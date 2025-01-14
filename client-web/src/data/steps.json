@@ -1,0 +1,27 @@
+[
+  {
+    "id": 0,
+    "label": "Send Request",
+    "desc": "User -> Frontend sends HTTP GET"
+  },
+  {
+    "id": 1,
+    "label": "Backend Controller",
+    "desc": "Spring Controller handles request"
+  },
+  {
+    "id": 2,
+    "label": "Service Logic",
+    "desc": "Business logic invoked"
+  },
+  {
+    "id": 3,
+    "label": "DB Query",
+    "desc": "Fetch from DB"
+  },
+  {
+    "id": 4,
+    "label": "Return Response",
+    "desc": "Response JSON returned"
+  }
+]

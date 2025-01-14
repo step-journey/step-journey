@@ -1,0 +1,206 @@
+{
+  "groupId": "phase-4",
+  "groupLabel": "Phase 4: Server-Side Processing & DB",
+  "steps": [
+    {
+      "id": 0,
+      "label": "Internal Routing",
+      "desc": "Google front-end routes request to search backends or microservices."
+    },
+    {
+      "id": 1,
+      "label": "Service Endpoint Invoked",
+      "desc": "A search microservice or monolith receives the final request payload."
+    },
+    {
+      "id": 2,
+      "label": "Check Query String",
+      "desc": "Service extracts 'q=flowers' from the query."
+    },
+    {
+      "id": 3,
+      "label": "Log Request Info",
+      "desc": "Google logs request in bigtable or spanner for analytics."
+    },
+    {
+      "id": 4,
+      "label": "Search Algorithm Initiation",
+      "desc": "The search system starts ranking logic or calls indexing system."
+    },
+    {
+      "id": 5,
+      "label": "Tokenize Query",
+      "desc": "System splits 'flowers' into terms, handles synonyms or language specifics."
+    },
+    {
+      "id": 6,
+      "label": "Check Spell Correction",
+      "desc": "Spelling system might check if user typed something close to 'flower'."
+    },
+    {
+      "id": 7,
+      "label": "Load User Profile (maybe)",
+      "desc": "If user is logged in, personalized data might be loaded."
+    },
+    {
+      "id": 8,
+      "label": "Retrieve Index Shards",
+      "desc": "System queries multiple index shards across data centers for 'flowers'."
+    },
+    {
+      "id": 9,
+      "label": "PageRank or Ranking Signals",
+      "desc": "Algorithm references link data, user signals, to rank results."
+    },
+    {
+      "id": 10,
+      "label": "Aggregate Partial Results",
+      "desc": "Results from multiple shards are combined or merged."
+    },
+    {
+      "id": 11,
+      "label": "Ads Retrieval",
+      "desc": "An ads microservice is called to fetch relevant ads for 'flowers'."
+    },
+    {
+      "id": 12,
+      "label": "Check SafeSearch Settings",
+      "desc": "Depending on user or default, explicit content is filtered out."
+    },
+    {
+      "id": 13,
+      "label": "Local/Regional Tweak",
+      "desc": "If user is in Korea, local content or language might be adjusted."
+    },
+    {
+      "id": 14,
+      "label": "Spell Correction Stage",
+      "desc": "Might generate 'Showing results for flowers' if typed incorrectly."
+    },
+    {
+      "id": 15,
+      "label": "DB or Bigtable Calls",
+      "desc": "Search system might do direct bigtable calls for synonyms or signals."
+    },
+    {
+      "id": 16,
+      "label": "Cache Lookup",
+      "desc": "A caching layer might have relevant results from a previous 'flowers' query."
+    },
+    {
+      "id": 17,
+      "label": "Ranking Model Execution",
+      "desc": "Machine learning rankers score each candidate result doc."
+    },
+    {
+      "id": 18,
+      "label": "Select Top N Results",
+      "desc": "System picks top results (like top 10) to display on first page."
+    },
+    {
+      "id": 19,
+      "label": "Ads Bidding Logic",
+      "desc": "Advertisers who bid on 'flowers' have a real-time auction. Highest ranks shown."
+    },
+    {
+      "id": 20,
+      "label": "Create Ads Snippet",
+      "desc": "Generate the ad blocks with link, short text, disclaimers if needed."
+    },
+    {
+      "id": 21,
+      "label": "Universal Results",
+      "desc": "Check if images, videos, or news about 'flowers' are relevant to show."
+    },
+    {
+      "id": 22,
+      "label": "Compose SERP (Search Engine Results Page)",
+      "desc": "Backend merges organic results, ads, universal, etc. into final data structure."
+    },
+    {
+      "id": 23,
+      "label": "Related Searches",
+      "desc": "System may fetch 'related queries' or 'people also ask' data."
+    },
+    {
+      "id": 24,
+      "label": "Time Ticks",
+      "desc": "All of this is done typically in well under a second in Google scale."
+    },
+    {
+      "id": 25,
+      "label": "Formatting HTML",
+      "desc": "A template or rendering engine composes final HTML output with results, ads, etc."
+    },
+    {
+      "id": 26,
+      "label": "Add Analytics Hooks",
+      "desc": "JS code might be injected for user interaction analytics."
+    },
+    {
+      "id": 27,
+      "label": "Add CSS/Script Links",
+      "desc": "HTML references google's styles, JS bundles (some might be inlined)."
+    },
+    {
+      "id": 28,
+      "label": "Potential Personalization Banner",
+      "desc": "If user is logged in, a personalized greeting or recommended content."
+    },
+    {
+      "id": 29,
+      "label": "Assemble Final HTML",
+      "desc": "Backend completes the main HTML document body."
+    },
+    {
+      "id": 30,
+      "label": "Header Info (Cache-Control, etc.)",
+      "desc": "Server sets appropriate headers to not cache or short-lifetime cache."
+    },
+    {
+      "id": 31,
+      "label": "Check HTTP Compression",
+      "desc": "Content might be gzipped or brotli compressed if supported."
+    },
+    {
+      "id": 32,
+      "label": "Generate ETag or Request ID",
+      "desc": "Server might attach an ETag or X-Request-ID for debugging."
+    },
+    {
+      "id": 33,
+      "label": "Server Logging",
+      "desc": "Server logs the final result count, time taken, etc."
+    },
+    {
+      "id": 34,
+      "label": "Send Partial Data",
+      "desc": "If HTTP/2 chunking or streaming, partial data might start flowing."
+    },
+    {
+      "id": 35,
+      "label": "Edge caching or CDN",
+      "desc": "Google may push to edge servers or caches for repeated queries."
+    },
+    {
+      "id": 36,
+      "label": "Double-check Abusive Patterns",
+      "desc": "Anti-DDoS systems ensure request volume is legitimate."
+    },
+    {
+      "id": 37,
+      "label": "Time to Return 200 OK",
+      "desc": "Server finalizes status code = 200 for success."
+    },
+    {
+      "id": 38,
+      "label": "Ready to Send to Browser",
+      "desc": "Everything is assembled, about to be transmitted."
+    },
+    {
+      "id": 39,
+      "label": "End of Phase 4",
+      "desc": "Server logic done, we have the HTML with search results ready."
+    }
+  ]
+}

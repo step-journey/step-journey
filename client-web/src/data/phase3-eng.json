@@ -1,0 +1,206 @@
+{
+  "groupId": "phase-3",
+  "groupLabel": "Phase 3: Sending the HTTP GET Request",
+  "steps": [
+    {
+      "id": 0,
+      "label": "Prepare HTTP Headers",
+      "desc": "Browser forms request line: GET / with host=google.com, user-agent, etc."
+    },
+    {
+      "id": 1,
+      "label": "Potential Cookies",
+      "desc": "Browser includes any relevant cookies for google.com."
+    },
+    {
+      "id": 2,
+      "label": "Send Request (Encrypted)",
+      "desc": "All data is encrypted with TLS, but effectively it's 'GET /search...' etc."
+    },
+    {
+      "id": 3,
+      "label": "HTTP/2 Frames",
+      "desc": "If using HTTP/2, the GET is broken into HEADERS frame, possibly with pseudo-headers."
+    },
+    {
+      "id": 4,
+      "label": "Header Compression",
+      "desc": "HTTP/2 might compress headers with HPACK or QPACK (HTTP/3)."
+    },
+    {
+      "id": 5,
+      "label": "Server Receives Frames",
+      "desc": "At Google front-end server, frames are reassembled into an HTTP request."
+    },
+    {
+      "id": 6,
+      "label": "Browser Streams Request Body",
+      "desc": "If there's any body (rare for GET), it would be sent, typically there's none."
+    },
+    {
+      "id": 7,
+      "label": "Waiting for Response",
+      "desc": "Browser is now in 'waiting' state for the server's reply."
+    },
+    {
+      "id": 8,
+      "label": "Possible 301 or 302?",
+      "desc": "Some requests might get redirected, but google.com typically not."
+    },
+    {
+      "id": 9,
+      "label": "Checking QUIC/HTTP3 (maybe)",
+      "desc": "Chrome might attempt QUIC on UDP if available, but let's assume we stay on HTTP/2."
+    },
+    {
+      "id": 10,
+      "label": "Request Headers Snapshot",
+      "desc": "Browser debugging tools can show the request method, path, etc."
+    },
+    {
+      "id": 11,
+      "label": "Performance Timing Mark",
+      "desc": "Browser logs 'requestStart' in PerformanceTiming API."
+    },
+    {
+      "id": 12,
+      "label": "Connection Reuse",
+      "desc": "If a keep-alive or existing connection is used, handshake might have been skipped."
+    },
+    {
+      "id": 13,
+      "label": "Possible Proxy Check",
+      "desc": "If user has a proxy, request is sent through that."
+    },
+    {
+      "id": 14,
+      "label": "Load Balancer or GSLB",
+      "desc": "Google has multiple load-balancing layers; request is routed to a local data center."
+    },
+    {
+      "id": 15,
+      "label": "Server Re-Decrypts",
+      "desc": "At server side, TLS terminates, your GET is visible in plaintext there."
+    },
+    {
+      "id": 16,
+      "label": "Identify the Resource",
+      "desc": "The path is something like '/', or '/search', or query param ?q=stuff."
+    },
+    {
+      "id": 17,
+      "label": "Check Host header",
+      "desc": "Server sees 'Host: google.com' in the headers."
+    },
+    {
+      "id": 18,
+      "label": "Server GFE (Google Front End)",
+      "desc": "Request typically hits a GFE which then dispatches internally to real search servers."
+    },
+    {
+      "id": 19,
+      "label": "Security Checks",
+      "desc": "Google might do quick checks for suspicious traffic, bot detection, etc."
+    },
+    {
+      "id": 20,
+      "label": "User Region Inference",
+      "desc": "Server might guess user location from IP or local domain (like google.co.kr)."
+    },
+    {
+      "id": 21,
+      "label": "Cookie-based Personalization",
+      "desc": "If user is logged in or has google cookies, personalization might be triggered."
+    },
+    {
+      "id": 22,
+      "label": "HTTP Keep-Alive",
+      "desc": "Connection is kept open for subsequent requests (images, scripts)."
+    },
+    {
+      "id": 23,
+      "label": "Check Query Params",
+      "desc": "If path is /search?q=flowers, it's the search query."
+    },
+    {
+      "id": 24,
+      "label": "Potential 204 or 304",
+      "desc": "If this was a resource check, 304 Not Modified or 204 could happen. Not typical for google home."
+    },
+    {
+      "id": 25,
+      "label": "Queue for Response Generation",
+      "desc": "The request is put in a queue for search logic."
+    },
+    {
+      "id": 26,
+      "label": "Await Server Handling",
+      "desc": "Now the browser is simply waiting, time depends on server load."
+    },
+    {
+      "id": 27,
+      "label": "Could Be Logging",
+      "desc": "Google logs the request for analytics or debugging."
+    },
+    {
+      "id": 28,
+      "label": "Possible AB Test",
+      "desc": "Google might route user to a test group to try new features."
+    },
+    {
+      "id": 29,
+      "label": "No Response Yet",
+      "desc": "Still waiting, the server is about to produce HTML."
+    },
+    {
+      "id": 30,
+      "label": "Server-Side Time",
+      "desc": "The time from request arrival to sending response might be a few ms or more."
+    },
+    {
+      "id": 31,
+      "label": "HTTP2 Stream ID",
+      "desc": "If HTTP/2, each request has a stream ID to track requests/responses concurrently."
+    },
+    {
+      "id": 32,
+      "label": "No Additional Auth",
+      "desc": "Public search typically doesn't require a 401 or authentication challenge."
+    },
+    {
+      "id": 33,
+      "label": "Wait for Server to Generate Response",
+      "desc": "We do not see final results until server finishes processing."
+    },
+    {
+      "id": 34,
+      "label": "Potential Revalidation",
+      "desc": "If browser had cache, might have sent If-Modified-Since, but typical search page is dynamic."
+    },
+    {
+      "id": 35,
+      "label": "Response about to Start",
+      "desc": "Server starts to form status line: 'HTTP/2 200 OK'."
+    },
+    {
+      "id": 36,
+      "label": "Response Headers Formation",
+      "desc": "Server sets content-type: text/html, content-length or transfer-encoding, etc."
+    },
+    {
+      "id": 37,
+      "label": "Partial Headers Sent?",
+      "desc": "HTTP/2 can start streaming headers as soon as they are ready."
+    },
+    {
+      "id": 38,
+      "label": "Buffering Response Body",
+      "desc": "Server composes the HTML in memory or streams it out chunk by chunk."
+    },
+    {
+      "id": 39,
+      "label": "End of Phase 3",
+      "desc": "HTTP GET fully sent. Next: the server is generating the response."
+    }
+  ]
+}
