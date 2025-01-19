@@ -30,7 +30,7 @@
     font-display: swap;
 }
 
-
+/* 기본 폰트 설정 */
 html,
 body {
     margin: 0;
@@ -38,54 +38,89 @@ body {
     font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
+/* 라이트 모드: Zinc 계열 */
 @layer base {
-  :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
+    :root {
+        /*
+          Zinc 50: #fafafa => 대략 hsl(0, 0%, 98%)
+          Zinc 900: #18181b => 대략 hsl(240, 5%, 11%)
+          (아래 값들 대략 추정치)
+        */
+        --background: 0 0% 100%;          /* 흰색 */
+        --foreground: 240 5% 11%;         /* zinc-900 */
+
+        --sidebar-bg: 0 0% 98%;           /* hsl(0,0%,98%) 근사 */
+        --sidebar-active: 240 3% 96%;
+
+        --card: 240 4% 96%;               /* zinc-100 */
+        --card-foreground: 240 5% 26%;    /* zinc-700 */
+
+        --popover: 240 4% 96%;            /* zinc-100 */
+        --popover-foreground: 240 5% 26%; /* zinc-700 */
+
+        --primary: 240 5% 26%;            /* zinc-700 */
+        --primary-foreground: 0 0% 98%;   /* zinc-50 */
+
+        --secondary: 240 5% 90%;          /* zinc-200 */
+        --secondary-foreground: 240 5% 26%; /* zinc-700 */
+
+        --muted: 240 5% 90%;              /* zinc-200 */
+        --muted-foreground: 240 5% 46%;   /* zinc-500 */
+
+        --accent: 240 4% 96%;            /* zinc-100 */
+        --accent-foreground: 240 5% 26%; /* zinc-700 */
+
+        --destructive: 240 5% 26%;       /* zinc-700 */
+        --destructive-foreground: 0 0% 98%; /* zinc-50 */
+
+        --border: 240 5% 82%;            /* zinc-300 */
+        --input: 240 5% 82%;             /* zinc-300 */
+        --ring: 240 5% 64%;              /* zinc-400 */
+
+        /* chart-x는 필요 시 임의 값 유지 */
         --chart-1: 12 76% 61%;
         --chart-2: 173 58% 39%;
         --chart-3: 197 37% 24%;
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
+
         --radius: 0.5rem;
     }
-  .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
+
+    /* 다크 모드: Zinc 900 ~ 50 */
+    .dark {
+        --background: 240 5% 11%;         /* zinc-900 */
+        --foreground: 0 0% 98%;          /* zinc-50 */
+
+        --sidebar-bg: 0 0% 14%;      /* 예: #242424 */
+        --sidebar-active: 0 0% 20%;  /* 더 짙은 hover */
+
+        --card: 240 5% 15%;              /* zinc-800 (#27272a) */
+        --card-foreground: 0 0% 98%;     /* zinc-50 */
+
+        --popover: 240 5% 15%;           /* zinc-800 */
+        --popover-foreground: 0 0% 98%;  /* zinc-50 */
+
+        --primary: 0 0% 98%;            /* zinc-50 */
+        --primary-foreground: 240 5% 11%; /* zinc-900 */
+
+        --secondary: 240 5% 26%;         /* zinc-700 */
+        --secondary-foreground: 0 0% 98%; /* zinc-50 */
+
+        --muted: 240 5% 26%;             /* zinc-700 */
+        --muted-foreground: 240 5% 64%;  /* zinc-400 */
+
+        --accent: 240 5% 15%;            /* zinc-800 */
+        --accent-foreground: 0 0% 98%;   /* zinc-50 */
+
+        --destructive: 240 5% 15%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
+
+        --border: 240 5% 26%;            /* zinc-700 */
+        --input: 240 5% 26%;             /* zinc-700 */
+        --ring: 240 5% 46%;              /* zinc-500 */
+
+        /* chart-x 대충 유지 */
         --chart-1: 220 70% 50%;
         --chart-2: 160 60% 45%;
         --chart-3: 30 80% 55%;
@@ -94,11 +129,12 @@ body {
     }
 }
 
+/* 전역 스타일 */
 @layer base {
-  * {
-    @apply border-border;
+    * {
+        @apply border-border;
     }
-  body {
-    @apply bg-background text-foreground;
+    body {
+        @apply bg-background text-foreground;
     }
 }

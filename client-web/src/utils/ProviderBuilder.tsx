@@ -1,6 +1,6 @@
 import React from "react";
 
-type Component<P> = React.ComponentType<P & { children: React.ReactElement }>;
+type Component<P> = React.ComponentType<P & { children: React.ReactNode }>;
 
 export class ProviderBuilder {
   constructor(component: React.FC) {

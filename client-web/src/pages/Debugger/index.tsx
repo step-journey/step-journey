@@ -1,39 +1,31 @@
 import { useState, useEffect, useRef } from "react";
-import ReactModal from "react-modal";
-import {
-  Button,
-  Group,
-  Text,
-  Tooltip,
-  ScrollArea,
-  Paper,
-  Divider,
-  Slider,
-} from "@mantine/core";
+import { useNavigate } from "react-router-dom";
 import {
   IconPlayerTrackNext,
   IconPlayerTrackPrev,
   IconChevronRight,
   IconChevronDown,
 } from "@tabler/icons-react";
-import { useNavigate } from "react-router-dom";
-import PATH from "../../constants/path";
 
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import {
-  debuggerWrapper,
-  toolbar,
-  leftActions,
-  rightActions,
-  contentArea,
-  leftPanel,
-  mainPanel,
-  bottomNav,
-  frameItem,
-  frameItemActive,
-  groupLabel,
-} from "./index.css";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { flattenSteps, groupData } from "../../data";
+import PATH from "@/constants/path";
+import { flattenSteps, groupData } from "@/data";
 
 export default function DebuggerPage() {
   const [globalIndex, setGlobalIndex] = useState(0);
@@ -44,35 +36,30 @@ export default function DebuggerPage() {
 
   const navigate = useNavigate();
 
+  // 다크 모드 토글
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => !prev);
+    document.documentElement.classList.toggle("dark");
+  };
+
   const currentStep = flattenSteps[globalIndex];
   const stepContainerRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // -------------------------------------------------------
-  // Prev / Next 이동 함수
-  // -------------------------------------------------------
+  // Prev / Next
   const goPrev = () => setGlobalIndex((p) => Math.max(0, p - 1));
   const goNext = () =>
     setGlobalIndex((p) => Math.min(flattenSteps.length - 1, p + 1));
 
-  // -------------------------------------------------------
-  // 키보드 이벤트
-  //   - 'KeyM': 지도 모달 토글
-  //   - ArrowLeft/ArrowUp: Prev
-  //   - ArrowRight/ArrowDown: Next
-  // -------------------------------------------------------
+  // Keyboard event (KeyM -> toggle map, arrow keys -> prev/next)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 만약 input, textarea, select 등에 포커스가 있다면 단축키 무시
-      const target = e.target as HTMLElement;
-      const tagName = target.tagName.toLowerCase();
-      if (["input", "textarea", "select"].includes(tagName)) {
-        return;
-      }
+      const tagName = (e.target as HTMLElement).tagName.toLowerCase();
+      if (["input", "textarea", "select"].includes(tagName)) return;
 
       // 지도 모달 토글: 물리 키 위치가 'KeyM'인 경우
       if (e.code === "KeyM") {
-        e.preventDefault(); // 혹시 모를 기본 동작 방지
-        // 열려 있으면 닫고, 닫혀 있으면 열기
+        e.preventDefault();
         setIsMapOpen((prev) => !prev);
         return;
       }
@@ -91,23 +78,16 @@ export default function DebuggerPage() {
         return;
       }
     };
-
     window.addEventListener("keydown", handleKeyDown, { passive: false });
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // -------------------------------------------------------
-  // 현재 단계 바뀌면 해당 Phase만 펼치기
-  // -------------------------------------------------------
+  // 현재 Step 바뀌면 해당 Phase 펼치기
   useEffect(() => {
     setExpandedGroups({ [currentStep.groupId]: true });
   }, [currentStep.groupId]);
 
-  // -------------------------------------------------------
-  // 펼쳐진 Phase 내부에서 현재 Step 위치로 스크롤
-  // -------------------------------------------------------
+  // 펼친 Phase 내부에서 현재 Step 위치로 스크롤
   useEffect(() => {
     const gId = currentStep.groupId;
     if (!expandedGroups[gId]) return;
@@ -115,33 +95,22 @@ export default function DebuggerPage() {
     setTimeout(() => {
       const container = stepContainerRefs.current[gId];
       if (!container) return;
-
       const stepEl = container.querySelector(
         `#step-${currentStep.globalIndex}`,
       ) as HTMLElement | null;
-      if (stepEl) {
-        stepEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      stepEl?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 0);
   }, [currentStep, expandedGroups]);
 
-  // -------------------------------------------------------
   // Phase 라벨 토글
-  // -------------------------------------------------------
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => {
       const isOpen = !!prev[groupId];
-      if (isOpen) {
-        return { ...prev, [groupId]: false };
-      } else {
-        return { [groupId]: true };
-      }
+      return { ...prev, [groupId]: !isOpen };
     });
   };
 
-  // -------------------------------------------------------
-  // 특정 Step 클릭 시 globalIndex 변경
-  // -------------------------------------------------------
+  // 특정 Step 클릭
   const handleStepClick = (groupId: string, stepIdInGroup: number) => {
     const found = flattenSteps.find(
       (fs) => fs.groupId === groupId && fs.stepIdInGroup === stepIdInGroup,
@@ -151,37 +120,53 @@ export default function DebuggerPage() {
     }
   };
 
-  // -------------------------------------------------------
   // Slider onChange
-  // -------------------------------------------------------
-  const handleSliderChange = (val: number) => {
-    setGlobalIndex(val);
+  const handleSliderChange = (val: number[]) => {
+    setGlobalIndex(val[0]);
   };
 
-  // -------------------------------------------------------
-  // 지도 모달 열기 / 닫기 (버튼으로도 토글 가능)
-  // -------------------------------------------------------
+  // 슬라이더 조작 후 포커스 해제
+  const handleSliderPointerUp = () => {
+    // 한 박자 뒤에 blur 처리
+    setTimeout(() => {
+      // 현재 포커스가 슬라이더에 있다면 해제
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }, 0);
+  };
+
+  // 지도 모달
   const openMap = () => setIsMapOpen(true);
-  const closeMap = () => setIsMapOpen(false);
 
   return (
-    <div className={debuggerWrapper}>
+    <div className="flex flex-col min-h-[calc(100vh-60px)] border border-border rounded overflow-hidden">
       {/* 상단 툴바 */}
-      <div className={toolbar}>
-        <div className={leftActions}>
-          <Text fw={600} size="sm">
-            Google Search Debugger
-          </Text>
+      <div className="flex items-center justify-between bg-muted border-b border-border px-4 h-10">
+        <div className="flex gap-2 items-center">
+          <p className="text-sm font-semibold">Google Search Debugger</p>
         </div>
-        <div className={rightActions}>
-          {/* 지도 버튼 */}
-          <Button variant="subtle" size="xs" onClick={openMap}>
+        <div className="flex gap-2 items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-muted"
+            onClick={openMap}
+          >
             지도 (m)
           </Button>
-          {/* About 버튼: 클릭 시 /about 으로 이동 */}
           <Button
-            variant="subtle"
-            size="xs"
+            variant="ghost"
+            size="sm"
+            className="hover:bg-muted"
+            onClick={toggleDarkMode}
+          >
+            {isDarkMode ? "Light Mode" : "Dark Mode"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-muted"
             onClick={() => navigate(PATH.ABOUT)}
           >
             About
@@ -189,48 +174,39 @@ export default function DebuggerPage() {
         </div>
       </div>
 
-      {/* 메인 콘텐츠: 좌측 Phase, 우측 현재 Step 상세 */}
-      <div className={contentArea}>
-        {/* 좌측 Phase 목록 */}
-        <ScrollArea className={leftPanel}>
+      {/* 메인 영역 */}
+      <div className="flex flex-1">
+        {/* 좌측 Sidebar */}
+        <ScrollArea className="w-72 bg-sidebar border-r border-border p-2 flex flex-col">
           {groupData.map((grp) => {
             const isExpanded = expandedGroups[grp.groupId] || false;
             const isCurrentGroup = grp.groupId === currentStep.groupId;
 
-            let labelCls = groupLabel.default;
-            if (isExpanded && isCurrentGroup) {
-              labelCls = groupLabel.activeExpanded;
-            } else if (isExpanded) {
-              labelCls = groupLabel.expanded;
-            } else if (isCurrentGroup) {
-              labelCls = groupLabel.activeDefault;
+            // Phase 라벨
+            let groupLabelClass =
+              "flex items-center gap-1 cursor-pointer rounded px-2 py-1 hover:bg-transparent";
+            if (isCurrentGroup) {
+              groupLabelClass += " font-bold text-primary";
             }
 
             return (
-              <div key={grp.groupId} style={{ marginBottom: "1rem" }}>
+              <div key={grp.groupId} className="mb-2">
                 <div
-                  className={labelCls}
+                  className={groupLabelClass}
                   onClick={() => toggleGroup(grp.groupId)}
                 >
                   {isExpanded ? (
-                    <IconChevronDown size={16} stroke={1.5} />
+                    <IconChevronDown size={16} />
                   ) : (
-                    <IconChevronRight size={16} stroke={1.5} />
+                    <IconChevronRight size={16} />
                   )}
-                  <Text fw={600} size="sm">
-                    {grp.groupLabel}
-                  </Text>
+                  <span className="text-sm">{grp.groupLabel}</span>
                 </div>
 
                 {isExpanded && (
                   <div
-                    style={{
-                      marginLeft: "1.5rem",
-                      marginTop: "0.25rem",
-                      maxHeight: "280px",
-                      overflowY: "auto",
-                    }}
                     ref={(el) => (stepContainerRefs.current[grp.groupId] = el)}
+                    className="ml-5 mt-1 max-h-[280px] overflow-auto flex flex-col gap-1"
                   >
                     {grp.steps.map((st) => {
                       const foundFs = flattenSteps.find(
@@ -243,16 +219,25 @@ export default function DebuggerPage() {
                       const isActive =
                         foundFs.globalIndex === currentStep.globalIndex;
 
+                      /* 
+                        기본: hover:bg-sidebar-active
+                        현재 Step: bg-sidebar-active 
+                      */
+                      let stepClass =
+                        "px-2 py-1 rounded text-sm cursor-pointer hover:bg-sidebar-active";
+
+                      if (isActive) {
+                        stepClass += " bg-sidebar-active font-medium";
+                      }
+
                       return (
                         <div
                           key={st.id}
                           id={`step-${foundFs.globalIndex}`}
-                          className={isActive ? frameItemActive : frameItem}
+                          className={stepClass}
                           onClick={() => handleStepClick(grp.groupId, st.id)}
                         >
-                          <Text size="sm" fw={isActive ? 600 : 400}>
-                            {st.label}
-                          </Text>
+                          {st.label}
                         </div>
                       );
                     })}
@@ -263,178 +248,102 @@ export default function DebuggerPage() {
           })}
         </ScrollArea>
 
-        {/* 우측: 현재 Step 상세 */}
-        <div className={mainPanel}>
-          <Text size="sm" fw={600} mb="xs">
+        {/* 우측 Main Panel */}
+        <div className="flex-1 flex flex-col p-4">
+          <p className="text-sm font-semibold mb-1">
             Current Step: {currentStep.label}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {currentStep.desc}
-          </Text>
+          </p>
+          <p className="text-sm text-muted-foreground">{currentStep.desc}</p>
 
-          <Divider my="sm" />
-          <Paper p="sm" shadow="xs" withBorder>
-            <Text size="sm" fw={500}>
-              여기에 해당 단계를 직관적으로 표현하는 시각화 자료 넣을 예정
-            </Text>
-            <ul style={{ marginLeft: 16 }}>
-              <li>
-                코드로 표현하는게 적절한 step 이면 로직을 간단하게 코드로
-                구현해서 보여주는 것도 괜찮을듯
-              </li>
-              <li>HTTP Request / Response</li>
-              <li>Server logs (like console output)</li>
-              <li>Database queries or external API calls</li>
-              <li>“Code snippet” highlight for the current step</li>
+          <Separator className="my-4" />
+          <Card className="p-4">
+            <p className="text-sm font-medium mb-2">여기에 해당 단계를 표현</p>
+            <ul className="list-disc list-inside text-sm text-muted-foreground">
+              <li>코드 스니펫, 서버로그, API 응답 등</li>
+              <li>직접 조작 예시</li>
             </ul>
-          </Paper>
+          </Card>
         </div>
       </div>
 
-      {/* 하단: Slider + Prev/Next + Step indicator */}
-      <div
-        className={bottomNav}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "1rem",
-        }}
-      >
-        <div style={{ flex: 1, marginRight: "1rem" }}>
-          <Slider
-            min={0}
-            max={flattenSteps.length - 1}
-            value={globalIndex}
-            onChange={handleSliderChange}
-            styles={{
-              track: { margin: "0 1rem" },
-            }}
-          />
-        </div>
-        <Group gap="xs" wrap="nowrap">
-          <Button
-            leftSection={<IconPlayerTrackPrev size={16} />}
-            onClick={goPrev}
-            variant="outline"
-            size="xs"
-          >
+      {/* 하단 Prev/Next + Slider */}
+      <div className="border-t border-border px-4 py-2 flex items-center justify-between gap-4">
+        <Slider
+          className="flex-1"
+          max={flattenSteps.length - 1}
+          value={[globalIndex]}
+          onValueChange={handleSliderChange}
+          step={1}
+          onPointerUp={handleSliderPointerUp} // pointerUp 시점에 포커스 해제
+        />
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={goPrev}>
+            <IconPlayerTrackPrev className="mr-1" size={16} />
             Prev
           </Button>
-          <Button
-            rightSection={<IconPlayerTrackNext size={16} />}
-            onClick={goNext}
-            variant="outline"
-            size="xs"
-          >
+          <Button variant="outline" size="sm" onClick={goNext}>
             Next
+            <IconPlayerTrackNext className="ml-1" size={16} />
           </Button>
-        </Group>
-
-        <Text
-          size="sm"
-          c="dimmed"
-          style={{
-            width: 90,
-            textAlign: "right",
-            whiteSpace: "nowrap",
-          }}
-        >
+        </div>
+        <span className="text-sm text-muted-foreground w-24 text-right">
           Step {globalIndex + 1} / {flattenSteps.length}
-        </Text>
+        </span>
       </div>
 
       {/* 지도 모달 */}
-      <ReactModal
-        isOpen={isMapOpen}
-        onRequestClose={closeMap}
-        contentLabel="RPG Map Modal"
-        style={{
-          content: {
-            top: "50%",
-            left: "50%",
-            right: "auto",
-            bottom: "auto",
-            transform: "translate(-50%, -50%)",
-            width: "600px",
-            maxWidth: "90%",
-            borderRadius: "8px",
-            padding: "1.5rem",
-          },
-          overlay: {
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-          },
-        }}
-      >
-        {/* 모달 내부 */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "1rem",
-          }}
+      <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
+        <DialogContent
+          className="sm:max-w-[600px]"
+          onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Text fw="bold" size="md" mb="xs">
-            지도
-          </Text>
-          <Text size="sm">
+          <DialogHeader>
+            <DialogTitle>지도</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm mb-2">
             현재 단계: <b>{currentStep.label}</b> ({currentStep.globalIndex + 1}{" "}
             / {flattenSteps.length})
-          </Text>
+          </p>
 
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "1rem",
-              border: "1px solid #ccc",
-              padding: "1rem",
-              borderRadius: "8px",
-            }}
-          >
+          <div className="flex flex-wrap gap-3 border border-border p-3 rounded">
             {groupData.map((grp) => (
-              <Tooltip
-                key={grp.groupId}
-                label={grp.mapDescription}
-                multiline
-                position="top"
-                withArrow
-                openDelay={300}
-                style={{
-                  maxWidth: 400,
-                  whiteSpace: "pre-wrap",
-                  wordWrap: "break-word",
-                }}
-              >
-                <div
-                  style={{
-                    cursor: "pointer",
-                    border: "1px solid #bbb",
-                    borderRadius: "4px",
-                    padding: "0.5rem",
-                    minWidth: "120px",
-                    backgroundColor:
-                      grp.groupId === currentStep.groupId ? "#ffc" : "#fff",
-                  }}
-                >
-                  <Text fw="bold" size="sm">
-                    {grp.groupLabel}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    (Step count: {grp.steps.length})
-                  </Text>
-                </div>
+              <Tooltip key={grp.groupId} delayDuration={0}>
+                <TooltipTrigger>
+                  <div
+                    className={
+                      "cursor-pointer border border-border rounded px-2 py-1 min-w-[120px]" +
+                      (grp.groupId === currentStep.groupId
+                        ? " bg-secondary text-secondary-foreground"
+                        : " bg-card")
+                    }
+                  >
+                    <p className="text-sm font-bold">{grp.groupLabel}</p>
+                    <p className="text-xs text-muted-foreground">
+                      (Step count: {grp.steps.length})
+                    </p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {/* 마우스 올렸을 때만 보이게, 딜레이 없이 바로 */}
+                  <p className="max-w-xs whitespace-pre-wrap">
+                    {grp.mapDescription}
+                  </p>
+                </TooltipContent>
               </Tooltip>
             ))}
           </div>
 
-          <div style={{ textAlign: "right" }}>
-            <Button onClick={closeMap} size="xs" variant="outline">
+          <div className="text-right mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMapOpen(false)}
+            >
               닫기
             </Button>
           </div>
-        </div>
-      </ReactModal>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
