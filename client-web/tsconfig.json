@@ -1,7 +1,12 @@
 {
   "compilerOptions": {
     "resolveJsonModule": true,    // JSON 모듈 import 허용
-    "esModuleInterop": true      // CommonJS/AMD/UMD 모듈을 ES6 모듈처럼 import 허용
+    "esModuleInterop": true,      // CommonJS/AMD/UMD 모듈을 ES6 모듈처럼 import 허용
+    // shadcn/ui CLI 가 여기서 import alias 를 찾을 수 있도록, 최소한의 alias 설정 추가
+    "baseUrl": ".",              // 현재 디렉토리를 import base 경로로 설정
+    "paths": {                   // import 시 "@/..." -> "./src/..."로 매핑
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.json"],
   "references": [
