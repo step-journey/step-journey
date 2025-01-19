@@ -3,6 +3,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* JetBrainsMono (Regular 400) */
+@font-face {
+    font-family: "JetBrainsMono";
+    src: url("/fonts/JetBrainsMono_2_304/JetBrainsMono-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* JetBrainsMono (Bold 700) */
+@font-face {
+    font-family: "JetBrainsMono";
+    src: url("/fonts/JetBrainsMono_2_304/JetBrainsMono-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Pretendard Variable (100~900) */
+@font-face {
+    font-family: "Pretendard";
+    src: url("/fonts/Pretendard_1_3_9/PretendardVariable.woff2") format("woff2-variations");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+
 html,
 body {
     margin: 0;
