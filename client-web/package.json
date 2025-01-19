@@ -11,8 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mantine/core": "^7.15.3",
-    "@mantine/hooks": "^7.15.3",
     "@tabler/icons-react": "^3.28.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -27,8 +25,6 @@
     "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@typescript-eslint/parser": "^8.20.0",
-    "@vanilla-extract/css": "^1.17.0",
-    "@vanilla-extract/vite-plugin": "^4.0.19",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
