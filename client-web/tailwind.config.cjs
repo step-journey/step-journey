@@ -56,7 +56,8 @@ module.exports = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+				step: "hsl(219, 12%, 40%)" // rgb(89, 97, 113)
   		},
 			// 아코디언 애니메이션
 			keyframes: {
