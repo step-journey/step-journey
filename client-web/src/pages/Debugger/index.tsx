@@ -165,8 +165,13 @@ export default function DebuggerPage() {
           flex items-center h-8 px-2 gap-2 cursor-pointer
           rounded hover:bg-gray-100 text-step
         `;
+            // 현재 그룹이면 폰트 두께 추가
             if (isCurrentGroup) {
               groupLabelClass += " font-semibold";
+              // 접혀 있다면 글자색 파란색
+              if (!isExpanded) {
+                groupLabelClass += " !text-blue-600";
+              }
             }
 
             return (

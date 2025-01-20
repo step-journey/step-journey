@@ -1,6 +1,6 @@
 {
   "groupId": "phase-1",
-  "groupLabel": "1단계: 내 기기(브라우저/OS)에서의 초기 동작",
+  "groupLabel": "내 기기에서의 초기 동작",
   "mapDescription": "이곳은 어둠 속에서 깨어나는 브라우저와 OS의 영역. 아직은 미지의 웹을 향해 발걸음을 떼기 전...",
   "steps": [
     {

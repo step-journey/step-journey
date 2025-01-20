@@ -1,6 +1,6 @@
 {
   "groupId": "phase-2",
-  "groupLabel": "2단계: DNS 서버 ~ TCP/SSL 연결",
+  "groupLabel": "DNS 서버 ~ TCP/SSL 연결",
   "mapDescription": "DNS의 미궁과 암흑의 TCP/SSL 지하 통로를 거쳐야 하는 위험한 여정...",
   "steps": [
     {

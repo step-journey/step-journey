@@ -1,6 +1,6 @@
 {
   "groupId": "phase-3",
-  "groupLabel": "3단계: 구글 서버로 HTTP 요청 보내기",
+  "groupLabel": "구글 서버로 HTTP 요청 보내기",
   "mapDescription": "수많은 데이터의 강을 건너, 구글 서버가 있는 성채로 떠나는 원정...",
   "steps": [
     {

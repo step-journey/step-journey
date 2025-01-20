@@ -1,6 +1,6 @@
 {
   "groupId": "phase-5",
-  "groupLabel": "5단계: 응답 전송 & 브라우저 렌더링",
+  "groupLabel": "응답 전송 & 브라우저 렌더링",
   "mapDescription": "최후의 결전지, 브라우저 렌더링 전장에서 승리해야 최종 결과물을 볼 수 있다!",
   "steps": [
     {

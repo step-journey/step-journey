@@ -1,6 +1,6 @@
 {
   "groupId": "phase-4",
-  "groupLabel": "4단계: 구글 서버 내부 처리 (DB/검색 로직)",
+  "groupLabel": "구글 서버 내부 처리 (DB/검색 로직)",
   "mapDescription": "거대한 구글의 내부 왕국... 이곳에는 방대한 DB와 검색 로직들이 얽혀 있는 거대한 미궁이...",
   "steps": [
     {

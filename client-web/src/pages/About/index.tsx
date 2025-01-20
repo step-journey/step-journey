@@ -27,9 +27,7 @@ export default function AboutPage() {
       </div>
 
       {/* Title */}
-      <h2 className="text-xl font-semibold mb-4">
-        패킷의 여행 (PacketJourney)
-      </h2>
+      <h2 className="text-xl font-semibold mb-4">StepJourney</h2>
 
       {/* Accordion: multiple, default open “ideation” */}
       <Accordion
