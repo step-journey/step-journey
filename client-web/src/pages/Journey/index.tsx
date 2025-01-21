@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import PATH from "@/constants/path";
 import { flattenSteps, groupData } from "@/data";
 
-export default function DebuggerPage() {
+export default function JourneyPage() {
   const [globalIndex, setGlobalIndex] = useState(0);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
