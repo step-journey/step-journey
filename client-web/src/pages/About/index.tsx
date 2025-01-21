@@ -27,7 +27,7 @@ export default function AboutPage() {
       </div>
 
       {/* Title */}
-      <h2 className="text-xl font-semibold mb-4">StepJourney</h2>
+      <h2 className="mb-4 text-xl font-semibold">StepJourney</h2>
 
       {/* Accordion: multiple, default open “ideation” */}
       <Accordion
@@ -48,7 +48,7 @@ export default function AboutPage() {
             <ul className="list-disc pl-5 text-sm space-y-3">
               <li>
                 <p className="font-medium">한 줄 소개</p>
-                <ul className="list-disc pl-5 mt-1">
+                <ul className="mt-1 list-disc pl-5">
                   <li>
                     일상적으로 사용하는 앱의 기능을 단계별로 조작하며 동작
                     원리를 이해하게 해주는 교육 서비스
@@ -57,7 +57,7 @@ export default function AboutPage() {
               </li>
               <li>
                 <p className="font-medium">풀고자 하는 문제</p>
-                <ul className="list-disc pl-5 mt-1 space-y-1">
+                <ul className="mt-1 list-disc pl-5 space-y-1">
                   <li>
                     매우 중요한 기술인 소프트웨어 개발을 재미없는 방식으로 접해
                     흥미를 가지지 못하는 문제
@@ -82,7 +82,7 @@ export default function AboutPage() {
               </li>
               <li>
                 <p className="font-medium">솔루션</p>
-                <ul className="list-disc pl-5 mt-1 space-y-1">
+                <ul className="mt-1 list-disc pl-5 space-y-1">
                   <li>
                     <b>실제 앱 중심</b>의 “디버거형” 학습: 매일 쓰는 앱의 특정
                     기능을 단계별로 추적하고 직접 조작

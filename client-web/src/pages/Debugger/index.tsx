@@ -136,26 +136,26 @@ export default function DebuggerPage() {
       {/*
     (1) 좌측 사이드바
   */}
-      <aside className="w-[280px] border-r border-gray-200 bg-white flex flex-col">
+      <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
         {/* 상단: 제목 + 검색창 */}
-        <div className="p-4 pb-2 shrink-0">
-          <h1 className="text-base font-bold mb-3">Google Search Journey</h1>
+        <div className="shrink-0 p-4 pb-2">
+          <h1 className="mb-3 text-base font-bold">Google Search Journey</h1>
           {/* 검색창 */}
           <div className="relative">
             <IconSearch
               size={16}
-              className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute top-1/2 left-2 -translate-y-1/2 text-gray-400"
             />
             <Input
               type="text"
               placeholder="Search"
-              className="pl-7 pr-2 py-1 text-sm w-full border-gray-200 bg-gray-50"
+              className="w-full border-gray-200 bg-gray-50 py-1 pr-2 pl-7 text-sm"
             />
           </div>
         </div>
 
         {/* 단계 목록 스크롤 영역 */}
-        <ScrollArea className="flex-1 py-2 pl-4 pr-1">
+        <ScrollArea className="flex-1 py-2 pr-1 pl-4">
           {groupData.map((grp) => {
             const isExpanded = expandedGroups[grp.groupId] || false;
             const isCurrentGroup = grp.groupId === currentStep.groupId;
@@ -181,7 +181,7 @@ export default function DebuggerPage() {
                   onClick={() => toggleGroup(grp.groupId)}
                 >
                   {/* 라벨 텍스트 */}
-                  <span className="text-sm flex-1 whitespace-nowrap">
+                  <span className="flex-1 whitespace-nowrap text-sm">
                     {grp.groupLabel}
                   </span>
                   {/* 우측 아이콘 (vertical-align 고정) */}
@@ -196,7 +196,7 @@ export default function DebuggerPage() {
                 {isExpanded && (
                   <div
                     ref={(el) => (stepContainerRefs.current[grp.groupId] = el)}
-                    className="ml-5 mt-1 max-h-[300px] overflow-auto flex flex-col gap-1"
+                    className="mt-1 ml-5 flex flex-col gap-1 overflow-auto max-h-[300px]"
                   >
                     {grp.steps.map((st) => {
                       const foundFs = flattenSteps.find(
@@ -236,7 +236,7 @@ export default function DebuggerPage() {
       </aside>
 
       {/* 우측 메인 영역 */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex flex-1 flex-col bg-white">
         {/* 
           상단 헤더: 
             - height 고정: h-[56px] (Stripe API Docs와 동일)
@@ -274,15 +274,15 @@ export default function DebuggerPage() {
         </div>
 
         {/* 중앙 본문 */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-6">
-          <p className="text-lg font-semibold mb-1">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          <p className="mb-1 text-lg font-semibold">
             Current Step: {currentStep.label}
           </p>
-          <p className="text-sm text-gray-500 mb-4">{currentStep.desc}</p>
+          <p className="mb-4 text-sm text-gray-500">{currentStep.desc}</p>
 
-          <Card className="p-4 bg-white border border-gray-200">
-            <p className="text-sm font-medium mb-2">여기에 해당 단계 내용</p>
-            <ul className="list-disc list-inside text-sm text-gray-600">
+          <Card className="border border-gray-200 bg-white p-4">
+            <p className="mb-2 text-sm font-medium">여기에 해당 단계 내용</p>
+            <ul className="list-inside list-disc text-sm text-gray-600">
               <li>코드 스니펫, 서버로그, API 응답 등</li>
               <li>직접 조작 예시</li>
             </ul>
@@ -290,7 +290,7 @@ export default function DebuggerPage() {
         </div>
 
         {/* 하단 Footer: Slider + Prev/Next + Step indicator */}
-        <div className="h-12 flex items-center border-t border-gray-200 px-4 gap-3 shrink-0 bg-white">
+        <div className="flex h-12 shrink-0 items-center gap-3 border-t border-gray-200 bg-white px-4">
           {/* 슬라이더 (flex-1) */}
           <Slider
             className="flex-1"
@@ -311,7 +311,7 @@ export default function DebuggerPage() {
             </Button>
           </div>
           {/* Step 표시 (한 줄 표시) */}
-          <span className="text-sm text-gray-500 w-20 text-right whitespace-nowrap">
+          <span className="w-20 whitespace-nowrap text-right text-sm text-gray-500">
             Step {globalIndex + 1} / {flattenSteps.length}
           </span>
         </div>
@@ -326,12 +326,12 @@ export default function DebuggerPage() {
           <DialogHeader>
             <DialogTitle>지도</DialogTitle>
           </DialogHeader>
-          <p className="text-sm mb-2">
+          <p className="mb-2 text-sm">
             현재 단계: <b>{currentStep.label}</b> ({currentStep.globalIndex + 1}{" "}
             / {flattenSteps.length})
           </p>
 
-          <div className="flex flex-wrap gap-3 border border-gray-200 p-3 rounded">
+          <div className="flex flex-wrap gap-3 rounded border border-gray-200 p-3">
             {groupData.map((grp) => (
               <Tooltip key={grp.groupId} delayDuration={0}>
                 <TooltipTrigger>
@@ -358,7 +358,7 @@ export default function DebuggerPage() {
             ))}
           </div>
 
-          <div className="text-right mt-4">
+          <div className="mt-4 text-right">
             <Button variant="outline" size="sm" onClick={closeMap}>
               닫기
             </Button>
