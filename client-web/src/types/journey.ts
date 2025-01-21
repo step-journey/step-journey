@@ -16,3 +16,5 @@ export interface FlattenedStep extends Step {
   globalIndex: number;
   stepIdInGroup: number;
 }
+
+export type StepContainerMap = Record<string, HTMLDivElement | null>;

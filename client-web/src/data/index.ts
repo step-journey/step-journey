@@ -12,7 +12,7 @@ import phase3 from "./phase3.json";
 import phase4 from "./phase4.json";
 import phase5 from "./phase5.json";
 
-import { GroupData, FlattenedStep } from "../types/debugger";
+import { GroupData, FlattenedStep } from "@/types/journey";
 
 // 2) JSON → GroupData 형 변환 (TS에서 JSON import 시 any로 인식할 수 있으므로 as 단언 사용)
 const phase1Data = phase1 as GroupData;
