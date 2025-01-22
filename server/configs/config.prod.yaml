@@ -1,0 +1,6 @@
+server:
+  port: 80
+database:
+  user: "postgres_prod"
+  password: "pass_prod"
+  sslmode: "require"

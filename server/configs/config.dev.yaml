@@ -1,0 +1,5 @@
+server:
+  port: 5000
+database:
+  user: "postgres_dev"
+  password: "pass_dev"
