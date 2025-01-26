@@ -70,13 +70,18 @@ func runServer(c *cli.Context) error {
 	// Service / Handler 준비
 	userSvc := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userSvc)
+	healthHandler := handler.NewHealthHandler()
+
+	mux := http.NewServeMux()
+	mux.Handle("/health", healthHandler)
+	mux.Handle("/", userHandler)
 
 	// HTTP 서버 생성
 	httpSrv := config.NewServer(
 		cfg.Server.Port,
+		mux,
 		cfg.ServerReadTimeout(),
 		cfg.ServerWriteTimeout(),
-		userHandler,
 	)
 
 	// Server 구조체 초기화

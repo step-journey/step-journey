@@ -100,7 +100,7 @@ func GetDBConnString(d DBConfig) string {
 	)
 }
 
-func NewServer(port int, readTimeout, writeTimeout time.Duration, handler http.Handler) *http.Server {
+func NewServer(port int, handler http.Handler, readTimeout, writeTimeout time.Duration) *http.Server {
 	return &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
 		Handler:      handler,
