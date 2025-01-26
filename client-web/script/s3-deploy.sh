@@ -16,11 +16,13 @@ if [[ "$ENVIRONMENT" == "dev" ]]; then
     CLOUDFRONT_DISTRIBUTION_ID="EBD7PIL49QIJG"
     AWS_PROFILE="cac-sso-workloads-dev"
     BUILD_COMMAND="build:dev"
+    GTM_ID="GTM-TWBQD39H"
 elif [[ "$ENVIRONMENT" == "prod" ]]; then
     S3_BUCKET="step-journey.com"
     CLOUDFRONT_DISTRIBUTION_ID="E2LIRZYXUOVCHC"
     AWS_PROFILE="cac-sso-workloads-prod"
     BUILD_COMMAND="build:prod"
+    GTM_ID="GTM-PH3KD4RZ"
 
     # 운영 배포 재확인
     echo -e "\033[31m정말 운영환경($ENVIRONMENT)으로 배포하시겠습니까? (yes/no): \033[0m"
@@ -45,9 +47,16 @@ npm run "$BUILD_COMMAND"
 log "기존 S3 파일 삭제 중: $S3_BUCKET"
 aws s3 rm "s3://$S3_BUCKET" --recursive --profile "$AWS_PROFILE"
 
-log "새 빌드 파일 업로드 중: dist -> s3://$S3_BUCKET"
-aws s3 cp "$PROJECT_ROOT/dist" "s3://$S3_BUCKET" --recursive --profile "$AWS_PROFILE"
+# dist 폴더로 이동
+cd "$PROJECT_ROOT/dist"
 
+# index.html 내의 __GTM_ID__를 실제 GTM ID로 대체
+sed -i '' "s/__GTM_ID__/$GTM_ID/g" index.html
+
+log "새 빌드 파일 업로드 중: dist -> s3://$S3_BUCKET"
+aws s3 cp . "s3://$S3_BUCKET" --recursive --profile "$AWS_PROFILE"
+
+# CloudFront 캐시 무효화
 if [[ -n "$CLOUDFRONT_DISTRIBUTION_ID" ]]; then
     log "CloudFront 캐시 무효화 중: $CLOUDFRONT_DISTRIBUTION_ID"
     INVALIDATION_ID=$(aws cloudfront create-invalidation \
