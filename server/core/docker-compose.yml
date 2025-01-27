@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: local_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: local_user
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: step_journey_local
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d/
+volumes:
+  db_data:

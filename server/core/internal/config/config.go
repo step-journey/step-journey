@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"server/internal/flags"
-	"strconv"
 	"time"
 
 	"github.com/knadh/koanf/parsers/yaml"
@@ -86,26 +85,13 @@ func (c *AppConfig) ToDBConfig() (DBConfig, error) {
 
 	envName := os.Getenv(flags.EnvVarEnvironment)
 	if envName == "" || envName == "local" {
-		// local 환경 (.env 파일 사용)
-		dbCfg.User = os.Getenv("LOCAL_DB_USER")
-		dbCfg.Password = os.Getenv("LOCAL_DB_PASSWORD")
-		dbCfg.DBName = os.Getenv("LOCAL_DB_NAME")
-		dbCfg.Host = os.Getenv("LOCAL_DB_HOST")
-		portStr := os.Getenv("LOCAL_DB_PORT")
-
-		// 포트 변환
-		p, err := strconv.Atoi(portStr)
-		if err != nil {
-			return DBConfig{}, errors.Wrapf(err, "[ToDBConfig] invalid LOCAL_DB_PORT (%s)", portStr)
-		}
-
-		dbCfg.Port = p
+		// local 환경
+		dbCfg.User = "local_user"
+		dbCfg.Password = "1234"
+		dbCfg.DBName = "step_journey_local"
+		dbCfg.Host = "localhost"
+		dbCfg.Port = 5432
 		dbCfg.SSLMode = "disable"
-
-		log.Info().
-			Str("user", dbCfg.User).
-			Msg("[ToDBConfig] Using local .env (SSLMode=disable)")
-
 	} else {
 		// ECS 환경 (Secrets Manager)
 
