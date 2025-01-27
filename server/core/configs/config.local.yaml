@@ -1,5 +1,4 @@
 server:
-  port: 3000
-database:
-  user: "postgres_local"
-  password: "pass_local"
+  port: 8000
+  read_timeout_seconds: 5
+  write_timeout_seconds: 10

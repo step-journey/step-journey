@@ -4,7 +4,7 @@ all: dev-run
 
 dev-run: build
 	@echo "[Makefile] Build done. Now running..."
-	./bin/step-journey serve
+	ENVIRONMENT=local ./bin/step-journey --env=local serve
 
 build:
 	@echo "[Makefile] Building..."
@@ -12,7 +12,7 @@ build:
 
 run:
 	@echo "[Makefile] Running..."
-	./bin/step-journey serve
+	ENVIRONMENT=local ./bin/step-journey --env=local serve
 
 test:
 	@echo "[Makefile] Testing..."

@@ -2,8 +2,8 @@
 
 # 예시: golang-migrate CLI를 통해 마이그레이션을 실행하는 스크립트
 
-# 사용 예: ./scripts/migration.sh up
-#        ./scripts/migration.sh down
+# 사용 예: ./_scripts/migration.sh up
+#        ./_scripts/migration.sh down
 
 DIRECTION=$1
 if [ -z "$DIRECTION" ]; then

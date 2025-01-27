@@ -11,6 +11,11 @@ import (
 func InitLogger(env string) {
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
+	// 타임스탬프 함수를 UTC 고정
+	zerolog.TimestampFunc = func() time.Time {
+		return time.Now().UTC()
+	}
+
 	var level zerolog.Level
 	switch env {
 	case "prod":
@@ -31,5 +36,5 @@ func InitLogger(env string) {
 			},
 		)
 	}
-	log.Info().Msgf("로깅 레벨: %s (env=%s)", level.String(), env)
+	log.Info().Msgf("[InitLogger] Logging Level: %s (env=%s)", level.String(), env)
 }

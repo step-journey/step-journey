@@ -29,6 +29,7 @@ func newUpCommand() *cli.Command {
 			envFile := c.String(flags.FlagEnvFile)
 			envName := c.String(flags.FlagEnv)
 
+			// Load config
 			cfg, err := config.LoadConfig(cfgFile, envName, envFile)
 			if err != nil {
 				return errors.Wrapf(err,
@@ -36,9 +37,17 @@ func newUpCommand() *cli.Command {
 					cfgFile, envName, envFile)
 			}
 
-			connStr := config.GetDBConnString(cfg.ToDBConfig())
+			// Build DBConfig
+			dbCfg, err := cfg.ToDBConfig()
+			if err != nil {
+				return errors.Wrap(err, "[migrateUp] ToDBConfig failed")
+			}
 
-			if err := db.MigrateDB(connStr, "migrations", "up"); err != nil {
+			// Get connection string
+			connStr := config.GetDBConnString(dbCfg)
+
+			// Migrate Up
+			if err := db.MigrateDB(connStr, "up"); err != nil {
 				return errors.Wrapf(err,
 					"[migrateUp] MigrateDB failed (connStr=%s)", connStr)
 			}
@@ -56,6 +65,7 @@ func newDownCommand() *cli.Command {
 			envFile := c.String(flags.FlagEnvFile)
 			envName := c.String(flags.FlagEnv)
 
+			// Load config
 			cfg, err := config.LoadConfig(cfgFile, envName, envFile)
 			if err != nil {
 				return errors.Wrapf(err,
@@ -63,9 +73,17 @@ func newDownCommand() *cli.Command {
 					cfgFile, envName, envFile)
 			}
 
-			connStr := config.GetDBConnString(cfg.ToDBConfig())
+			// Build DBConfig
+			dbCfg, err := cfg.ToDBConfig()
+			if err != nil {
+				return errors.Wrap(err, "[migrateDown] ToDBConfig failed")
+			}
 
-			if err := db.MigrateDB(connStr, "migrations", "down"); err != nil {
+			// Get connection string
+			connStr := config.GetDBConnString(dbCfg)
+
+			// Migrate down
+			if err := db.MigrateDB(connStr, "down"); err != nil {
 				return errors.Wrapf(err,
 					"[migrateDown] MigrateDB failed (connStr=%s)", connStr)
 			}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 이 스크립트는 packet-journey/server/scripts 디렉토리에 위치한다고 가정
+# 이 스크립트는 packet-journey/server/_scripts 디렉토리에 위치한다고 가정
 # 실행 시, 프로젝트 루트(../)로 이동한 뒤 tree 구조와 특정 확장자의 파일들을
 # 하나의 파일(all_merged_files.txt)로 합쳐서 server 디렉토리에 생성함
 #
@@ -44,7 +44,7 @@ find . \
   -type f | sort | while read -r file
 do
   # 상대 경로에서 "./"를 제거하고 앞에 "server/"를 붙임
-  # 예: ./scripts/migration.sh -> server/scripts/migration.sh
+  # 예: ./_scripts/migration.sh -> server/_scripts/migration.sh
 
   relative_path="$CURRENT_DIR/${file#./}"
 

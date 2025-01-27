@@ -1,6 +1,4 @@
 server:
-  port: 80
-database:
-  user: "postgres_prod"
-  password: "pass_prod"
-  sslmode: "require"
+  port: 8000
+  read_timeout_seconds: 5
+  write_timeout_seconds: 10

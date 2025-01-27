@@ -1,77 +1,29 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/joho/godotenv"
 	"net/http"
+	"net/url"
 	"os"
-	"strings"
+	"server/internal/flags"
+	"strconv"
 	"time"
 
 	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
-// AppConfig ...
 type AppConfig struct {
 	Server struct {
 		Port                int `koanf:"port"`
 		ReadTimeoutSeconds  int `koanf:"read_timeout_seconds"`
 		WriteTimeoutSeconds int `koanf:"write_timeout_seconds"`
 	} `koanf:"server"`
-
-	Database struct {
-		Host     string `koanf:"host"`
-		Port     int    `koanf:"port"`
-		User     string `koanf:"user"`
-		Password string `koanf:"password"`
-		DBName   string `koanf:"dbname"`
-		SSLMode  string `koanf:"sslmode"`
-	} `koanf:"database"`
-}
-
-func LoadConfig(baseFile, envName, envFile string) (*AppConfig, error) {
-	k := koanf.New(".")
-
-	if err := k.Load(file.Provider(baseFile), yaml.Parser()); err != nil {
-		return nil, errors.Wrapf(err, "[LoadConfig] base config load failed (baseFile=%s)", baseFile)
-	}
-
-	if envName == "" {
-		envName = "local"
-	}
-	envFilePath := fmt.Sprintf("./configs/config.%s.yaml", envName)
-	if _, err := os.Stat(envFilePath); err == nil {
-		if loadErr := k.Load(file.Provider(envFilePath), yaml.Parser()); loadErr != nil {
-			return nil, errors.Wrapf(loadErr,
-				"[LoadConfig] env-specific config load failed (env=%s, file=%s)",
-				envName, envFilePath)
-		}
-		log.Debug().Msgf("[LoadConfig] Merged environment config: %s", envFilePath)
-	} else {
-		log.Debug().Msgf("[LoadConfig] No env config file found for env=%s (checked %s)", envName, envFilePath)
-	}
-
-	if envFile != "" {
-		log.Debug().Msgf("[LoadConfig] Optionally read .env file at: %s (not implemented)", envFile)
-	}
-
-	if err := k.Load(env.Provider("APP_", ".", func(s string) string {
-		return strings.Replace(strings.ToLower(strings.TrimPrefix(s, "APP_")), "_", ".", -1)
-	}), nil); err != nil {
-		return nil, errors.Wrap(err, "[LoadConfig] env.Provider load failed (prefix=APP_)")
-	}
-
-	var cfg AppConfig
-	if err := k.Unmarshal("", &cfg); err != nil {
-		return nil, errors.Wrap(err, "[LoadConfig] unmarshal to AppConfig failed")
-	}
-
-	log.Debug().Msgf("[LoadConfig] Final merged config: %#v", k.All())
-	return &cfg, nil
 }
 
 type DBConfig struct {
@@ -83,21 +35,123 @@ type DBConfig struct {
 	SSLMode  string
 }
 
-func (c *AppConfig) ToDBConfig() DBConfig {
-	return DBConfig{
-		Host:     c.Database.Host,
-		Port:     c.Database.Port,
-		User:     c.Database.User,
-		Password: c.Database.Password,
-		DBName:   c.Database.DBName,
-		SSLMode:  c.Database.SSLMode,
+func LoadConfig(baseFile, envName, envFile string) (*AppConfig, error) {
+	k := koanf.New(".")
+
+	if err := k.Load(file.Provider(baseFile), yaml.Parser()); err != nil {
+		return nil, errors.Wrapf(err, "[LoadConfig] base config load failed (baseFile=%s)", baseFile)
 	}
+
+	// 기본 envName 없으면 "local"로
+	if envName == "" {
+		envName = "local"
+	}
+	envFilePath := fmt.Sprintf("./configs/config.%s.yaml", envName)
+	if _, err := os.Stat(envFilePath); err == nil {
+		if loadErr := k.Load(file.Provider(envFilePath), yaml.Parser()); loadErr != nil {
+			return nil, errors.Wrapf(loadErr,
+				"[LoadConfig] env-specific config load failed (env=%s, file=%s)",
+				envName, envFilePath)
+		}
+		log.Info().Msgf("[LoadConfig] Merged environment config: %s", envFilePath)
+	} else {
+		log.Error().Msgf("[LoadConfig] No env config file found for env=%s (checked %s)", envName, envFilePath)
+	}
+
+	// .env 파일 로드 (원한다면, envFile 인자 사용 가능)
+	if envName == "local" {
+		// local 환경이라면 .env 로부터 로드 (오류 무시)
+		godotenv.Load(".env")
+	}
+
+	var cfg AppConfig
+	if err := k.Unmarshal("", &cfg); err != nil {
+		return nil, errors.Wrap(err, "[LoadConfig] unmarshal to AppConfig failed")
+	}
+
+	if rawAll := k.All(); rawAll != nil {
+		// MarshalIndent 로 보기 좋은 JSON 문자열 만들기
+		if configJSON, err := json.MarshalIndent(rawAll, "", "  "); err == nil {
+			log.Info().Msgf("[LoadConfig] Final merged config:\n%s", string(configJSON))
+		} else {
+			log.Info().Msgf("[LoadConfig] Final merged config: %#v", rawAll)
+		}
+	}
+
+	return &cfg, nil
+}
+
+func (c *AppConfig) ToDBConfig() (DBConfig, error) {
+	var dbCfg DBConfig
+
+	envName := os.Getenv(flags.EnvVarEnvironment)
+	if envName == "" || envName == "local" {
+		// local 환경 (.env 파일 사용)
+		dbCfg.User = os.Getenv("LOCAL_DB_USER")
+		dbCfg.Password = os.Getenv("LOCAL_DB_PASSWORD")
+		dbCfg.DBName = os.Getenv("LOCAL_DB_NAME")
+		dbCfg.Host = os.Getenv("LOCAL_DB_HOST")
+		portStr := os.Getenv("LOCAL_DB_PORT")
+
+		// 포트 변환
+		p, err := strconv.Atoi(portStr)
+		if err != nil {
+			return DBConfig{}, errors.Wrapf(err, "[ToDBConfig] invalid LOCAL_DB_PORT (%s)", portStr)
+		}
+
+		dbCfg.Port = p
+		dbCfg.SSLMode = "disable"
+
+		log.Info().
+			Str("user", dbCfg.User).
+			Msg("[ToDBConfig] Using local .env (SSLMode=disable)")
+
+	} else {
+		// ECS 환경 (Secrets Manager)
+
+		// 1) username/password
+		secretValue := os.Getenv(flags.EnvVarDbUserCredential)
+		if secretValue == "" {
+			return DBConfig{}, errors.Errorf("[ToDBConfig] missing env var: %s", flags.EnvVarDbUserCredential)
+		}
+		var secretData struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+		if err := json.Unmarshal([]byte(secretValue), &secretData); err != nil {
+			return DBConfig{}, errors.Wrap(err, "[ToDBConfig] failed to parse DB_USER_CREDENTIAL JSON")
+		}
+		dbCfg.User = secretData.Username
+		dbCfg.Password = secretData.Password
+
+		// 2) host, port, dbname
+		connectionInfoValue := os.Getenv(flags.EnvVarDbConnectionInfo)
+		if connectionInfoValue == "" {
+			return DBConfig{}, errors.Errorf("[ToDBConfig] missing env var: %s", flags.EnvVarDbConnectionInfo)
+		}
+		var connectionInfo struct {
+			Host   string `json:"host"`
+			Port   int    `json:"port"`
+			DBName string `json:"dbname"`
+		}
+		if err := json.Unmarshal([]byte(connectionInfoValue), &connectionInfo); err != nil {
+			return DBConfig{}, errors.Wrap(err, "[ToDBConfig] failed to parse DB_CONNECTION_INFO JSON")
+		}
+		dbCfg.Host = connectionInfo.Host
+		dbCfg.Port = connectionInfo.Port
+		dbCfg.DBName = connectionInfo.DBName
+
+		dbCfg.SSLMode = "disable"
+	}
+
+	return dbCfg, nil
 }
 
 func GetDBConnString(d DBConfig) string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		d.User, d.Password, d.Host, d.Port, d.DBName, d.SSLMode,
-	)
+	user := url.QueryEscape(d.User)
+	pass := url.QueryEscape(d.Password)
+	return fmt.Sprintf("pgx://%s:%s@%s:%d/%s?sslmode=%s",
+		user, pass, d.Host, d.Port, d.DBName, d.SSLMode)
 }
 
 func NewServer(port int, handler http.Handler, readTimeout, writeTimeout time.Duration) *http.Server {

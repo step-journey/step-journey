@@ -25,14 +25,14 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Error().Err(err).Msg("CLI run error")
+		log.Error().Err(err).Msg("[main] CLI run error")
 		os.Exit(1)
 	}
 }
 
 // CLI 시작 전에 공통적으로 실행할 로직
 func initializeApp(c *cli.Context) error {
-	env := c.String(flags.FlagEnv)
+	env := os.Getenv(flags.EnvVarEnvironment)
 	logger.InitLogger(env)
 	return nil
 }

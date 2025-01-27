@@ -1,0 +1,6 @@
+.git
+.vscode
+.idea
+bin/
+node_modules/
+*.local

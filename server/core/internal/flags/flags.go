@@ -3,6 +3,15 @@ package flags
 import "github.com/urfave/cli/v2"
 
 const (
+
+	// ECS Task Definition 에 정의된 환경변수
+
+	EnvVarEnvironment      = "ENVIRONMENT"
+	EnvVarDbUserCredential = "DB_USER_CREDENTIAL"
+	EnvVarDbConnectionInfo = "DB_CONNECTION_INFO"
+
+	// CLI 플래그 관련 상수
+
 	FlagEnv     = "env"
 	FlagConfig  = "config-file"
 	FlagEnvFile = "env-file"
