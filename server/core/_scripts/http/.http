@@ -1,0 +1,2 @@
+### HealthCheck
+GET {{host}}/health
