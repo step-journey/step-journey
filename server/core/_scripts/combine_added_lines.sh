@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 #
-# 목적:
 # 1) Git 루트로 이동하여, "커밋되지 않은(Tracked) 변경"을 가져온다.
 # 2) 그중 server/core/ 내부 파일만 필터링한다.
 # 3) diff에서 실제 추가(+)된 코드 라인만 추출해, server/core/_scripts/combined_added_lines.txt 에 모은다.

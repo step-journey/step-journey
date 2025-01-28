@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 #
-# 이 스크립트는 실제 .git 이 있는 프로젝트 루트(예: packet-journey)로 이동한 뒤,
-# "커밋되지 않은 (Tracked) 변경 파일" 중 server/core/ 내부에 있는 파일만 하나의 파일로 합쳐
-# server/core/_scripts/combined_changed.txt 에 생성합니다.
-# 프로젝트 구조 출력 시에는 server/core 디렉토리만 tree 를 사용합니다.
+# 1) Git 루트(프로젝트 최상위)로 이동한다.
+# 2) "커밋되지 않은(Tracked) 변경" 파일 목록을 얻는다(스테이징 + 비스테이징).
+# 3) 그 중 server/core 폴더 내부(`server/core/`)에 있는 파일만 추려낸다.
+# 4) 특정 확장자(Dockerfile, *.go 등)에 해당한다면
+#    모두 합쳐서 server/core/_scripts/combined_changed.txt 에 저장한다.
+# 5) 병합 전, server/core 디렉토리 구조와 간단한 프로젝트 정보를 파일 상단에 기록한다.
 #
 
 set -e
