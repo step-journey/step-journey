@@ -50,10 +50,10 @@ echo "" >> "$OUTPUT_FILE"
 ##############################################
 # 5) 코딩 원칙 삽입
 ##############################################
-echo "# Coding Principles:" >> "$OUTPUT_FILE"
-cat server/core/_scripts/CODING_RULES_FOR_PROMPT.md >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
+#echo "# Coding Principles:" >> "$OUTPUT_FILE"
+#cat server/core/_scripts/CODING_RULES_FOR_PROMPT.md >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
 
 ##############################################
 # 6) "커밋되지 않은 (Tracked) 변경 파일" 수집

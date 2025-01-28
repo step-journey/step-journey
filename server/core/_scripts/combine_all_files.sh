@@ -48,10 +48,10 @@ echo "" >> "$OUTPUT_FILE"
 ##############################################
 # 4) 코딩 원칙 삽입
 ##############################################
-echo "# Coding Principles:" >> "$OUTPUT_FILE"
-cat ./_scripts/CODING_RULES_FOR_PROMPT.md >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
+#echo "# Coding Principles:" >> "$OUTPUT_FILE"
+#cat ./_scripts/CODING_RULES_FOR_PROMPT.md >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
 
 ##############################################
 # 5) 전체 프로젝트 소스코드 병합
