@@ -8,10 +8,10 @@ interface Props {
 }
 
 export function JourneyHeader({
-  isDarkMode,
-  onToggleDarkMode,
+  // isDarkMode,
+  // onToggleDarkMode,
   onOpenMap,
-  onNavigateAbout,
+  // onNavigateAbout,
 }: Props) {
   return (
     <div
@@ -31,12 +31,12 @@ export function JourneyHeader({
       <Button variant="ghost" size="default" onClick={onOpenMap}>
         지도 (m)
       </Button>
-      <Button variant="ghost" size="default" onClick={onToggleDarkMode}>
-        {isDarkMode ? "Light Mode" : "Dark Mode"}
-      </Button>
-      <Button variant="ghost" size="default" onClick={onNavigateAbout}>
-        About
-      </Button>
+      {/*<Button variant="ghost" size="default" onClick={onToggleDarkMode}>*/}
+      {/*  {isDarkMode ? "Light Mode" : "Dark Mode"}*/}
+      {/*</Button>*/}
+      {/*<Button variant="ghost" size="default" onClick={onNavigateAbout}>*/}
+      {/*  About*/}
+      {/*</Button>*/}
     </div>
   );
 }
