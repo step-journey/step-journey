@@ -1,28 +1,36 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 import LoginModal from "./LoginModal";
 
-/**
- * 메인화면 (Reddit 메인화면과 유사한 3-컬럼 구조)
- * 좌측 사이드바 / 중앙 본문 / 우측 사이드바
- * 안의 컨텐츠는 비어있는 상태로만 두었습니다.
- */
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+import PATH from "@/constants/path";
+
 export default function HomePage() {
   // 로그인 모달 열림 여부
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  // 로그인 모달 열기/닫기 함수
+  // 모달 열고 닫는 함수
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
+
+  // 페이지 이동용 훅
+  const navigate = useNavigate();
+
+  // Card 클릭 시 이동
+  const handleCardClick = () => {
+    navigate(PATH.JOURNEY);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* 상단 Header */}
       <Header onClickLogin={openLoginModal} />
 
-      {/* 본문 3-컬럼: 좌/중앙/우 */}
+      {/* 기존 3-컬럼 구조 */}
       <div className="flex flex-1 bg-background text-foreground">
-        {/* 좌측 사이드바 (예: Reddit의 Home/Popular/Explore...) */}
+        {/* 좌측 사이드바 (기존 내용 그대로) */}
         <aside className="hidden md:flex flex-col w-60 border-r border-border p-4">
           <nav className="space-y-4">
             <div className="text-sm font-semibold">Home</div>
@@ -52,14 +60,26 @@ export default function HomePage() {
           </nav>
         </aside>
 
-        {/* 중앙 본문 (현재는 비어있는 상태) */}
+        {/* 중앙 본문 */}
         <main className="flex-1 p-4">
           {/* 추후 이곳에 메인 피드/게시물 목록이 들어갈 예정 */}
+
+          <Card
+            className="cursor-pointer max-w-xs mb-4"
+            onClick={handleCardClick}
+          >
+            <CardHeader>
+              <CardTitle>Google Search Journey</CardTitle>
+            </CardHeader>
+            <CardContent>구글 검색 처리 과정</CardContent>
+          </Card>
+
+          {/* 여기에 다른 본문 내용(게시물 목록 등) 추가 가능 */}
         </main>
 
-        {/* 우측 사이드바 (현재는 비어있는 상태) */}
+        {/* 우측 사이드바 */}
         <aside className="hidden lg:flex flex-col w-64 border-l border-border p-4">
-          {/* 예: Reddit의 광고, 추천, 인기글, 커뮤니티 정보 등 */}
+          {/* 우측 광고/추천/인기글 등 공간 */}
         </aside>
       </div>
 
