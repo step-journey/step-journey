@@ -7,6 +7,7 @@ interface Props {
   setGlobalIndex: (val: number) => void;
   goPrev: () => void;
   goNext: () => void;
+  totalSteps: number; // 전체 단계 수
 }
 
 export function JourneyFooter({
@@ -14,8 +15,9 @@ export function JourneyFooter({
   setGlobalIndex,
   goPrev,
   goNext,
+  totalSteps,
 }: Props) {
-  // Slider onChange
+  // 슬라이더 onChange
   const handleSliderChange = (val: number[]) => {
     setGlobalIndex(val[0]);
   };
@@ -34,11 +36,13 @@ export function JourneyFooter({
       {/* 슬라이더 (flex-1) */}
       <Slider
         className="flex-1"
-        max={200} // 실제 flattenSteps.length - 1 써도 되고, props로 받으셔도 됩니다.
+        // max를 totalSteps - 1로 설정 → 0~(총개수-1)
+        max={totalSteps - 1}
         value={[globalIndex]}
         onValueChange={handleSliderChange}
         onPointerUp={handleSliderPointerUp}
       />
+
       {/* Prev / Next 버튼 */}
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={goPrev}>
@@ -50,10 +54,10 @@ export function JourneyFooter({
           <IconPlayerTrackNext className="ml-1" size={16} />
         </Button>
       </div>
-      {/* Step 표시 (한 줄 표시) */}
+
+      {/* Step 표시 */}
       <span className="w-20 whitespace-nowrap text-right text-sm text-gray-500">
-        Step {globalIndex + 1} / 200
-        {/* 실제론 flattenSteps.length 사용 */}
+        Step {globalIndex + 1} / {totalSteps}
       </span>
     </div>
   );

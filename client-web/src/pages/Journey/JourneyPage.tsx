@@ -18,6 +18,9 @@ export default function JourneyPage() {
   // 현재 스텝 (flattenSteps 에서 globalIndex 로 추출)
   const currentStep = flattenSteps[globalIndex];
 
+  // 전체 스텝 개수
+  const totalSteps = flattenSteps.length;
+
   // 그룹(Phase) 펼침/접힘 상태
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
@@ -38,7 +41,7 @@ export default function JourneyPage() {
   // Prev / Next 핸들러
   const goPrev = () => setGlobalIndex((prev) => Math.max(0, prev - 1));
   const goNext = () =>
-    setGlobalIndex((prev) => Math.min(prev + 1, flattenSteps.length - 1));
+    setGlobalIndex((prev) => Math.min(prev + 1, totalSteps - 1));
 
   // 키보드 단축키 등록 (m키 지도, 방향키 Prev/Next 등)
   useEffect(() => {
@@ -99,6 +102,7 @@ export default function JourneyPage() {
           setGlobalIndex={setGlobalIndex}
           goPrev={goPrev}
           goNext={goNext}
+          totalSteps={totalSteps}
         />
       </div>
 
