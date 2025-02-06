@@ -23,6 +23,12 @@ OUTPUT_FILE="server/core/_scripts/combined_added_lines.txt"
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 rm -f "$OUTPUT_FILE"
 
+# 구현시 주의사항
+echo "# StepJourney Golang Server 구현시 주의사항:" >> "$OUTPUT_FILE"
+echo "- 너의 답변의 코드를 그대로 복사하여 붙여넣어서 prod 배포할 예정이므로 주석으로 생략하는 부분 없이 완전한 코드로 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
+echo "- 구현을 위해 조금이라도 수정이 된 파일은 해당 파일의 전체 코드를 완전하게 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
 ##############################################
 # 2) (선택) server/core 트리 구조 등 정보 출력
 ##############################################
