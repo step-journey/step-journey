@@ -17,4 +17,12 @@ const (
 	EnvLocal = "local"
 	EnvDev   = "dev"
 	EnvProd  = "prod"
+
+	// local 환경 OAuth 환경 변수 Key (.env 파일)
+	EnvKeyOauthGoogleClientID     = "OAUTH_GOOGLE_CLIENT_ID"
+	EnvKeyOauthGoogleClientSecret = "OAUTH_GOOGLE_CLIENT_SECRET"
+	EnvKeyOauthNaverClientID      = "OAUTH_NAVER_CLIENT_ID"
+	EnvKeyOauthNaverClientSecret  = "OAUTH_NAVER_CLIENT_SECRET"
+	EnvKeyOauthKakaoRestApiKey    = "OAUTH_KAKAO_REST_API_KEY"
+	EnvKeyOauthKakaoClientSecret  = "OAUTH_KAKAO_CLIENT_SECRET"
 )
