@@ -3,9 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"server/internal/service"
 
 	"github.com/rs/zerolog/log"
-	"server/internal/service"
 )
 
 type UserHandler struct {
@@ -14,17 +14,6 @@ type UserHandler struct {
 
 func NewUserHandler(svc *service.UserService) *UserHandler {
 	return &UserHandler{userSvc: svc}
-}
-
-func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		h.ListUsers(w, r)
-	case http.MethodPost:
-		h.CreateUser(w, r)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	}
 }
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
@@ -57,4 +46,28 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+func (h *UserHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
+	// AuthMiddleware 에서 "userID"를 context 에 넣어 줌
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok || userID <= 0 {
+		http.Error(w, "Unauthorized (invalid context)", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.userSvc.FindByID(r.Context(), userID)
+	if err != nil {
+		log.Error().Err(err).Msgf("[HandleMe] cannot find user by ID=%d", userID)
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	resp := map[string]interface{}{
+		"id":    user.ID,
+		"name":  user.Nickname, // 예) nickname 을 클라이언트에 name 으로 내려줌
+		"email": user.Email,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }

@@ -10,7 +10,9 @@ import (
 	"server/internal/db"
 	"server/internal/flags"
 	"server/internal/handler"
+	"server/internal/middleware"
 	"server/internal/repository"
+	"server/internal/router"
 	"server/internal/service"
 	"syscall"
 	"time"
@@ -40,10 +42,17 @@ func NewCommand() *cli.Command {
 func runServer(c *cli.Context) error {
 	envName := os.Getenv(flags.EnvVarEnvironment)
 	cfgFile := c.String(flags.FlagConfig)
-	// Load config
+
+	// App Config 로드
 	cfg, err := config.LoadConfig(cfgFile, envName)
 	if err != nil {
 		return pkgerrors.Wrapf(err, "[runServer] LoadConfig failed (file=%s, env=%s)", cfgFile, envName)
+	}
+
+	// OAuthSecrets 로드
+	oAuthSecrets, err := config.GetOAuthSecrets()
+	if err != nil {
+		return pkgerrors.Wrap(err, "[runServer] failed to get OAuthSecrets")
 	}
 
 	// DB 연결
@@ -65,26 +74,42 @@ func runServer(c *cli.Context) error {
 			dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.DBName)
 	}
 
-	// 자동 마이그레이션
+	// DB 마이그레이션
 	if err := db.MigrateDB(connStr, "up"); err != nil {
 		return pkgerrors.Wrapf(err, "[runServer] failed to auto-migrate on server start")
 	}
 
-	// 리포지토리 생성
+	// 리포지토리 & 서비스
 	userRepo := repository.NewPostgresUserRepository(dbConn)
 	userSvc := service.NewUserService(userRepo)
 
+	refreshTokenRepo := repository.NewPostgresRefreshTokenRepo(dbConn)
+	jwtManager := service.NewJWTManager()
+	authService := service.NewAuthService(oAuthSecrets, userRepo, refreshTokenRepo, jwtManager)
+
+	// 미들웨어
+	authMw := middleware.NewAuthMiddleware(jwtManager, refreshTokenRepo, userRepo)
+
+	// 핸들러
 	userHandler := handler.NewUserHandler(userSvc)
 	healthHandler := handler.NewHealthHandler()
+	authHandler := handler.NewAuthHandler(authService)
 
-	mux := http.NewServeMux()
-	mux.Handle("/health", healthHandler)
-	mux.Handle("/", userHandler)
+	rCfg := router.Config{
+		AuthHandler:    authHandler,
+		HealthHandler:  healthHandler,
+		UserHandler:    userHandler,
+		AuthMiddleware: authMw,
+	}
+	mux := router.NewRouter(rCfg)
+
+	// CORS 미들웨어 적용
+	corsWrapped := middleware.NewCORSMiddleware()(mux)
 
 	// HTTP 서버 생성
 	httpSrv := config.NewServer(
 		cfg.Server.Port,
-		mux,
+		corsWrapped,
 		cfg.ServerReadTimeout(),
 		cfg.ServerWriteTimeout(),
 	)
