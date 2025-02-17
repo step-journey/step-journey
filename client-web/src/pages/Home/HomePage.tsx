@@ -1,36 +1,105 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import Header from "./Header";
 import LoginModal from "./LoginModal";
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-
 import PATH from "@/constants/path";
+
+/**
+ * 간단한 User 타입 예시. 실제로는 서버 응답에 맞춰 구조를 수정하세요.
+ */
+interface User {
+  name: string;
+  email: string;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function HomePage() {
   // 로그인 모달 열림 여부
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  // 모달 열고 닫는 함수
+  // 유저 정보 (null이면 비로그인 상태)
+  const [user, setUser] = useState<User | null>(null);
+
+  const navigate = useNavigate();
+  const didFetchUser = useRef(false); // 한 번만 호출하도록 플래그
+
+  // ---------------------------
+  // 1) 초기 로딩 시 유저 정보 가져오기
+  // ---------------------------
+  useEffect(() => {
+    if (didFetchUser.current) return;
+    didFetchUser.current = true;
+
+    const fetchUser = async () => {
+      try {
+        const resp = await fetch(`${API_URL}/users/me`, {
+          credentials: "include",
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          setUser({
+            name: data.name,
+            email: data.email,
+          });
+        } else {
+          // 401 등 에러 -> 비로그인 처리
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user info:", err);
+        setUser(null);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // ---------------------------
+  // 2) 로그인 / 로그아웃
+  // ---------------------------
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
 
-  // 페이지 이동용 훅
-  const navigate = useNavigate();
+  // 로그아웃 시, 서버의 로그아웃 엔드포인트를 호출하여 쿠키에 설정된 access_token과 refresh_token을 삭제한 후,
+  // 클라이언트 상태에서 user를 null로 업데이트합니다.
+  const handleLogout = async () => {
+    try {
+      const resp = await fetch(`${API_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!resp.ok) {
+        console.error("Logout API call failed with status", resp.status);
+      }
+    } catch (err) {
+      console.error("Logout API call failed:", err);
+    } finally {
+      setUser(null);
+    }
+  };
 
-  // Card 클릭 시 이동
+  // ---------------------------
+  // 3) Card 클릭 시 Journey 이동
+  // ---------------------------
   const handleCardClick = () => {
     navigate(PATH.JOURNEY);
   };
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* 상단 Header */}
-      <Header onClickLogin={openLoginModal} />
+      {/* 상단 Header: user, onClickLogin, onClickLogout 전달 */}
+      <Header
+        user={user}
+        onClickLogin={openLoginModal}
+        onClickLogout={handleLogout}
+      />
 
-      {/* 기존 3-컬럼 구조 */}
+      {/* 메인 레이아웃 (좌 사이드바 - 중앙 본문 - 우 사이드바) */}
       <div className="flex flex-1 bg-background text-foreground">
-        {/* 좌측 사이드바 (기존 내용 그대로) */}
+        {/* 좌측 사이드바 */}
         <aside className="hidden md:flex flex-col w-60 border-r border-border p-4">
           <nav className="space-y-4">
             <div className="text-sm font-semibold">Home</div>
@@ -62,8 +131,6 @@ export default function HomePage() {
 
         {/* 중앙 본문 */}
         <main className="flex-1 p-4">
-          {/* 추후 이곳에 메인 피드/게시물 목록이 들어갈 예정 */}
-
           <Card
             className="cursor-pointer max-w-xs mb-4"
             onClick={handleCardClick}
@@ -73,14 +140,10 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>구글 검색 처리 과정</CardContent>
           </Card>
-
-          {/* 여기에 다른 본문 내용(게시물 목록 등) 추가 가능 */}
         </main>
 
         {/* 우측 사이드바 */}
-        <aside className="hidden lg:flex flex-col w-64 border-l border-border p-4">
-          {/* 우측 광고/추천/인기글 등 공간 */}
-        </aside>
+        <aside className="hidden lg:flex flex-col w-64 border-l border-border p-4"></aside>
       </div>
 
       {/* 로그인 모달 */}

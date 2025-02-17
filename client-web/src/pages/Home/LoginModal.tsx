@@ -8,16 +8,26 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-/**
- * 로그인 모달
- * Google, Kakao, Naver, Email 로그인 버튼을 노출
- */
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_URL}/auth/google/login`;
+  };
+
+  const handleKakaoLogin = () => {
+    window.location.href = `${API_URL}/auth/kakao/login`;
+  };
+
+  const handleNaverLogin = () => {
+    window.location.href = `${API_URL}/auth/naver/login`;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -25,12 +35,18 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <DialogTitle className="text-lg">소셜 로그인</DialogTitle>
         </DialogHeader>
 
-        {/* 실제 로그인 로직은 추후 추가 예정이므로 버튼만 배치 */}
         <div className="flex flex-col gap-3 mt-2">
-          <Button variant="outline">Google 계정으로 로그인</Button>
-          <Button variant="outline">Kakao 계정으로 로그인</Button>
-          <Button variant="outline">Naver 계정으로 로그인</Button>
-          <Button variant="outline">이메일로 로그인</Button>
+          <Button variant="outline" onClick={handleGoogleLogin}>
+            Google 계정으로 로그인
+          </Button>
+
+          <Button variant="outline" onClick={handleKakaoLogin}>
+            Kakao 계정으로 로그인
+          </Button>
+
+          <Button variant="outline" onClick={handleNaverLogin}>
+            Naver 계정으로 로그인
+          </Button>
         </div>
 
         <DialogFooter className="mt-4">
