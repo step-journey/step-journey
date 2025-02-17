@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"server/internal/config"
 	"server/internal/model"
 	"server/internal/repository"
@@ -18,6 +17,7 @@ import (
 )
 
 type AuthService struct {
+	cfg              *config.AppConfig
 	httpClient       *http.Client
 	oAuthSecrets     *config.OAuthSecrets
 	userRepo         repository.UserRepository
@@ -26,12 +26,14 @@ type AuthService struct {
 }
 
 func NewAuthService(
+	cfg *config.AppConfig,
 	oAuthSecrets *config.OAuthSecrets,
 	userRepo repository.UserRepository,
 	refreshTokenRepo repository.RefreshTokenRepository,
 	jwtManager *JWTManager,
 ) *AuthService {
 	return &AuthService{
+		cfg:              cfg,
 		httpClient:       &http.Client{Timeout: 10 * time.Second},
 		oAuthSecrets:     oAuthSecrets,
 		userRepo:         userRepo,
@@ -41,20 +43,15 @@ func NewAuthService(
 }
 
 func (s *AuthService) GetGoogleLoginURL() (string, error) {
-	clientID := s.oAuthSecrets.GoogleClientID
-	if clientID == "" {
+	if s.oAuthSecrets.GoogleClientID == "" {
 		return "", errors.New("[GetGoogleLoginURL] googleClientID is empty")
 	}
-	redirectURI := os.Getenv("GOOGLE_REDIRECT_URL")
-	if redirectURI == "" {
-		redirectURI = "http://localhost:8000/auth/google/callback"
-	}
+	redirectURI := s.cfg.Endpoints.BackendBaseURL + "/api/v1/auth/google/callback"
 	scope := "profile email"
 
-	// URL 빌드
 	u := fmt.Sprintf(
 		"https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&access_type=offline&prompt=select_account",
-		url.QueryEscape(clientID),
+		url.QueryEscape(s.oAuthSecrets.GoogleClientID),
 		url.QueryEscape(redirectURI),
 		url.QueryEscape(scope),
 	)
@@ -62,16 +59,15 @@ func (s *AuthService) GetGoogleLoginURL() (string, error) {
 }
 
 func (s *AuthService) GetKakaoLoginURL() (string, error) {
-	restAPIKey := s.oAuthSecrets.KakaoRestApiKey
-	if restAPIKey == "" {
+	if s.oAuthSecrets.KakaoRestApiKey == "" {
 		return "", errors.New("[GetKakaoLoginURL] kakaoRestApiKey is empty")
 	}
-	redirectURI := "http://localhost:8000/auth/kakao/callback"
+	redirectURI := s.cfg.Endpoints.BackendBaseURL + "/api/v1/auth/kakao/callback"
 	scope := "account_email"
 
 	u := fmt.Sprintf(
 		"https://kauth.kakao.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s",
-		url.QueryEscape(restAPIKey),
+		url.QueryEscape(s.oAuthSecrets.KakaoRestApiKey),
 		url.QueryEscape(redirectURI),
 		url.QueryEscape(scope),
 	)
@@ -79,30 +75,26 @@ func (s *AuthService) GetKakaoLoginURL() (string, error) {
 }
 
 func (s *AuthService) GetNaverLoginURL() (string, error) {
-	clientID := s.oAuthSecrets.NaverClientID
-	if clientID == "" {
+	if s.oAuthSecrets.NaverClientID == "" {
 		return "", errors.New("[GetNaverLoginURL] naverClientID is empty")
 	}
-	redirectURI := os.Getenv("NAVER_REDIRECT_URL")
-	if redirectURI == "" {
-		redirectURI = "http://localhost:8000/auth/naver/callback"
-	}
+	redirectURI := s.cfg.Endpoints.BackendBaseURL + "/api/v1/auth/naver/callback"
 	state := "someRandomState"
 
 	u := fmt.Sprintf(
 		"https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=%s&redirect_uri=%s&state=%s",
-		url.QueryEscape(clientID),
+		url.QueryEscape(s.oAuthSecrets.NaverClientID),
 		url.QueryEscape(redirectURI),
 		url.QueryEscape(state),
 	)
 	return u, nil
 }
 
+// -----------------------------------------------
+// Google OAuth Callback
+// -----------------------------------------------
 func (s *AuthService) ProcessGoogleCallback(ctx context.Context, code string) (*model.User, error) {
-	redirectURI := os.Getenv("GOOGLE_REDIRECT_URL")
-	if redirectURI == "" {
-		redirectURI = "http://localhost:8000/auth/google/callback"
-	}
+	redirectURI := s.cfg.Endpoints.BackendBaseURL + "/api/v1/auth/google/callback"
 
 	tokenURL := "https://oauth2.googleapis.com/token"
 	form := url.Values{}
@@ -140,7 +132,7 @@ func (s *AuthService) ProcessGoogleCallback(ctx context.Context, code string) (*
 	userinfoURL := "https://www.googleapis.com/oauth2/v2/userinfo"
 	req2, err := http.NewRequestWithContext(ctx, "GET", userinfoURL, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "[ProcessGoogleCallback] new request2 failed")
+		return nil, errors.Wrap(err, "[ProcessGoogleCallback] new userinfo request failed")
 	}
 	req2.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
 
@@ -155,7 +147,7 @@ func (s *AuthService) ProcessGoogleCallback(ctx context.Context, code string) (*
 	}
 
 	var googleUser struct {
-		Id      string `json:"id"`
+		ID      string `json:"id"`
 		Email   string `json:"email"`
 		Name    string `json:"name"`
 		Picture string `json:"picture"`
@@ -171,15 +163,14 @@ func (s *AuthService) ProcessGoogleCallback(ctx context.Context, code string) (*
 		nickname = "GoogleUser"
 	}
 
-	user, err := s.upsertUser(ctx, "google", googleUser.Email, nickname, googleUser.Name, googleUser.Picture)
-	if err != nil {
-		return nil, errors.Wrap(err, "[ProcessGoogleCallback] upsertUser failed")
-	}
-	return user, nil
+	return s.upsertUser(ctx, "google", googleUser.Email, nickname, googleUser.Name, googleUser.Picture)
 }
 
+// -----------------------------------------------
+// Kakao OAuth Callback
+// -----------------------------------------------
 func (s *AuthService) ProcessKakaoCallback(ctx context.Context, code string) (*model.User, error) {
-	redirectURI := "http://localhost:8000/auth/kakao/callback"
+	redirectURI := s.cfg.Endpoints.BackendBaseURL + "/api/v1/auth/kakao/callback"
 	tokenURL := "https://kauth.kakao.com/oauth/token"
 
 	data := url.Values{}
@@ -221,7 +212,7 @@ func (s *AuthService) ProcessKakaoCallback(ctx context.Context, code string) (*m
 	userInfoURL := "https://kapi.kakao.com/v2/user/me"
 	req2, err := http.NewRequestWithContext(ctx, "GET", userInfoURL, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "[ProcessKakaoCallback] new request2 failed")
+		return nil, errors.Wrap(err, "[ProcessKakaoCallback] new userinfo request failed")
 	}
 	req2.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
 
@@ -253,18 +244,14 @@ func (s *AuthService) ProcessKakaoCallback(ctx context.Context, code string) (*m
 	name := kakaoResp.KakaoAccount.Profile.Nickname
 	profileImg := kakaoResp.KakaoAccount.Profile.ProfileImg
 
-	user, err := s.upsertUser(ctx, "kakao", email, name, name, profileImg)
-	if err != nil {
-		return nil, errors.Wrap(err, "[ProcessKakaoCallback] upsertUser failed")
-	}
-	return user, nil
+	return s.upsertUser(ctx, "kakao", email, name, name, profileImg)
 }
 
+// -----------------------------------------------
+// Naver OAuth Callback
+// -----------------------------------------------
 func (s *AuthService) ProcessNaverCallback(ctx context.Context, code, state string) (*model.User, error) {
-	redirectURI := os.Getenv("NAVER_REDIRECT_URL")
-	if redirectURI == "" {
-		redirectURI = "http://localhost:8000/auth/naver/callback"
-	}
+	redirectURI := s.cfg.Endpoints.BackendBaseURL + "/api/v1/auth/naver/callback"
 
 	tokenURL := "https://nid.naver.com/oauth2.0/token"
 	data := url.Values{}
@@ -302,7 +289,7 @@ func (s *AuthService) ProcessNaverCallback(ctx context.Context, code, state stri
 	userInfoURL := "https://openapi.naver.com/v1/nid/me"
 	req2, err := http.NewRequestWithContext(ctx, "GET", userInfoURL, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "[ProcessNaverCallback] new request2 failed")
+		return nil, errors.Wrap(err, "[ProcessNaverCallback] new userinfo request failed")
 	}
 	req2.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
 
@@ -338,13 +325,12 @@ func (s *AuthService) ProcessNaverCallback(ctx context.Context, code, state stri
 	}
 	profileImg := naverResp.Response.ProfileImage
 
-	user, err := s.upsertUser(ctx, "naver", email, name, name, profileImg)
-	if err != nil {
-		return nil, errors.Wrap(err, "[ProcessNaverCallback] upsertUser failed")
-	}
-	return user, nil
+	return s.upsertUser(ctx, "naver", email, name, name, profileImg)
 }
 
+// -----------------------------------------------
+// 로그인 성공시 쿠키 세팅
+// -----------------------------------------------
 func (s *AuthService) LoginUserAndSetCookies(w http.ResponseWriter, user *model.User) error {
 	user.VisitsCount++
 	if err := s.userRepo.UpdateUser(context.Background(), user); err != nil {
@@ -357,8 +343,6 @@ func (s *AuthService) LoginUserAndSetCookies(w http.ResponseWriter, user *model.
 	}
 	expireTime := time.Now().Add(s.jwtManager.RefreshTokenTTL)
 
-	// 변경 전: s.refreshTokenRepo.SaveRefreshToken(ctx, user.ID, refreshTokenStr, expireTime)
-	// 변경 후:
 	rt := &model.RefreshToken{
 		UserID:    user.ID,
 		Token:     refreshTokenStr,
@@ -368,33 +352,25 @@ func (s *AuthService) LoginUserAndSetCookies(w http.ResponseWriter, user *model.
 		return errors.Wrap(err, "[LoginUserAndSetCookies] createOrUpdate refresh token failed")
 	}
 
-	// Access Token도 동일
 	accessTokenStr, err := s.jwtManager.GenerateAccessToken(user)
 	if err != nil {
 		return errors.Wrap(err, "[LoginUserAndSetCookies] generate access token failed")
 	}
 
-	// ... 쿠키 세팅 로직은 동일 ...
+	// 쿠키 설정 (domain, secure 등은 config 값 사용)
 	s.setCookie(w, "access_token", accessTokenStr, s.jwtManager.AccessTokenTTL)
 	s.setCookie(w, "refresh_token", refreshTokenStr, s.jwtManager.RefreshTokenTTL)
 	return nil
 }
 
 func (s *AuthService) setCookie(w http.ResponseWriter, name, value string, ttl time.Duration) {
-	domain := os.Getenv("COOKIE_DOMAIN")
-	if domain == "" {
-		domain = "localhost"
-	}
-	secureFlag := true
-	if os.Getenv("ENVIRONMENT") == "local" {
-		secureFlag = false
-	}
+	domain := s.cfg.CookieDomain
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
 		Value:    value,
 		Path:     "/",
 		Domain:   domain,
-		Secure:   secureFlag,
+		Secure:   (domain != "localhost"), // localhost 아니면 https 적용
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Now().Add(ttl),
@@ -402,16 +378,15 @@ func (s *AuthService) setCookie(w http.ResponseWriter, name, value string, ttl t
 	})
 }
 
-// ----------------------------------------------------
-// 4) 유저가 없으면 새로 insert, 있으면 그대로
-// ----------------------------------------------------
+// -----------------------------------------------
+// 유저가 없으면 새로 생성, 있으면 그대로
+// -----------------------------------------------
 func (s *AuthService) upsertUser(
 	ctx context.Context,
 	provider, email, nickname, name, profileImg string,
 ) (*model.User, error) {
 	u, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil {
-		// 없는 경우 새로 생성
 		newUser := &model.User{
 			OauthProvider: provider,
 			Email:         email,

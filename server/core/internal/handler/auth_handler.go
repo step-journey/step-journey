@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-	"os"
+	"server/internal/config"
 	"server/internal/service"
 	"time"
 
@@ -10,11 +10,15 @@ import (
 )
 
 type AuthHandler struct {
+	cfg         *config.AppConfig
 	authService *service.AuthService
 }
 
-func NewAuthHandler(authSvc *service.AuthService) *AuthHandler {
-	return &AuthHandler{authService: authSvc}
+func NewAuthHandler(cfg *config.AppConfig, authSvc *service.AuthService) *AuthHandler {
+	return &AuthHandler{
+		cfg:         cfg,
+		authService: authSvc,
+	}
 }
 
 func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
@@ -48,12 +52,7 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// 3) 최종 리다이렉트
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
-	}
-	http.Redirect(w, r, frontendURL+"?login=success", http.StatusFound)
+	http.Redirect(w, r, h.cfg.Endpoints.FrontendBaseURL+"?login=success", http.StatusFound)
 }
 
 func (h *AuthHandler) HandleKakaoLogin(w http.ResponseWriter, r *http.Request) {
@@ -85,11 +84,7 @@ func (h *AuthHandler) HandleKakaoCallback(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
-	}
-	http.Redirect(w, r, frontendURL+"?login=success", http.StatusFound)
+	http.Redirect(w, r, h.cfg.Endpoints.FrontendBaseURL+"?login=success", http.StatusFound)
 }
 
 func (h *AuthHandler) HandleNaverLogin(w http.ResponseWriter, r *http.Request) {
@@ -122,35 +117,35 @@ func (h *AuthHandler) HandleNaverCallback(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
-	}
-	http.Redirect(w, r, frontendURL+"?login=success", http.StatusFound)
+	http.Redirect(w, r, h.cfg.Endpoints.FrontendBaseURL+"?login=success", http.StatusFound)
 }
 
 func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("[HandleLogout] Processing logout request")
 
+	// AccessToken 쿠키 무효화
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    "",
 		Path:     "/",
+		Domain:   h.cfg.CookieDomain,
+		Secure:   h.cfg.CookieDomain != "localhost",
+		HttpOnly: true,
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   os.Getenv("ENVIRONMENT") != "local",
 		SameSite: http.SameSiteLaxMode,
 	})
 
+	// RefreshToken 쿠키 무효화
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    "",
 		Path:     "/",
+		Domain:   h.cfg.CookieDomain,
+		Secure:   h.cfg.CookieDomain != "localhost",
+		HttpOnly: true,
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   os.Getenv("ENVIRONMENT") != "local",
 		SameSite: http.SameSiteLaxMode,
 	})
 

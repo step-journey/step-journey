@@ -2,3 +2,10 @@ server:
   port: 8000
   read_timeout_seconds: 5
   write_timeout_seconds: 10
+
+cookie_domain: ".step-journey.com"
+
+endpoints:
+  backend_base_url: "https://api-core.step-journey.com"
+  frontend_base_url: "https://step-journey.com"
+

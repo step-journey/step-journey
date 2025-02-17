@@ -44,21 +44,21 @@ func NewRouter(cfg Config) *Router {
 
 func (r *Router) setupRoutes(cfg Config) {
 	// Health Check
-	r.GET("/health", cfg.HealthHandler.ServeHTTP)
+	r.GET("/api/v1/health", cfg.HealthHandler.ServeHTTP)
 
 	// Auth Routes
-	r.GET("/auth/google/login", cfg.AuthHandler.HandleGoogleLogin)
-	r.GET("/auth/google/callback", cfg.AuthHandler.HandleGoogleCallback)
-	r.GET("/auth/kakao/login", cfg.AuthHandler.HandleKakaoLogin)
-	r.GET("/auth/kakao/callback", cfg.AuthHandler.HandleKakaoCallback)
-	r.GET("/auth/naver/login", cfg.AuthHandler.HandleNaverLogin)
-	r.GET("/auth/naver/callback", cfg.AuthHandler.HandleNaverCallback)
-	r.POST("/auth/logout", cfg.AuthHandler.HandleLogout)
+	r.GET("/api/v1/auth/google/login", cfg.AuthHandler.HandleGoogleLogin)
+	r.GET("/api/v1/auth/google/callback", cfg.AuthHandler.HandleGoogleCallback)
+	r.GET("/api/v1/auth/kakao/login", cfg.AuthHandler.HandleKakaoLogin)
+	r.GET("/api/v1/auth/kakao/callback", cfg.AuthHandler.HandleKakaoCallback)
+	r.GET("/api/v1/auth/naver/login", cfg.AuthHandler.HandleNaverLogin)
+	r.GET("/api/v1/auth/naver/callback", cfg.AuthHandler.HandleNaverCallback)
+	r.POST("/api/v1/auth/logout", cfg.AuthHandler.HandleLogout)
 
 	// Users Routes (with Auth)
-	r.GET("/users", withMiddleware(cfg.AuthMiddleware, cfg.UserHandler.ListUsers))
-	r.POST("/users", withMiddleware(cfg.AuthMiddleware, cfg.UserHandler.CreateUser))
-	r.GET("/users/me", withMiddleware(cfg.AuthMiddleware, cfg.UserHandler.HandleMe))
+	r.GET("/api/v1/users", withMiddleware(cfg.AuthMiddleware, cfg.UserHandler.ListUsers))
+	r.POST("/api/v1/users", withMiddleware(cfg.AuthMiddleware, cfg.UserHandler.CreateUser))
+	r.GET("/api/v1/users/me", withMiddleware(cfg.AuthMiddleware, cfg.UserHandler.HandleMe))
 }
 
 func (r *Router) Group(prefix string) *RouteGroup {

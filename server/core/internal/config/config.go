@@ -23,6 +23,15 @@ type AppConfig struct {
 		ReadTimeoutSeconds  int `koanf:"read_timeout_seconds"`
 		WriteTimeoutSeconds int `koanf:"write_timeout_seconds"`
 	} `koanf:"server"`
+
+	// 쿠키 Domain (local, dev, prod 별로 상이)
+	CookieDomain string `koanf:"cookie_domain"`
+
+	// 환경별 Backend/Frontend Base URL
+	Endpoints struct {
+		BackendBaseURL  string `koanf:"backend_base_url"`
+		FrontendBaseURL string `koanf:"frontend_base_url"`
+	} `koanf:"endpoints"`
 }
 
 type DBConfig struct {
@@ -37,6 +46,7 @@ type DBConfig struct {
 func LoadConfig(baseFile, envName string) (*AppConfig, error) {
 	k := koanf.New(".")
 
+	// base yaml 로드
 	if err := k.Load(file.Provider(baseFile), yaml.Parser()); err != nil {
 		return nil, errors.Wrapf(err, "[LoadConfig] base config load failed (baseFile=%s)", baseFile)
 	}
@@ -57,10 +67,9 @@ func LoadConfig(baseFile, envName string) (*AppConfig, error) {
 		log.Error().Msgf("[LoadConfig] No env config file found for env=%s (checked %s)", envName, envFilePath)
 	}
 
-	// .env 파일 로드 (원한다면, envFile 인자 사용 가능)
+	// 로컬이면 .env 로드
 	if envName == "local" {
-		// local 환경이라면 .env 로부터 로드 (오류 무시)
-		godotenv.Load(".env")
+		_ = godotenv.Load(".env") // 실패해도 무시
 	}
 
 	var cfg AppConfig
@@ -68,6 +77,7 @@ func LoadConfig(baseFile, envName string) (*AppConfig, error) {
 		return nil, errors.Wrap(err, "[LoadConfig] unmarshal to AppConfig failed")
 	}
 
+	// 최종 구성 로깅
 	if rawAll := k.All(); rawAll != nil {
 		// MarshalIndent 로 보기 좋은 JSON 문자열 만들기
 		if configJSON, err := json.MarshalIndent(rawAll, "", "  "); err == nil {
@@ -140,6 +150,7 @@ func GetDBConnString(d DBConfig) string {
 		user, pass, d.Host, d.Port, d.DBName, d.SSLMode)
 }
 
+// 서버 생성 (port, read_timeout, write_timeout)
 func NewServer(port int, handler http.Handler, readTimeout, writeTimeout time.Duration) *http.Server {
 	return &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),

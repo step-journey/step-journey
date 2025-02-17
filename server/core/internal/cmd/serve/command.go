@@ -81,20 +81,28 @@ func runServer(c *cli.Context) error {
 
 	// 리포지토리 & 서비스
 	userRepo := repository.NewPostgresUserRepository(dbConn)
-	userSvc := service.NewUserService(userRepo)
-
 	refreshTokenRepo := repository.NewPostgresRefreshTokenRepo(dbConn)
 	jwtManager := service.NewJWTManager()
-	authService := service.NewAuthService(oAuthSecrets, userRepo, refreshTokenRepo, jwtManager)
+
+	authService := service.NewAuthService(
+		cfg,
+		oAuthSecrets,
+		userRepo,
+		refreshTokenRepo,
+		jwtManager,
+	)
+	userService := service.NewUserService(userRepo)
 
 	// 미들웨어
 	authMw := middleware.NewAuthMiddleware(jwtManager, refreshTokenRepo, userRepo)
+	corsMw := middleware.NewCORSMiddleware(cfg)
 
 	// 핸들러
-	userHandler := handler.NewUserHandler(userSvc)
+	authHandler := handler.NewAuthHandler(cfg, authService)
+	userHandler := handler.NewUserHandler(userService)
 	healthHandler := handler.NewHealthHandler()
-	authHandler := handler.NewAuthHandler(authService)
 
+	// 라우터
 	rCfg := router.Config{
 		AuthHandler:    authHandler,
 		HealthHandler:  healthHandler,
@@ -103,8 +111,8 @@ func runServer(c *cli.Context) error {
 	}
 	mux := router.NewRouter(rCfg)
 
-	// CORS 미들웨어 적용
-	corsWrapped := middleware.NewCORSMiddleware()(mux)
+	// CORS 래핑
+	corsWrapped := corsMw(mux)
 
 	// HTTP 서버 생성
 	httpSrv := config.NewServer(
