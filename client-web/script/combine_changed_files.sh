@@ -83,7 +83,12 @@ do
   # 5-2) client-web/ 내부인지 확인 (중복 안전장치)
   [[ $file == client-web/* ]] || continue
 
-  # 5-3) 확장자 필터 (js, jsx, ts, tsx, css, html, yml, json, sh 등)
+  # 5-3) package-lock.json 파일은 제외
+  if [ "$file" = "client-web/package-lock.json" ]; then
+    continue
+  fi
+
+  # 5-4) 확장자 필터 (js, jsx, ts, tsx, css, html, yml, json, sh 등)
   case "$file" in
     *.js|*.jsx|*.ts|*.tsx|*.css|*.html|*.yml|*.yaml|*.json|*.sh)
       echo "### $file:" >> "$OUTPUT_FILE"

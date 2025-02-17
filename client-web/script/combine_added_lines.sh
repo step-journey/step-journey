@@ -66,6 +66,11 @@ do
   # 5-2) client-web 내부인지 재확인 (안전장치)
   [[ $file == client-web/* ]] || continue
 
+  # 5-3) package-lock.json 파일은 제외
+  if [ "$file" = "client-web/package-lock.json" ]; then
+    continue
+  fi
+
   # (스테이징 + 미스테이징) diff를 모두 합쳐서 실제 추가된(+ 라인)만 추출
   DIFF_LINES=$(
     (
