@@ -1,3 +1,4 @@
+/* client-web/src/pages/Home/LoginModal.tsx */
 import {
   Dialog,
   DialogContent,
@@ -7,8 +8,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { API_URL } from "@/constants/apiConfig";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -17,15 +18,15 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google/login`;
+    window.location.href = `${API_URL}${API_ENDPOINTS.auth.googleLogin}`;
   };
 
   const handleKakaoLogin = () => {
-    window.location.href = `${API_URL}/auth/kakao/login`;
+    window.location.href = `${API_URL}${API_ENDPOINTS.auth.kakaoLogin}`;
   };
 
   const handleNaverLogin = () => {
-    window.location.href = `${API_URL}/auth/naver/login`;
+    window.location.href = `${API_URL}${API_ENDPOINTS.auth.naverLogin}`;
   };
 
   return (

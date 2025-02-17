@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Header from "./Header";
@@ -6,84 +6,34 @@ import LoginModal from "./LoginModal";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import PATH from "@/constants/path";
 
-/**
- * 간단한 User 타입 예시. 실제로는 서버 응답에 맞춰 구조를 수정하세요.
- */
-interface User {
-  name: string;
-  email: string;
-}
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { useUserQuery, useLogoutMutation } from "@/hooks/useAuth";
 
 export default function HomePage() {
   // 로그인 모달 열림 여부
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  // 유저 정보 (null이면 비로그인 상태)
-  const [user, setUser] = useState<User | null>(null);
+  // TanStack Query
+  // 1) useUserQuery: 유저 정보를 불러옴 (없으면 null)
+  // 2) useLogoutMutation: 로그아웃 처리
+  const { data: user } = useUserQuery();
+  const logoutMutation = useLogoutMutation();
 
   const navigate = useNavigate();
-  const didFetchUser = useRef(false); // 한 번만 호출하도록 플래그
 
-  // ---------------------------
-  // 1) 초기 로딩 시 유저 정보 가져오기
-  // ---------------------------
-  useEffect(() => {
-    if (didFetchUser.current) return;
-    didFetchUser.current = true;
-
-    const fetchUser = async () => {
-      try {
-        const resp = await fetch(`${API_URL}/users/me`, {
-          credentials: "include",
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          setUser({
-            name: data.name,
-            email: data.email,
-          });
-        } else {
-          // 401 등 에러 -> 비로그인 처리
-          setUser(null);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user info:", err);
-        setUser(null);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  // ---------------------------
-  // 2) 로그인 / 로그아웃
-  // ---------------------------
+  // 로그인 모달 열고 닫기
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
 
-  // 로그아웃 시, 서버의 로그아웃 엔드포인트를 호출하여 쿠키에 설정된 access_token과 refresh_token을 삭제한 후,
-  // 클라이언트 상태에서 user를 null로 업데이트합니다.
+  // 로그아웃
   const handleLogout = async () => {
     try {
-      const resp = await fetch(`${API_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!resp.ok) {
-        console.error("Logout API call failed with status", resp.status);
-      }
+      await logoutMutation.mutateAsync();
     } catch (err) {
-      console.error("Logout API call failed:", err);
-    } finally {
-      setUser(null);
+      console.error("Logout failed:", err);
     }
   };
 
-  // ---------------------------
-  // 3) Card 클릭 시 Journey 이동
-  // ---------------------------
+  // Card 클릭 시 Journey 페이지로 이동
   const handleCardClick = () => {
     navigate(PATH.JOURNEY);
   };
@@ -92,7 +42,8 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       {/* 상단 Header: user, onClickLogin, onClickLogout 전달 */}
       <Header
-        user={user}
+        // user는 (User | null | undefined)이므로, undefined 인 경우 null 로 대체
+        user={user ?? null}
         onClickLogin={openLoginModal}
         onClickLogout={handleLogout}
       />
