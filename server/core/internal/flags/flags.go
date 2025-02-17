@@ -13,9 +13,4 @@ var GlobalFlags = []cli.Flag{
 		Usage: "Path to config file (YAML)",
 		Value: "./configs/config.yaml",
 	},
-	&cli.StringFlag{
-		Name:  FlagEnvFile,
-		Usage: "Path to .env file",
-		Value: "./configs/.env",
-	},
 }

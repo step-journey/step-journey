@@ -34,7 +34,7 @@ type DBConfig struct {
 	SSLMode  string
 }
 
-func LoadConfig(baseFile, envName, envFile string) (*AppConfig, error) {
+func LoadConfig(baseFile, envName string) (*AppConfig, error) {
 	k := koanf.New(".")
 
 	if err := k.Load(file.Provider(baseFile), yaml.Parser()); err != nil {

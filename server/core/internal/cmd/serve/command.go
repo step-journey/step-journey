@@ -40,13 +40,10 @@ func NewCommand() *cli.Command {
 func runServer(c *cli.Context) error {
 	envName := os.Getenv(flags.EnvVarEnvironment)
 	cfgFile := c.String(flags.FlagConfig)
-	envFile := c.String(flags.FlagEnvFile)
-
 	// Load config
-	cfg, err := config.LoadConfig(cfgFile, envName, envFile)
+	cfg, err := config.LoadConfig(cfgFile, envName)
 	if err != nil {
-		return pkgerrors.Wrapf(err, "[runServer] LoadConfig failed (file=%s, env=%s, envFile=%s)",
-			cfgFile, envName, envFile)
+		return pkgerrors.Wrapf(err, "[runServer] LoadConfig failed (file=%s, env=%s)", cfgFile, envName)
 	}
 
 	// DB 연결

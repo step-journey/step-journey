@@ -26,15 +26,12 @@ func newUpCommand() *cli.Command {
 		Usage: "Migrate DB schema up",
 		Action: func(c *cli.Context) error {
 			cfgFile := c.String(flags.FlagConfig)
-			envFile := c.String(flags.FlagEnvFile)
 			envName := c.String(flags.FlagEnv)
 
 			// Load config
-			cfg, err := config.LoadConfig(cfgFile, envName, envFile)
+			cfg, err := config.LoadConfig(cfgFile, envName)
 			if err != nil {
-				return errors.Wrapf(err,
-					"[migrateUp] LoadConfig failed (cfgFile=%s, env=%s, envFile=%s)",
-					cfgFile, envName, envFile)
+				return errors.Wrapf(err, "[migrateUp] LoadConfig failed (cfgFile=%s, env=%s)", cfgFile, envName)
 			}
 
 			// Build DBConfig
@@ -62,15 +59,13 @@ func newDownCommand() *cli.Command {
 		Usage: "Rollback DB schema (down)",
 		Action: func(c *cli.Context) error {
 			cfgFile := c.String(flags.FlagConfig)
-			envFile := c.String(flags.FlagEnvFile)
 			envName := c.String(flags.FlagEnv)
 
 			// Load config
-			cfg, err := config.LoadConfig(cfgFile, envName, envFile)
+			cfg, err := config.LoadConfig(cfgFile, envName)
 			if err != nil {
 				return errors.Wrapf(err,
-					"[migrateDown] LoadConfig failed (cfgFile=%s, env=%s, envFile=%s)",
-					cfgFile, envName, envFile)
+					"[migrateDown] LoadConfig failed (cfgFile=%s, env=%s)", cfgFile, envName)
 			}
 
 			// Build DBConfig
