@@ -46,6 +46,15 @@ func (r *Router) setupRoutes(cfg Config) {
 	// Health Check
 	r.GET("/health", cfg.HealthHandler.ServeHTTP)
 
+	// Auth Routes
+	r.GET("/auth/google/login", cfg.AuthHandler.HandleGoogleLogin)
+	r.GET("/auth/google/callback", cfg.AuthHandler.HandleGoogleCallback)
+	r.GET("/auth/kakao/login", cfg.AuthHandler.HandleKakaoLogin)
+	r.GET("/auth/kakao/callback", cfg.AuthHandler.HandleKakaoCallback)
+	r.GET("/auth/naver/login", cfg.AuthHandler.HandleNaverLogin)
+	r.GET("/auth/naver/callback", cfg.AuthHandler.HandleNaverCallback)
+	r.POST("/auth/logout", cfg.AuthHandler.HandleLogout)
+
 	// Users Routes (with Auth)
 	r.GET("/users", withMiddleware(cfg.AuthMiddleware, cfg.UserHandler.ListUsers))
 	r.POST("/users", withMiddleware(cfg.AuthMiddleware, cfg.UserHandler.CreateUser))
