@@ -6,32 +6,68 @@
     {
       "id": 0,
       "label": "토큰 임베딩",
-      "desc": "각 토큰 ID를 고차원 벡터(임베딩)로 변환합니다."
+      "desc": "각 토큰 ID를 고차원 벡터(임베딩)로 변환합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/TokenEmbeddingAnimation.webp",
+        "alt": "토큰 임베딩 과정",
+        "caption": "토큰 ID를 의미있는 벡터 공간으로 변환하는 과정"
+      }
     },
     {
       "id": 1,
       "label": "어텐션 계산",
-      "desc": "토큰 간의 관계(어텐션)를 계산합니다."
+      "desc": "토큰 간의 관계(어텐션)를 계산합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/AttentionCalculationAnimation.webp",
+        "alt": "어텐션 계산 과정",
+        "caption": "각 토큰이 다른 토큰과 어떻게 관계를 맺는지 계산하는 과정"
+      }
     },
     {
       "id": 2,
       "label": "피드포워드 네트워크",
-      "desc": "각 레이어에서 피드포워드 신경망을 통과시킵니다."
+      "desc": "각 레이어에서 피드포워드 신경망을 통과시킵니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/FeedForwardNetworkAnimation.webp",
+        "alt": "피드포워드 과정",
+        "caption": "신경망의 피드포워드 레이어를 통과하는 과정"
+      }
     },
     {
       "id": 3,
       "label": "활성화 함수",
-      "desc": "비선형성을 추가하기 위한 활성화 함수를 적용합니다."
+      "desc": "비선형성을 추가하기 위한 활성화 함수를 적용합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/ActivationFunctionAnimation.webp",
+        "alt": "활성화 함수 적용",
+        "caption": "비선형성을 추가하기 위한 활성화 함수 적용 과정"
+      }
     },
     {
       "id": 4,
       "label": "레이어 정규화",
-      "desc": "각 레이어의 출력을 정규화하여 학습 안정성을 높입니다."
+      "desc": "각 레이어의 출력을 정규화하여 학습 안정성을 높입니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/LayerNormalizationAnimation.webp",
+        "alt": "레이어 정규화",
+        "caption": "레이어 출력값을 정규화하는 과정"
+      }
     },
     {
       "id": 5,
       "label": "레이어 통과",
-      "desc": "모델의 여러 레이어를 순차적으로 통과합니다."
+      "desc": "모델의 여러 레이어를 순차적으로 통과합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/LayerPassingAnimation.webp",
+        "alt": "레이어 통과 과정",
+        "caption": "여러 레이어를 순차적으로 통과하는 과정 시각화"
+      }
     }
   ]
 }

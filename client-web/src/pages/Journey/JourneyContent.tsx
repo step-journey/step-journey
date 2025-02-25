@@ -6,6 +6,71 @@ interface Props {
 }
 
 export function JourneyContent({ currentStep }: Props) {
+  // 미디어 렌더링 함수
+  const renderMedia = () => {
+    if (!currentStep.media) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-sm text-center text-gray-500">
+            이 단계에 대한 시각적 자료가 없습니다
+          </p>
+        </div>
+      );
+    }
+
+    const { type, url, alt, caption } = currentStep.media;
+
+    switch (type) {
+      case "image":
+      case "gif":
+        return (
+          <div className="flex flex-col h-full">
+            <div className="flex-1 flex items-center justify-center">
+              <img
+                src={url}
+                alt={alt || currentStep.label}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+            {caption && (
+              <p className="mt-2 text-sm text-center text-gray-600">
+                {caption}
+              </p>
+            )}
+          </div>
+        );
+      case "video":
+        return (
+          <div className="flex flex-col h-full">
+            <div className="flex-1 flex items-center justify-center">
+              <video
+                src={url}
+                controls
+                className="max-w-full max-h-full"
+                autoPlay={false}
+              >
+                {alt && <track kind="captions" label={alt} />}
+                브라우저가 비디오 재생을 지원하지 않습니다
+              </video>
+            </div>
+            {caption && (
+              <p className="mt-2 text-sm text-center text-gray-600">
+                {caption}
+              </p>
+            )}
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-center text-gray-500">
+              지원되지 않는 미디어 형식입니다
+            </p>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-6">
       {/* 좌/우 2열로 분할 */}
@@ -26,12 +91,10 @@ export function JourneyContent({ currentStep }: Props) {
           </Card>
         </div>
 
-        {/* 오른쪽 영역: 전체 크기를 차지하는 Card */}
+        {/* 오른쪽 영역: 미디어 영역 */}
         <div className="w-1/2">
-          <Card className="w-full h-full flex items-center justify-center border border-gray-200 bg-white p-4">
-            <p className="text-sm text-center">
-              이곳에 각 <b>step의 시각적인 변화</b>가 들어갈 예정
-            </p>
+          <Card className="w-full h-full border border-gray-200 bg-white p-4 overflow-hidden">
+            {renderMedia()}
           </Card>
         </div>
       </div>

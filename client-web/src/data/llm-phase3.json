@@ -6,27 +6,57 @@
     {
       "id": 0,
       "label": "로짓 계산",
-      "desc": "모델이 다음 토큰에 대한 확률 분포(로짓)를 계산합니다."
+      "desc": "모델이 다음 토큰에 대한 확률 분포(로짓)를 계산합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/LogitsCalculationAnimation.webp",
+        "alt": "로짓 계산 과정",
+        "caption": "다음 토큰에 대한 확률 분포를 계산하는 과정"
+      }
     },
     {
       "id": 1,
       "label": "온도 적용",
-      "desc": "생성 다양성을 조절하기 위한 온도(temperature) 파라미터를 적용합니다."
+      "desc": "생성 다양성을 조절하기 위한 온도(temperature) 파라미터를 적용합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/TemperatureApplicationAnimation.webp",
+        "alt": "온도 파라미터 적용",
+        "caption": "확률 분포에 온도 파라미터를 적용하여 다양성을 조절하는 과정"
+      }
     },
     {
       "id": 2,
       "label": "Top-K / Top-P 필터링",
-      "desc": "가장 가능성 높은 토큰들만 선택하도록 필터링합니다."
+      "desc": "가장 가능성 높은 토큰들만 선택하도록 필터링합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/TopKPFilteringAnimation.webp",
+        "alt": "Top-K/Top-P 필터링",
+        "caption": "확률 분포에서 가장 가능성 높은 토큰들만 선택하는 과정"
+      }
     },
     {
       "id": 3,
       "label": "토큰 샘플링",
-      "desc": "필터링된 확률 분포에서 다음 토큰을 샘플링합니다."
+      "desc": "필터링된 확률 분포에서 다음 토큰을 샘플링합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/TokenSamplingAnimation.webp",
+        "alt": "토큰 샘플링 과정",
+        "caption": "확률 분포에서 다음 토큰을 선택하는 과정"
+      }
     },
     {
       "id": 4,
       "label": "반복 토큰 검사",
-      "desc": "반복적인 토큰이나 패턴을 감지하고 패널티를 적용합니다."
+      "desc": "반복적인 토큰이나 패턴을 감지하고 패널티를 적용합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/RepetitionPenaltyAnimation.webp",
+        "alt": "반복 토큰 검사",
+        "caption": "반복적인 토큰이나 패턴에 패널티를 적용하는 과정"
+      }
     }
   ]
 }

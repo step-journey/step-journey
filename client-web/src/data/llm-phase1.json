@@ -6,27 +6,57 @@
     {
       "id": 0,
       "label": "텍스트 입력 수신",
-      "desc": "사용자로부터 입력된 텍스트를 시스템이 수신합니다."
+      "desc": "사용자로부터 입력된 텍스트를 시스템이 수신합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/InputReceivingAnimation.webp",
+        "alt": "텍스트 입력 수신 과정",
+        "caption": "사용자가 입력한 텍스트가 LLM 시스템으로 전송되는 과정"
+      }
     },
     {
       "id": 1,
       "label": "전처리 (Preprocessing)",
-      "desc": "문장 분리, 특수 문자 처리 등 기본적인 전처리를 수행합니다."
+      "desc": "문장 분리, 특수 문자 처리 등 기본적인 전처리를 수행합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/PreprocessingAnimation.webp",
+        "alt": "텍스트 전처리 과정",
+        "caption": "입력 텍스트를 처리하기 위한 기본적인 전처리 작업"
+      }
     },
     {
       "id": 2,
       "label": "토큰화 (Tokenization)",
-      "desc": "입력 텍스트를 토큰(단어, 부분 단어, 문자)으로 분리합니다."
+      "desc": "입력 텍스트를 토큰(단어, 부분 단어, 문자)으로 분리합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/TokenizationAnimation.webp",
+        "alt": "토큰화 과정",
+        "caption": "텍스트를 의미 있는 단위인 토큰으로 분리하는 과정"
+      }
     },
     {
       "id": 3,
       "label": "입력 인코딩",
-      "desc": "토큰을 모델이 이해할 수 있는 숫자 ID로 변환합니다."
+      "desc": "토큰을 모델이 이해할 수 있는 숫자 ID로 변환합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/EncodingAnimation.webp",
+        "alt": "입력 인코딩 과정",
+        "caption": "토큰을 숫자 ID로 변환하는 인코딩 과정"
+      }
     },
     {
       "id": 4,
       "label": "컨텍스트 관리",
-      "desc": "이전 대화 기록이 있는 경우 합쳐서 컨텍스트를 구성합니다."
+      "desc": "이전 대화 기록이 있는 경우 합쳐서 컨텍스트를 구성합니다.",
+      "media": {
+        "type": "image",
+        "url": "/assets/llm/ContextManagementAnimation.webp",
+        "alt": "컨텍스트 관리 과정",
+        "caption": "이전 대화 기록을 현재 입력과 함께 처리하는 과정"
+      }
     }
   ]
 }
