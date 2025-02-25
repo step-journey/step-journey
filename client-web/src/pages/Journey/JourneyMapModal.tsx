@@ -25,6 +25,9 @@ export function JourneyMapModal({
   currentStep,
   groupData,
 }: Props) {
+  // 단계 총 개수 계산
+  const totalSteps = groupData.reduce((sum, g) => sum + g.steps.length, 0);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
@@ -36,7 +39,7 @@ export function JourneyMapModal({
         </DialogHeader>
         <p className="mb-2 text-sm">
           현재 단계: <b>{currentStep.label}</b> ({currentStep.globalIndex + 1} /{" "}
-          {groupData.reduce((sum, g) => sum + g.steps.length, 0)})
+          {totalSteps})
         </p>
 
         <div className="flex flex-wrap gap-3 rounded border border-gray-200 p-3">

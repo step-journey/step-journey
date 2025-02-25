@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { flattenSteps, groupData } from "@/data";
+import { useNavigate, useParams } from "react-router-dom";
+import { journeys, getJourneyById, flattenJourneySteps } from "@/data";
 import { StepContainerMap } from "@/types/journey";
 import { handleKeyboardShortcuts, scrollToCurrentStep } from "./journey.utils";
 
@@ -12,6 +12,16 @@ import { JourneyMapModal } from "./JourneyMapModal";
 import PATH from "@/constants/path";
 
 export default function JourneyPage() {
+  // URL에서 journeyId 파라미터 가져오기
+  const { journeyId } = useParams<{ journeyId: string }>();
+  const navigate = useNavigate();
+
+  // 현재 Journey 찾기 (없으면 기본값으로 첫 번째 Journey 사용)
+  const currentJourney = getJourneyById(journeyId || "") || journeys[0];
+
+  // 선택된 Journey의 단계들 평탄화
+  const flattenSteps = flattenJourneySteps(currentJourney);
+
   // 전역 스텝 인덱스
   const [globalIndex, setGlobalIndex] = useState(0);
 
@@ -32,9 +42,6 @@ export default function JourneyPage() {
   // 다크 모드 (임의 예시)
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // 네비게이션 (About 페이지 이동용 등)
-  const navigate = useNavigate();
-
   // 각 Phase 별 ScrollArea DOM 참조
   const stepContainerRefs = useRef<StepContainerMap>({});
 
@@ -53,13 +60,29 @@ export default function JourneyPage() {
 
   // currentStep 바뀔 때 해당 group 펼치도록
   useEffect(() => {
-    setExpandedGroups({ [currentStep.groupId]: true });
-  }, [currentStep.groupId]);
+    if (currentStep) {
+      setExpandedGroups({ [currentStep.groupId]: true });
+    }
+  }, [currentStep?.groupId]);
 
   // 펼쳐진 Phase 내부에서 현재 스텝 위치로 스크롤
   useEffect(() => {
-    scrollToCurrentStep(currentStep, expandedGroups, stepContainerRefs);
+    if (currentStep) {
+      scrollToCurrentStep(currentStep, expandedGroups, stepContainerRefs);
+    }
   }, [currentStep, expandedGroups]);
+
+  // journeyId가 변경되면 globalIndex 초기화
+  useEffect(() => {
+    setGlobalIndex(0);
+  }, [journeyId]);
+
+  // 존재하지 않는 Journey ID인 경우 홈으로 리다이렉트
+  useEffect(() => {
+    if (journeyId && !getJourneyById(journeyId)) {
+      navigate(PATH.HOME);
+    }
+  }, [journeyId, navigate]);
 
   // 다크 모드 토글
   const toggleDarkMode = () => {
@@ -67,10 +90,15 @@ export default function JourneyPage() {
     document.documentElement.classList.toggle("dark");
   };
 
+  if (!currentStep) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="flex h-screen bg-white">
       {/* 좌측 사이드바 */}
       <JourneySidebar
+        journey={currentJourney}
         currentStep={currentStep}
         expandedGroups={expandedGroups}
         setExpandedGroups={setExpandedGroups}
@@ -81,6 +109,7 @@ export default function JourneyPage() {
           );
           if (found) setGlobalIndex(found.globalIndex);
         }}
+        onNavigateHome={() => navigate(PATH.HOME)}
       />
 
       {/* 우측 영역: 헤더 / 본문 / 하단 */}
@@ -111,7 +140,7 @@ export default function JourneyPage() {
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
         currentStep={currentStep}
-        groupData={groupData}
+        groupData={currentJourney.groups}
       />
     </div>
   );

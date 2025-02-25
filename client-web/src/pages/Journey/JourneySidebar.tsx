@@ -2,31 +2,35 @@ import {
   IconSearch,
   IconChevronRight,
   IconChevronDown,
+  IconHome,
 } from "@tabler/icons-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { FlattenedStep } from "@/types/journey";
-import { flattenSteps, groupData } from "@/data";
+import { FlattenedStep, Journey } from "@/types/journey";
+import { flattenJourneySteps } from "@/data";
 import React from "react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
+  journey: Journey;
   currentStep: FlattenedStep;
   expandedGroups: Record<string, boolean>;
   setExpandedGroups: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
-  stepContainerRefs: React.MutableRefObject<
-    Record<string, HTMLDivElement | null>
-  >;
+  stepContainerRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
   onClickStep: (groupId: string, stepIdInGroup: number) => void;
+  onNavigateHome?: () => void;
 }
 
 export function JourneySidebar({
+  journey,
   currentStep,
   expandedGroups,
   setExpandedGroups,
   stepContainerRefs,
   onClickStep,
+  onNavigateHome,
 }: Props) {
   // 그룹 라벨 클릭 => 펼치기/접기
   const toggleGroup = (groupId: string) => {
@@ -36,11 +40,13 @@ export function JourneySidebar({
     }));
   };
 
+  const flattenSteps = flattenJourneySteps(journey);
+
   return (
     <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
       {/* 상단: 제목 + 검색창 */}
       <div className="shrink-0 p-4 pb-2">
-        <h1 className="text-base font-bold mb-3">Google Search Journey</h1>
+        <h1 className="text-base font-bold mb-3">{journey.title}</h1>
         {/* 검색창 */}
         <div className="relative">
           <IconSearch
@@ -57,7 +63,7 @@ export function JourneySidebar({
 
       {/* 단계 목록 스크롤 영역 */}
       <ScrollArea className="flex-1 py-2 pl-4 pr-1">
-        {groupData.map((grp) => {
+        {journey.groups.map((grp) => {
           const isExpanded = expandedGroups[grp.groupId] || false;
           const isCurrentGroup = grp.groupId === currentStep.groupId;
 
@@ -93,7 +99,11 @@ export function JourneySidebar({
               {/* 펼쳐진 목록 */}
               {isExpanded && (
                 <div
-                  ref={(el) => (stepContainerRefs.current[grp.groupId] = el)}
+                  ref={(el) => {
+                    if (stepContainerRefs.current) {
+                      stepContainerRefs.current[grp.groupId] = el;
+                    }
+                  }}
                   className="ml-5 mt-1 max-h-[300px] overflow-auto flex flex-col gap-1"
                 >
                   {grp.steps.map((st) => {
@@ -131,6 +141,18 @@ export function JourneySidebar({
           );
         })}
       </ScrollArea>
+      {/* 최하단 홈 아이콘 - 스크롤 영역 밖에 배치하여 항상 보이도록 함 */}
+      <div className="p-2 mt-auto flex justify-end">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-gray-500 hover:text-gray-800"
+          onClick={onNavigateHome}
+          title="홈으로 돌아가기"
+        >
+          <IconHome size={18} />
+        </Button>
+      </div>
     </aside>
   );
 }

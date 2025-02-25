@@ -17,4 +17,11 @@ export interface FlattenedStep extends Step {
   stepIdInGroup: number;
 }
 
+export interface Journey {
+  id: string;
+  title: string;
+  description: string;
+  groups: GroupData[];
+}
+
 export type StepContainerMap = Record<string, HTMLDivElement | null>;

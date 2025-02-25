@@ -1,54 +1,59 @@
-/**
- * client-web/src/data/index.ts
- *
- * 이 파일은 data 폴더에 있는 여러 phase별 JSON을 import해서
- * groupData, flattenSteps 등을 production-ready 형태로 내보낸다.
- */
-
-// 1) import
 import phase1 from "./phase1.json";
 import phase2 from "./phase2.json";
 import phase3 from "./phase3.json";
 import phase4 from "./phase4.json";
 import phase5 from "./phase5.json";
+import llmPhase1 from "./llm-phase1.json";
+import llmPhase2 from "./llm-phase2.json";
+import llmPhase3 from "./llm-phase3.json";
+import llmPhase4 from "./llm-phase4.json";
+import { Journey, FlattenedStep, GroupData } from "@/types/journey";
 
-import { GroupData, FlattenedStep } from "@/types/journey";
+// Google Search Journey
+const googleSearchJourney: Journey = {
+  id: "google-search",
+  title: "Google Search Journey",
+  description: "구글 검색 처리 과정",
+  groups: [phase1, phase2, phase3, phase4, phase5],
+};
 
-// 2) JSON → GroupData 형 변환 (TS에서 JSON import 시 any로 인식할 수 있으므로 as 단언 사용)
-const phase1Data = phase1 as GroupData;
-const phase2Data = phase2 as GroupData;
-const phase3Data = phase3 as GroupData;
-const phase4Data = phase4 as GroupData;
-const phase5Data = phase5 as GroupData;
+// LLM Processing Journey
+const llmProcessingJourney: Journey = {
+  id: "llm-processing",
+  title: "LLM Processing Journey",
+  description: "LLM이 입력 토큰을 출력 토큰으로 변환하는 과정",
+  groups: [llmPhase1, llmPhase2, llmPhase3, llmPhase4],
+};
 
-// 3) groupData: 여러 phase들을 하나의 배열로 합치기
-export const groupData: GroupData[] = [
-  phase1Data,
-  phase2Data,
-  phase3Data,
-  phase4Data,
-  phase5Data,
-];
+// 모든 Journey를 배열로 관리
+export const journeys: Journey[] = [googleSearchJourney, llmProcessingJourney];
 
-/**
- * 4) flattenSteps: groupData를 일렬로 펼치면서 globalIndex를 매긴다
- *    - 각 groupData의 steps 개수만큼 오프셋을 누적하여 globalIndex를 계산
- */
-export const flattenSteps: FlattenedStep[] = groupData.flatMap(
-  (grp, groupIdx) => {
-    // 앞선 group들의 steps.length 합을 offset으로 사용
-    const offset = groupData
-      .slice(0, groupIdx)
-      .reduce((acc, g) => acc + g.steps.length, 0);
+// 특정 Journey 가져오기 (ID로)
+export const getJourneyById = (id: string): Journey | undefined => {
+  return journeys.find((journey) => journey.id === id);
+};
 
-    return grp.steps.map((step, stepIdx) => ({
-      ...step,
-      groupId: grp.groupId,
-      stepIdInGroup: step.id,
-      globalIndex: offset + stepIdx,
-    }));
-  },
-);
+// 특정 Journey의 단계 데이터 평탄화하기
+export const flattenJourneySteps = (journey: Journey): FlattenedStep[] => {
+  const result: FlattenedStep[] = [];
+  let globalIndex = 0;
 
-// production-level 에서는 export만 있어도 충분하며, 필요하다면 default export도 가능
-// export default { groupData, flattenSteps };
+  journey.groups.forEach((group) => {
+    group.steps.forEach((step) => {
+      result.push({
+        ...step,
+        groupId: group.groupId,
+        globalIndex,
+        stepIdInGroup: step.id,
+      });
+      globalIndex++;
+    });
+  });
+
+  return result;
+};
+
+// 기존 함수들은 내부적으로 위의 함수들을 활용하도록 수정
+// 이 함수들은 호환성을 위해 유지
+export const groupData: GroupData[] = googleSearchJourney.groups;
+export const flattenSteps = flattenJourneySteps(googleSearchJourney);

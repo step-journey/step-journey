@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import PATH from "@/constants/path";
 
 import { useUserQuery, useLogoutMutation } from "@/hooks/useAuth";
+import { journeys } from "@/data";
 
 export default function HomePage() {
   // 로그인 모달 열림 여부
@@ -33,9 +34,9 @@ export default function HomePage() {
     }
   };
 
-  // Card 클릭 시 Journey 페이지로 이동
-  const handleCardClick = () => {
-    navigate(PATH.JOURNEY);
+  // Card 클릭 시 Journey 페이지로 이동 (journeyId를 파라미터로 전달)
+  const handleCardClick = (journeyId: string) => {
+    navigate(`${PATH.JOURNEY}/${journeyId}`);
   };
 
   return (
@@ -82,15 +83,21 @@ export default function HomePage() {
 
         {/* 중앙 본문 */}
         <main className="flex-1 p-4">
-          <Card
-            className="cursor-pointer max-w-xs mb-4"
-            onClick={handleCardClick}
-          >
-            <CardHeader>
-              <CardTitle>Google Search Journey</CardTitle>
-            </CardHeader>
-            <CardContent>구글 검색 처리 과정</CardContent>
-          </Card>
+          <h2 className="text-xl font-semibold mb-4">All Journeys</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {journeys.map((journey) => (
+              <Card
+                key={journey.id}
+                className="cursor-pointer"
+                onClick={() => handleCardClick(journey.id)}
+              >
+                <CardHeader>
+                  <CardTitle>{journey.title}</CardTitle>
+                </CardHeader>
+                <CardContent>{journey.description}</CardContent>
+              </Card>
+            ))}
+          </div>
         </main>
 
         {/* 우측 사이드바 */}

@@ -1,0 +1,32 @@
+{
+  "groupId": "llm-phase-4",
+  "groupLabel": "출력 처리 (Output Processing)",
+  "mapDescription": "생성된 토큰을 처리하여 최종 응답을 만드는 단계입니다.",
+  "steps": [
+    {
+      "id": 0,
+      "label": "토큰 누적",
+      "desc": "생성된 토큰을 이전 토큰들과 함께 누적합니다."
+    },
+    {
+      "id": 1,
+      "label": "특수 토큰 처리",
+      "desc": "EOS(End of Sequence)와 같은 특수 토큰을 처리합니다."
+    },
+    {
+      "id": 2,
+      "label": "토큰 디코딩",
+      "desc": "생성된 토큰 ID를 다시 텍스트로 변환합니다."
+    },
+    {
+      "id": 3,
+      "label": "후처리 (Postprocessing)",
+      "desc": "필요한 경우 특정 형식으로 출력을 정리합니다."
+    },
+    {
+      "id": 4,
+      "label": "최종 응답 형성",
+      "desc": "모든 출력 토큰을 결합하여 최종 응답을 생성합니다."
+    }
+  ]
+}
