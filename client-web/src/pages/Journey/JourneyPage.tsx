@@ -123,7 +123,7 @@ export default function JourneyPage() {
         />
 
         {/* 본문: currentStep 내용 */}
-        <JourneyContent currentStep={currentStep} />
+        <JourneyContent currentStep={currentStep} allSteps={flattenSteps} />
 
         {/* 하단: Prev/Next + Slider */}
         <JourneyFooter

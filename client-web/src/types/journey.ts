@@ -5,11 +5,22 @@ export interface Media {
   caption?: string; // 캡션 텍스트
 }
 
+// 디버그 변수 타입 정의
+export interface DebugVariable {
+  name: string;
+  value: string | number | boolean | null;
+  type: string;
+  children?: DebugVariable[];
+  expanded?: boolean;
+}
+
 export interface Step {
   id: number;
   label: string;
   desc: string;
   media?: Media; // 미디어 정보 추가
+  example?: string; // 예시 코드나 텍스트
+  debugVariables?: DebugVariable[]; // 디버그 변수 추가
 }
 
 export interface GroupData {
