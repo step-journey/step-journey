@@ -13,7 +13,27 @@
         "alt": "",
         "caption": ""
       },
-      "example": "[\"안녕\"]"
+      "example": "[\"안녕\"]",
+      "debugVariables": [
+        {
+          "name": "tokens",
+          "value": "[2 items]",
+          "type": "Array",
+          "children": [
+            { "name": "[0]", "value": "안녕", "type": "string" },
+            { "name": "[1]", "value": "?", "type": "string" }
+          ]
+        },
+        {
+          "name": "preprocessedTokens",
+          "value": "[1 item]",
+          "type": "Array",
+          "expanded": true,
+          "children": [
+            { "name": "[0]", "value": "안녕", "type": "string" }
+          ]
+        }
+      ]
     },
     {
       "id": 1,
@@ -25,7 +45,28 @@
         "alt": "",
         "caption": ""
       },
-      "example": "Intent: \"Greeting\" (인사로 분류)"
+      "example": "Intent: \"Greeting\" (인사로 분류)",
+      "debugVariables": [
+        {
+          "name": "preprocessedTokens",
+          "value": "[1 item]",
+          "type": "Array",
+          "children": [
+            { "name": "[0]", "value": "안녕", "type": "string" }
+          ]
+        },
+        {
+          "name": "intentAnalysis",
+          "value": null,
+          "type": "object",
+          "expanded": true,
+          "children": [
+            { "name": "mainIntent", "value": "GREETING", "type": "string" },
+            { "name": "confidence", "value": 0.95, "type": "number" },
+            { "name": "entities", "value": "[]", "type": "Array" }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -13,7 +13,39 @@
         "alt": "",
         "caption": ""
       },
-      "example": "이전 대화: \"안녕?\" → \"안녕하세요!\""
+      "example": "이전 대화: \"안녕?\" → \"안녕하세요!\"",
+      "debugVariables": [
+        {
+          "name": "conversationHistory",
+          "value": "[2 items]",
+          "type": "Array",
+          "expanded": true,
+          "children": [
+            {
+              "name": "[0]",
+              "value": null,
+              "type": "object",
+              "expanded": true,
+              "children": [
+                { "name": "role", "value": "user", "type": "string" },
+                { "name": "content", "value": "안녕?", "type": "string" },
+                { "name": "timestamp", "value": "2025-02-26T12:34:56", "type": "string" }
+              ]
+            },
+            {
+              "name": "[1]",
+              "value": null,
+              "type": "object",
+              "expanded": true,
+              "children": [
+                { "name": "role", "value": "assistant", "type": "string" },
+                { "name": "content", "value": "안녕하세요! 무엇을 도와드릴까요?", "type": "string" },
+                { "name": "timestamp", "value": "2025-02-26T12:34:57", "type": "string" }
+              ]
+            }
+          ]
+        }
+      ]
     },
     {
       "id": 1,
@@ -25,7 +57,21 @@
         "alt": "",
         "caption": ""
       },
-      "example": ""
+      "example": "",
+      "debugVariables": [
+        {
+          "name": "conversationState",
+          "value": null,
+          "type": "object",
+          "expanded": true,
+          "children": [
+            { "name": "lastMessageTime", "value": "2025-02-26T12:34:57", "type": "string" },
+            { "name": "isWaitingForUserInput", "value": true, "type": "boolean" },
+            { "name": "lastIntent", "value": "GREETING", "type": "string" },
+            { "name": "conversationTurns", "value": 1, "type": "number" }
+          ]
+        }
+      ]
     }
   ]
 }

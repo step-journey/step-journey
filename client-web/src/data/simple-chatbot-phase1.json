@@ -13,7 +13,14 @@
         "alt": "",
         "caption": ""
       },
-      "example": "\"안녕?\""
+      "example": "\"안녕?\"",
+      "debugVariables": [
+        {
+          "name": "userInput",
+          "value": "안녕?",
+          "type": "string"
+        }
+      ]
     },
     {
       "id": 1,
@@ -25,7 +32,19 @@
         "alt": "",
         "caption": ""
       },
-      "example": "\"안녕?\" (변화 없음)"
+      "example": "\"안녕?\" (변화 없음)",
+      "debugVariables": [
+        {
+          "name": "userInput",
+          "value": "안녕?",
+          "type": "string"
+        },
+        {
+          "name": "processedInput",
+          "value": "안녕?",
+          "type": "string"
+        }
+      ]
     },
     {
       "id": 2,
@@ -37,7 +56,24 @@
         "alt": "",
         "caption": ""
       },
-      "example": "[\"안녕\", \"?\"]"
+      "example": "[\"안녕\", \"?\"]",
+      "debugVariables": [
+        {
+          "name": "processedInput",
+          "value": "안녕?",
+          "type": "string"
+        },
+        {
+          "name": "tokens",
+          "value": "[2 items]",
+          "type": "Array",
+          "expanded": true,
+          "children": [
+            { "name": "[0]", "value": "안녕", "type": "string" },
+            { "name": "[1]", "value": "?", "type": "string" }
+          ]
+        }
+      ]
     }
   ]
 }

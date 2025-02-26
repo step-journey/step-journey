@@ -8,6 +8,7 @@ import { JourneySidebar } from "./JourneySidebar";
 import { JourneyHeader } from "./JourneyHeader";
 import { JourneyContent } from "./JourneyContent";
 import { JourneyFooter } from "./JourneyFooter";
+import { JourneyVariablesPanel } from "./JourneyVariablesPanel";
 import { JourneyMapModal } from "./JourneyMapModal";
 import PATH from "@/constants/path";
 
@@ -38,6 +39,9 @@ export default function JourneyPage() {
 
   // 지도 모달 상태
   const [isMapOpen, setIsMapOpen] = useState(false);
+
+  // 변수 패널 표시 상태
+  const [showVariables, setShowVariables] = useState(false);
 
   // 다크 모드 (임의 예시)
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -112,7 +116,7 @@ export default function JourneyPage() {
         onNavigateHome={() => navigate(PATH.HOME)}
       />
 
-      {/* 우측 영역: 헤더 / 본문 / 하단 */}
+      {/* 우측 영역: 헤더 / 본문 / 푸터 / 변수패널 */}
       <div className="flex flex-1 flex-col bg-white">
         {/* 헤더 */}
         <JourneyHeader
@@ -125,7 +129,14 @@ export default function JourneyPage() {
         {/* 본문: currentStep 내용 */}
         <JourneyContent currentStep={currentStep} allSteps={flattenSteps} />
 
-        {/* 하단: Prev/Next + Slider */}
+        {/* 변수 패널 */}
+        <JourneyVariablesPanel
+          currentStep={currentStep}
+          show={showVariables}
+          onToggle={() => setShowVariables(!showVariables)}
+        />
+
+        {/* 푸터: Prev/Next + Slider */}
         <JourneyFooter
           globalIndex={globalIndex}
           setGlobalIndex={setGlobalIndex}
