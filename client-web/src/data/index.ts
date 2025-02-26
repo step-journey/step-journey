@@ -7,6 +7,10 @@ import llmPhase1 from "./llm-phase1.json";
 import llmPhase2 from "./llm-phase2.json";
 import llmPhase3 from "./llm-phase3.json";
 import llmPhase4 from "./llm-phase4.json";
+import simpleChatbotPhase1 from "./simple-chatbot-phase1.json";
+import simpleChatbotPhase2 from "./simple-chatbot-phase2.json";
+import simpleChatbotPhase3 from "./simple-chatbot-phase3.json";
+import simpleChatbotPhase4 from "./simple-chatbot-phase4.json";
 import { Journey, FlattenedStep, GroupData } from "@/types/journey";
 
 // Google Search Journey
@@ -25,8 +29,24 @@ const llmProcessingJourney: Journey = {
   groups: [llmPhase1, llmPhase2, llmPhase3, llmPhase4],
 };
 
-// 모든 Journey를 배열로 관리
-export const journeys: Journey[] = [googleSearchJourney, llmProcessingJourney];
+// Simple Chatbot Journey
+const simpleChatbot: Journey = {
+  id: "simple-chatbot",
+  title: "Simple Chat Journey",
+  description: "간단한 챗봇 처리 과정",
+  groups: [
+    simpleChatbotPhase1,
+    simpleChatbotPhase2,
+    simpleChatbotPhase3,
+    simpleChatbotPhase4,
+  ],
+};
+
+export const journeys: Journey[] = [
+  googleSearchJourney,
+  llmProcessingJourney,
+  simpleChatbot,
+];
 
 // 특정 Journey 가져오기 (ID로)
 export const getJourneyById = (id: string): Journey | undefined => {

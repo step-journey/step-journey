@@ -1,0 +1,43 @@
+{
+  "groupId": "simple-chat-phase3",
+  "groupLabel": "응답 생성 및 출력",
+  "mapDescription": "사용자의 의도에 맞는 응답을 생성하고 출력하는 단계입니다.",
+  "steps": [
+    {
+      "id": 0,
+      "label": "패턴 매칭 또는 모델 예측",
+      "desc": "사전 정의된 규칙 또는 기계학습 모델을 사용하여 적절한 응답을 찾습니다.",
+      "media": {
+        "type": "image",
+        "url": "",
+        "alt": "",
+        "caption": ""
+      },
+      "example": "\"안녕하세요! 무엇을 도와드릴까요?\""
+    },
+    {
+      "id": 1,
+      "label": "응답 생성",
+      "desc": "선택된 응답을 최종적으로 정리하여 출력 형태로 준비합니다.",
+      "media": {
+        "type": "image",
+        "url": "",
+        "alt": "",
+        "caption": ""
+      },
+      "example": "\"안녕하세요! 무엇을 도와드릴까요?\""
+    },
+    {
+      "id": 2,
+      "label": "출력",
+      "desc": "생성된 응답을 사용자에게 표시합니다.",
+      "media": {
+        "type": "image",
+        "url": "",
+        "alt": "",
+        "caption": ""
+      },
+      "example": "챗봇: \"안녕하세요! 무엇을 도와드릴까요?\""
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "groupId": "simple-chat-phase2",
+  "groupLabel": "의미 분석 및 의도 인식",
+  "mapDescription": "토큰화된 텍스트를 분석하여 사용자의 의도를 파악하는 단계입니다.",
+  "steps": [
+    {
+      "id": 0,
+      "label": "전처리 (Preprocessing)",
+      "desc": "대소문자 변환, 불용어 제거, 형태소 분석 등 자연어 처리를 위한 추가 전처리를 수행합니다.",
+      "media": {
+        "type": "image",
+        "url": "",
+        "alt": "",
+        "caption": ""
+      },
+      "example": "[\"안녕\"]"
+    },
+    {
+      "id": 1,
+      "label": "의도 분석 (Intent Recognition)",
+      "desc": "사용자의 의도를 파악하여 메시지가 인사, 질문, 명령 등 어떤 유형인지 분류합니다.",
+      "media": {
+        "type": "image",
+        "url": "",
+        "alt": "",
+        "caption": ""
+      },
+      "example": "Intent: \"Greeting\" (인사로 분류)"
+    }
+  ]
+}
