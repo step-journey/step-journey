@@ -127,7 +127,11 @@ export default function JourneyPage() {
         />
 
         {/* 본문: currentStep 내용 */}
-        <JourneyContent currentStep={currentStep} allSteps={flattenSteps} />
+        <JourneyContent
+          currentStep={currentStep}
+          allSteps={flattenSteps}
+          journey={currentJourney}
+        />
 
         {/* 변수 패널 */}
         <JourneyVariablesPanel

@@ -21,6 +21,7 @@ export interface Step {
   media?: Media; // 미디어 정보 추가
   example?: string; // 예시 코드나 텍스트
   debugVariables?: DebugVariable[]; // 디버그 변수 추가
+  content?: string | string[];
 }
 
 export interface GroupData {
@@ -41,6 +42,7 @@ export interface Journey {
   title: string;
   description: string;
   groups: GroupData[];
+  pinnedProblem?: string; // 고정된 문제 설명 (선택적)
 }
 
 export type StepContainerMap = Record<string, HTMLDivElement | null>;

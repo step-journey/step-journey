@@ -67,16 +67,12 @@ export function JourneySidebar({
           const isExpanded = expandedGroups[grp.groupId] || false;
           const isCurrentGroup = grp.groupId === currentStep.groupId;
 
-          // 그룹 라벨
           let groupLabelClass = `
             flex items-center h-8 px-2 gap-2 cursor-pointer
-            rounded hover:bg-gray-100 text-step
+            rounded hover:bg-gray-100
           `;
           if (isCurrentGroup) {
             groupLabelClass += " font-semibold";
-            if (!isExpanded) {
-              groupLabelClass += " !text-blue-600";
-            }
           }
 
           return (
@@ -107,21 +103,19 @@ export function JourneySidebar({
                   className="ml-5 mt-1 max-h-[300px] overflow-auto flex flex-col gap-1"
                 >
                   {grp.steps.map((st) => {
-                    // flattenSteps 에서 해당 FlattenedStep 을 찾아온다
                     const foundFs = flattenSteps.find(
                       (fs) =>
                         fs.groupId === grp.groupId &&
                         fs.stepIdInGroup === st.id,
                     );
-                    if (!foundFs) return null; // 혹은 return (some fallback)
+                    if (!foundFs) return null;
 
                     const isActive =
                       foundFs.globalIndex === currentStep.globalIndex;
+
                     const stepClass = [
                       "px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-100",
-                      isActive
-                        ? "bg-gray-100 font-medium text-blue-600"
-                        : "text-step",
+                      isActive ? "bg-gray-100 font-medium text-blue-600" : "",
                     ].join(" ");
 
                     return (
@@ -141,6 +135,7 @@ export function JourneySidebar({
           );
         })}
       </ScrollArea>
+
       {/* 최하단 홈 아이콘 - 스크롤 영역 밖에 배치하여 항상 보이도록 함 */}
       <div className="p-2 mt-auto flex justify-end">
         <Button
