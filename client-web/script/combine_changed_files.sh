@@ -83,8 +83,8 @@ do
   # 5-2) client-web/ 내부인지 확인 (중복 안전장치)
   [[ $file == client-web/* ]] || continue
 
-  # 5-3) package-lock.json 파일은 제외
-  if [ "$file" = "client-web/package-lock.json" ]; then
+  # 5-3) 제외 파일
+  if [[ "$file" = "client-web/package-lock.json" || "$file" == client-web/script/* ]]; then
     continue
   fi
 

@@ -27,6 +27,7 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 # 구현시 주의사항
 echo "# StepJourney React Client 구현시 주의사항:" >> "$OUTPUT_FILE"
+echo "- 프로젝트 이름은 StepJourney 임" >> "$OUTPUT_FILE"
 echo "- 너의 답변의 코드를 그대로 복사하여 붙여넣어서 prod 배포할 예정이므로 주석으로 생략하는 부분 없이 완전한 코드로 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
 echo "- 구현을 위해 조금이라도 수정이 된 파일은 해당 파일의 전체 코드를 완전하게 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
 echo "- React 클라이언트에서 UI 디자인은 shadcd/ui (\`radix-ui\`)가 추구하는 것처럼 minimal함을 추구해야함" >> "$OUTPUT_FILE"
@@ -77,6 +78,7 @@ find . \
   ! -path "*/.idea/*" \
   ! -path "*/fonts/*" \
   ! -path "*/src/data/*" \
+  ! -path "*/script/*" \
   ! -name "package-lock.json" \
   | sort \
   | while read -r file
