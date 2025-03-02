@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 import Header from "./Header";
 import LoginModal from "./LoginModal";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import PATH from "@/constants/path";
 
 import { useUserQuery, useLogoutMutation } from "@/hooks/useAuth";
-import { journeys } from "@/data";
 
 export default function HomePage() {
   // 로그인 모달 열림 여부
@@ -19,7 +16,7 @@ export default function HomePage() {
   const { data: user } = useUserQuery();
   const logoutMutation = useLogoutMutation();
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // 로그인 모달 열고 닫기
   const openLoginModal = () => setIsLoginModalOpen(true);
@@ -32,11 +29,6 @@ export default function HomePage() {
     } catch (err) {
       console.error("Logout failed:", err);
     }
-  };
-
-  // Card 클릭 시 Journey 페이지로 이동 (journeyId를 파라미터로 전달)
-  const handleCardClick = (journeyId: string) => {
-    navigate(`${PATH.JOURNEY}/${journeyId}`);
   };
 
   return (
@@ -82,23 +74,7 @@ export default function HomePage() {
         </aside>
 
         {/* 중앙 본문 */}
-        <main className="flex-1 p-4">
-          <h2 className="text-xl font-semibold mb-4">All Journeys</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {journeys.map((journey) => (
-              <Card
-                key={journey.id}
-                className="cursor-pointer"
-                onClick={() => handleCardClick(journey.id)}
-              >
-                <CardHeader>
-                  <CardTitle>{journey.title}</CardTitle>
-                </CardHeader>
-                <CardContent>{journey.description}</CardContent>
-              </Card>
-            ))}
-          </div>
-        </main>
+        <main className="flex-1 p-4"></main>
 
         {/* 우측 사이드바 */}
         <aside className="hidden lg:flex flex-col w-64 border-l border-border p-4"></aside>
