@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # 에러 발생 시 스크립트 중단 설정 (단, tsc 명령은 예외 처리 예정)
 set -e
 
@@ -7,12 +6,21 @@ set -e
 cd "$(dirname "$0")/.."
 
 # 출력 파일 정의
-OUTPUT_FILE="script/compile_errors.txt"
+OUTPUT_FILE="script/combined_compile_errors.txt"
 TEMP_FILE="script/temp_compile_errors.txt"
 
 # 기존 출력 파일 삭제 및 디렉토리 생성
 rm -f "$OUTPUT_FILE"
 mkdir -p "$(dirname "$OUTPUT_FILE")"
+
+# 구현시 주의사항
+echo "# StepJourney React Client 문제 해결시 주의사항:" >> "$OUTPUT_FILE"
+echo "- 너의 답변의 코드를 그대로 복사하여 붙여넣어서 prod 배포할 예정이므로 주석으로 생략하는 부분 없이 완전한 코드로 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
+echo "- 구현 혹은 문제 해결을 위해 조금이라도 수정이 된 파일은 해당 파일의 전체 코드를 완전하게 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
+echo "- React 클라이언트에서 UI 디자인은 shadcd/ui (\`radix-ui\`)가 추구하는 것처럼 minimal함을 추구해야함" >> "$OUTPUT_FILE"
+echo "- React 클라이언트에서 필요한 컴포넌트를 \`npx shadcn@latest add [component]\` 커맨드로 추가해서 사용해야함" >> "$OUTPUT_FILE"
+echo "- React 클라이언트에서 아이콘은 \`\"@tabler/icons-react\"\` 에서 적절한 것을 가져다가 사용해야함" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
 
 # 프로젝트 구조 추가
 echo "# Project Structure:" >> "$OUTPUT_FILE"
@@ -36,7 +44,6 @@ echo "" >> "$OUTPUT_FILE"
 
 # src/types 디렉토리의 모든 .ts 파일을 찾음
 type_files=$(find src/types -name "*.ts" 2>/dev/null)
-
 if [ -n "$type_files" ]; then
   for file in $type_files; do
     if [ -f "$file" ]; then
@@ -82,33 +89,43 @@ if [ -s "$TEMP_FILE" ]; then
       echo "## Error $error_count:" >> "$OUTPUT_FILE"
       echo "$file($line_num,$col_num): error $error_code: $error_message" >> "$OUTPUT_FILE"
 
-      # 파일에서 해당 라인 주변의 코드 추출 (예: 2줄 전후)
+      # 파일이 존재하는지 확인
       if [ -f "$file" ]; then
-        start_line=$((line_num - 2))
-        end_line=$((line_num + 2))
-        if [ $start_line -lt 1 ]; then
-          start_line=1
-        fi
-        echo "" >> "$OUTPUT_FILE"
-        echo "  Code Context (lines $start_line to $end_line):" >> "$OUTPUT_FILE"
-        echo "    ```tsx" >> "$OUTPUT_FILE"
-        sed -n "${start_line},${end_line}p" "$file" | sed 's/^[ \t]*//;s/[ \t]*$//' >> "$OUTPUT_FILE"
-        echo "    ```" >> "$OUTPUT_FILE"
+        # Code Context 부분은 제거
 
-        # 오류가 발생한 라인과 컬럼 강조
-        echo "    Error at line $line_num, column $col_num:" >> "$OUTPUT_FILE"
-        error_line=$(sed "${line_num}q;d" "$file" | sed 's/^[ \t]*//;s/[ \t]*$//')
-        echo "    $error_line" >> "$OUTPUT_FILE"
-        underline=$(printf "%*s" "$((col_num - 1))" "" | tr ' ' ' ' && echo "^")
-        echo "    $underline" >> "$OUTPUT_FILE"
+        # 오류 위치 표시 방법 개선
+        echo "" >> "$OUTPUT_FILE"
+        echo "### Error Location:" >> "$OUTPUT_FILE"
+
+        # 파일에서 해당 라인 읽기
+        error_line=$(sed -n "${line_num}p" "$file" || echo "Line not found")
+
+        # 오류 라인에서 문제 부분 표시 (cut 명령 오류 방지)
+        if [ -n "$error_line" ]; then
+          # 오류 위치를 표시할 코드 부분 추출 (최대 20자까지)
+          problematic_code=$(echo "$error_line" | cut -c${col_num}- | head -c 20)
+          if [ -z "$problematic_code" ]; then
+            problematic_code="(위치를 찾을 수 없음)"
+          fi
+
+          echo "Line $line_num: \`$error_line\`" >> "$OUTPUT_FILE"
+          echo "Problem: \`$problematic_code\` at column $col_num" >> "$OUTPUT_FILE"
+        else
+          echo "Line $line_num: (라인을 읽을 수 없음)" >> "$OUTPUT_FILE"
+        fi
+
+        echo "" >> "$OUTPUT_FILE"
       else
         echo "  [File not found: $file]" >> "$OUTPUT_FILE"
+        echo "" >> "$OUTPUT_FILE"
       fi
 
-      echo "" >> "$OUTPUT_FILE"
       error_count=$((error_count + 1))
     else
-      echo "$line" >> "$OUTPUT_FILE"
+      # TS6305와 같은 메타 오류는 필터링
+      if ! [[ $line =~ TS6305 || $line =~ TS6306 || $line =~ TS6310 ]]; then
+        echo "$line" >> "$OUTPUT_FILE"
+      fi
     fi
   done < "$TEMP_FILE"
 else
@@ -120,11 +137,10 @@ if [ "${#error_files[@]}" -gt 0 ]; then
   echo "" >> "$OUTPUT_FILE"
   echo "# Full Source Code of Error Files:" >> "$OUTPUT_FILE"
   echo "" >> "$OUTPUT_FILE"
-
   for file in "${error_files[@]}"; do
     if [ -f "$file" ]; then
       echo "## $file" >> "$OUTPUT_FILE"
-      echo '```tsx' >> "$OUTPUT_FILE"
+      echo '```typescript' >> "$OUTPUT_FILE"
       cat "$file" >> "$OUTPUT_FILE"
       echo '```' >> "$OUTPUT_FILE"
       echo "" >> "$OUTPUT_FILE"
