@@ -1,4 +1,3 @@
-// src/components/editor/TextEditor.tsx
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { BlockType, TextFormat } from "@/types/block";
 import { cn } from "@/lib/utils";
@@ -31,7 +30,6 @@ export default function TextEditor({
   onArrowDown,
   placeholder = "글을 작성하세요. AI를 사용하려면 '스페이스' 키를, 명령어를 사용하려면 '/ '키를 누르세요...",
 }: TextEditorProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -204,14 +202,12 @@ export default function TextEditor({
         contentEditable
         suppressContentEditableWarning
         onFocus={() => {
-          setIsEditing(true);
           setIsFocused(true);
           setTimeout(() => {
             moveCursorToEnd();
           }, 0);
         }}
         onBlur={() => {
-          setIsEditing(false);
           setIsFocused(false);
           if (!menuPosition) {
             setCommandMenuOpen(false);

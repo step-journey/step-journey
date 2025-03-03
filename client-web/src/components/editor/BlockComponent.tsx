@@ -1,4 +1,3 @@
-// src/components/editor/BlockComponent.tsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Block, BlockType } from "@/types/block";
 import { cn } from "@/lib/utils";
@@ -230,7 +229,7 @@ export default function BlockComponent({
       return (
         <h1
           spellCheck="true"
-          placeholder="제목1"
+          data-placeholder="제목1"
           contentEditable
           data-content-editable-leaf="true"
           style={{ fontSize: "1.875em", lineHeight: "1.3", margin: 0 }}
@@ -243,7 +242,7 @@ export default function BlockComponent({
       return (
         <h2
           spellCheck="true"
-          placeholder="제목2"
+          data-placeholder="제목2"
           contentEditable
           data-content-editable-leaf="true"
           style={{ fontSize: "1.5em", lineHeight: "1.35", margin: 0 }}
@@ -256,7 +255,7 @@ export default function BlockComponent({
       return (
         <h3
           spellCheck="true"
-          placeholder="제목3"
+          data-placeholder="제목3"
           contentEditable
           data-content-editable-leaf="true"
           style={{ fontSize: "1.25em", lineHeight: "1.4", margin: 0 }}
@@ -356,14 +355,11 @@ export default function BlockComponent({
       case "heading_1":
       case "heading_2":
       case "heading_3": {
-        const text = block.properties.title?.[0]?.[0] || "";
-        return <>{renderHeadingTag(text) /* 실제 h1/h2/h3 */}</>;
+        return <>{renderHeadingTag(block.properties.title?.[0]?.[0] || "")}</>;
       }
 
       case "bulleted_list":
       case "numbered_list": {
-        // 실제 Notion의 리스트 아이템 구조를 비슷하게 흉내
-        const text = block.properties.title?.[0]?.[0] || "";
         return (
           <div
             style={{
