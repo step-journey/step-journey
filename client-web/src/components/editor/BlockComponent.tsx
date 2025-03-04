@@ -168,7 +168,7 @@ export default function BlockComponent({
         notionBlockClass,
         classNameExtra,
         isSelected && "bg-accent/20 rounded",
-        isFocused && "ring-1 ring-primary/40 rounded",
+        isFocused && "ring-primary/40 rounded",
         isDragged && "opacity-50",
       )}
       onClick={handleBlockClick}
