@@ -35,6 +35,19 @@ const BlockContent: React.FC<BlockContentProps> = ({
   onArrowUp,
   onArrowDown,
 }) => {
+  // Handle cursor positioning when navigating between blocks
+  const handleArrowUp = () => {
+    if (onArrowUp) {
+      onArrowUp();
+    }
+  };
+
+  const handleArrowDown = () => {
+    if (onArrowDown) {
+      onArrowDown();
+    }
+  };
+
   const renderContent = () => {
     switch (blockType) {
       case "to_do":
@@ -81,8 +94,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
           onShiftTab={handleOutdent}
           onDelete={handleDeleteBlock}
           onChangeType={handleChangeType}
-          onArrowUp={onArrowUp}
-          onArrowDown={onArrowDown}
+          onArrowUp={handleArrowUp}
+          onArrowDown={handleArrowDown}
         />
       </div>
     </div>
@@ -111,8 +124,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
           onShiftTab={handleOutdent}
           onDelete={handleDeleteBlock}
           onChangeType={handleChangeType}
-          onArrowUp={onArrowUp}
-          onArrowDown={onArrowDown}
+          onArrowUp={handleArrowUp}
+          onArrowDown={handleArrowDown}
         />
       </div>
     </div>
@@ -131,8 +144,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
           onShiftTab={handleOutdent}
           onDelete={handleDeleteBlock}
           onChangeType={handleChangeType}
-          onArrowUp={onArrowUp}
-          onArrowDown={onArrowDown}
+          onArrowUp={handleArrowUp}
+          onArrowDown={handleArrowDown}
         />
       </div>
     </div>
@@ -149,8 +162,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
         onShiftTab={handleOutdent}
         onDelete={handleDeleteBlock}
         onChangeType={handleChangeType}
-        onArrowUp={onArrowUp}
-        onArrowDown={onArrowDown}
+        onArrowUp={handleArrowUp}
+        onArrowDown={handleArrowDown}
       />
     </div>
   );
@@ -172,8 +185,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
         onShiftTab={handleOutdent}
         onDelete={handleDeleteBlock}
         onChangeType={handleChangeType}
-        onArrowUp={onArrowUp}
-        onArrowDown={onArrowDown}
+        onArrowUp={handleArrowUp}
+        onArrowDown={handleArrowDown}
       />
     </div>
   );
@@ -195,8 +208,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
             onEnter={handleAddBlock}
             onTab={handleIndent}
             onShiftTab={handleOutdent}
-            onArrowUp={onArrowUp}
-            onArrowDown={onArrowDown}
+            onArrowUp={handleArrowUp}
+            onArrowDown={handleArrowDown}
           />
         </div>
       </div>
@@ -222,8 +235,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
       onShiftTab={handleOutdent}
       onDelete={handleDeleteBlock}
       onChangeType={handleChangeType}
-      onArrowUp={onArrowUp}
-      onArrowDown={onArrowDown}
+      onArrowUp={handleArrowUp}
+      onArrowDown={handleArrowDown}
     />
   );
 
@@ -256,8 +269,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
           onShiftTab={handleOutdent}
           onDelete={handleDeleteBlock}
           onChangeType={handleChangeType}
-          onArrowUp={onArrowUp}
-          onArrowDown={onArrowDown}
+          onArrowUp={handleArrowUp}
+          onArrowDown={handleArrowDown}
         />
       </div>
     </div>
@@ -273,8 +286,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
       onShiftTab={handleOutdent}
       onDelete={handleDeleteBlock}
       onChangeType={handleChangeType}
-      onArrowUp={onArrowUp}
-      onArrowDown={onArrowDown}
+      onArrowUp={handleArrowUp}
+      onArrowDown={handleArrowDown}
     />
   );
 

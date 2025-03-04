@@ -227,17 +227,33 @@ export function useTextEditorKeydown({
           const selection = window.getSelection();
           if (selection && selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
-            const isAtStart =
-              range.startOffset === 0 &&
-              (range.startContainer === editorRef.current ||
-                (range.startContainer.nodeType === Node.TEXT_NODE &&
-                  !range.startContainer.previousSibling));
 
-            if (isAtStart && onArrowUp) {
-              e.preventDefault();
-              onArrowUp();
-            } else if (!isTextLineStart()) {
-              // 같은 블록의 이전 줄로 이동
+            // 현재 커서 위치의 가로 좌표(column) 정보를 저장
+            const cursorPosition = getCaretPosition();
+            const currentColumn = cursorPosition ? cursorPosition.offset : 0;
+
+            // 현재 커서 위치가 현재 블록의 첫 번째 라인에 있는지 확인
+            const isFirstLine = isTextLineStart() || !text.includes("\n");
+
+            if (isFirstLine) {
+              // 첫 번째 줄에서 위 방향키를 누르면 이전 블록으로 이동
+              if (onArrowUp) {
+                e.preventDefault();
+
+                // 현재 커서의 column 위치를 저장하고 onArrowUp에 전달
+                // 이렇게 하면 이전 블록으로 이동할 때 동일한 column 위치로 이동 가능
+                if (typeof onArrowUp === "function") {
+                  // 커서 위치 정보를 localStorage나 다른 방법으로 임시 저장
+                  // 실제 구현에서는 상태 관리나 ref를 사용하는 것이 더 좋음
+                  window.localStorage.setItem(
+                    "caretColumn",
+                    currentColumn.toString(),
+                  );
+                  onArrowUp();
+                }
+              }
+            } else {
+              // 여러 줄 내에서의 위로 이동은 moveUpToSameColumn 사용
               e.preventDefault();
               moveUpToSameColumn();
             }
@@ -255,17 +271,39 @@ export function useTextEditorKeydown({
           const selection = window.getSelection();
           if (selection && selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
-            const isAtEnd =
-              range.startOffset === text.length &&
-              (range.startContainer === editorRef.current ||
-                (range.startContainer.nodeType === Node.TEXT_NODE &&
-                  !range.startContainer.nextSibling));
 
-            if (isAtEnd && onArrowDown) {
-              e.preventDefault();
-              onArrowDown();
-            } else if (!isTextLineEnd()) {
-              // 같은 블록의 다음 줄로 이동
+            // 현재 커서 위치의 가로 좌표(column) 정보를 저장
+            const cursorPosition = getCaretPosition();
+            const currentColumn = cursorPosition ? cursorPosition.offset : 0;
+
+            // 마지막 라인인지 확인
+            const lastNewlinePos = text.lastIndexOf("\n");
+            const isLastLine =
+              lastNewlinePos === -1 ||
+              (cursorPosition && cursorPosition.offset > lastNewlinePos);
+
+            if (
+              isLastLine &&
+              cursorPosition &&
+              cursorPosition.offset >=
+                getLineEndPosition(text, cursorPosition.offset)
+            ) {
+              // 마지막 줄의 끝에서 아래 방향키를 누르면 다음 블록으로 이동
+              if (onArrowDown) {
+                e.preventDefault();
+
+                // 현재 커서의 column 위치를 저장하고 onArrowDown에 전달
+                window.localStorage.setItem(
+                  "caretColumn",
+                  getColumnPositionInLine(
+                    text,
+                    cursorPosition.offset,
+                  ).toString(),
+                );
+                onArrowDown();
+              }
+            } else {
+              // 여러 줄 내에서의 아래로 이동은 moveDownToSameColumn 사용
               e.preventDefault();
               moveDownToSameColumn();
             }
@@ -430,6 +468,23 @@ export function useTextEditorKeydown({
     // 캐럿 위치 설정
     setCaretPosition(lineEndPos);
   }, [editorRef, setCaretPosition]);
+
+  // 현재 위치의 줄 끝 위치 계산
+  const getLineEndPosition = useCallback((text: string, cursorPos: number) => {
+    const nextNewlinePos = text.indexOf("\n", cursorPos);
+    return nextNewlinePos === -1 ? text.length : nextNewlinePos;
+  }, []);
+
+  // 현재 줄에서의 열(column) 위치 계산
+  const getColumnPositionInLine = useCallback(
+    (text: string, cursorPos: number) => {
+      const textBeforeCursor = text.substring(0, cursorPos);
+      const lastNewlinePos = textBeforeCursor.lastIndexOf("\n");
+      const currentLineStart = lastNewlinePos === -1 ? 0 : lastNewlinePos + 1;
+      return cursorPos - currentLineStart;
+    },
+    [],
+  );
 
   // 왼쪽으로 단어 단위 이동
   const moveWordLeft = useCallback(() => {
@@ -688,7 +743,6 @@ export function useTextEditorKeydown({
     selection.removeAllRanges();
     selection.addRange(newRange);
   }, [editorRef]);
-
   // 같은 열로 위쪽 줄로 이동
   const moveUpToSameColumn = useCallback(() => {
     if (!editorRef.current) return;

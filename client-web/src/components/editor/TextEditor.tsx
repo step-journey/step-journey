@@ -60,6 +60,79 @@ export default function TextEditor({
     }
   }, [value]);
 
+  useEffect(() => {
+    const editorElement = editorRef.current;
+    if (!editorElement) return;
+
+    const handleKeyDownEvent = (e: KeyboardEvent) => {
+      // Arrow key handling for cursor position maintenance
+      if (e.key === "ArrowUp" && isFirstLine(editorElement)) {
+        const cursorPos = getCursorPosition();
+        if (cursorPos) {
+          // Save the current horizontal position for when we move to the previous block
+          const column = getColumnPosition(cursorPos);
+          localStorage.setItem("caretColumn", column.toString());
+        }
+      } else if (e.key === "ArrowDown" && isLastLine(editorElement)) {
+        const cursorPos = getCursorPosition();
+        if (cursorPos) {
+          // Save the current horizontal position for when we move to the next block
+          const column = getColumnPosition(cursorPos);
+          localStorage.setItem("caretColumn", column.toString());
+        }
+      }
+    };
+
+    // Helper functions for cursor position
+    const isFirstLine = (element: HTMLElement) => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return false;
+
+      const range = selection.getRangeAt(0);
+      const text = element.textContent || "";
+      const cursorPos = range.startOffset;
+
+      // If there's no newline or cursor is before the first newline
+      return text.indexOf("\n") === -1 || cursorPos <= text.indexOf("\n");
+    };
+
+    const isLastLine = (element: HTMLElement) => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return false;
+
+      const range = selection.getRangeAt(0);
+      const text = element.textContent || "";
+      const cursorPos = range.startOffset;
+      const lastNewlinePos = text.lastIndexOf("\n");
+
+      // If there's no newline or cursor is after the last newline
+      return lastNewlinePos === -1 || cursorPos > lastNewlinePos;
+    };
+
+    const getCursorPosition = (): number | null => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return null;
+
+      const range = selection.getRangeAt(0);
+      return range.startOffset;
+    };
+
+    const getColumnPosition = (cursorPos: number): number => {
+      const text = editorElement.textContent || "";
+      const textBeforeCursor = text.substring(0, cursorPos);
+      const lastNewlinePos = textBeforeCursor.lastIndexOf("\n");
+
+      // If there's no newline, cursor column is just the cursor position
+      // Otherwise, it's the position relative to the last newline
+      return lastNewlinePos === -1 ? cursorPos : cursorPos - lastNewlinePos - 1;
+    };
+
+    editorElement.addEventListener("keydown", handleKeyDownEvent);
+    return () => {
+      editorElement.removeEventListener("keydown", handleKeyDownEvent);
+    };
+  }, [editorRef]);
+
   // 텍스트 포맷팅 훅
   const {
     selectedRange,
