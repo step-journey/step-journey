@@ -1,4 +1,3 @@
-// src/components/editor/BlockChildren.tsx
 import { useState, useEffect, useCallback } from "react";
 import { Block, BlockType } from "@/types/block";
 import BlockComponent from "./BlockComponent";
@@ -20,7 +19,6 @@ export default function BlockChildren({
   addBlock,
   updateBlock,
   deleteBlock,
-  moveBlock,
   indentBlock,
   outdentBlock,
   depth,
@@ -133,7 +131,25 @@ export default function BlockChildren({
     }
   };
 
-  // 차일드 블록 이동
+  // 블록 포커스 처리
+  const handleFocusBlock = (id: string) => {
+    setFocusedBlockId(id);
+  };
+
+  // 블록 선택 처리
+  const handleSelectBlock = (id: string, multiSelect: boolean) => {
+    if (multiSelect) {
+      // 다중 선택 시 상위 컴포넌트에 위임하는 것이 좋음
+      // 이 예제에서는 단순 구현
+      setSelectedBlockId(id === selectedBlockId ? null : id);
+    } else {
+      setSelectedBlockId(id);
+    }
+
+    setFocusedBlockId(id);
+  };
+
+  // 블록 이동
   const handleMoveChildBlock = async (id: string, targetIndex: number) => {
     try {
       // 현재 인덱스 찾기
@@ -159,24 +175,6 @@ export default function BlockChildren({
     } catch (error) {
       console.error("Failed to move child block:", error);
     }
-  };
-
-  // 블록 포커스 처리
-  const handleFocusBlock = (id: string) => {
-    setFocusedBlockId(id);
-  };
-
-  // 블록 선택 처리
-  const handleSelectBlock = (id: string, multiSelect: boolean) => {
-    if (multiSelect) {
-      // 다중 선택 시 상위 컴포넌트에 위임하는 것이 좋음
-      // 이 예제에서는 단순 구현
-      setSelectedBlockId(id === selectedBlockId ? null : id);
-    } else {
-      setSelectedBlockId(id);
-    }
-
-    setFocusedBlockId(id);
   };
 
   // 들여쓰기/내어쓰기 후 블록 트리 구조 변경 시 새로고침

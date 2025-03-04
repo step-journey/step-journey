@@ -87,7 +87,7 @@ if [ -s "$TEMP_FILE" ]; then
 
       # 오류 섹션 시작
       echo "## Error $error_count:" >> "$OUTPUT_FILE"
-      echo "$file($line_num,$col_num): error $error_code: $error_message" >> "$OUTPUT_FILE"
+      echo "- $file($line_num,$col_num): error $error_code: $error_message" >> "$OUTPUT_FILE"
 
       # 파일이 존재하는지 확인
       if [ -f "$file" ]; then
@@ -95,7 +95,7 @@ if [ -s "$TEMP_FILE" ]; then
 
         # 오류 위치 표시 방법 개선
         echo "" >> "$OUTPUT_FILE"
-        echo "### Error Location:" >> "$OUTPUT_FILE"
+        echo "- Error Location:" >> "$OUTPUT_FILE"
 
         # 파일에서 해당 라인 읽기
         error_line=$(sed -n "${line_num}p" "$file" || echo "Line not found")
@@ -108,10 +108,10 @@ if [ -s "$TEMP_FILE" ]; then
             problematic_code="(위치를 찾을 수 없음)"
           fi
 
-          echo "Line $line_num: \`$error_line\`" >> "$OUTPUT_FILE"
-          echo "Problem: \`$problematic_code\` at column $col_num" >> "$OUTPUT_FILE"
+          echo "- Line $line_num: \`$error_line\`" >> "$OUTPUT_FILE"
+          echo "- Problem: \`$problematic_code\` at column $col_num" >> "$OUTPUT_FILE"
         else
-          echo "Line $line_num: (라인을 읽을 수 없음)" >> "$OUTPUT_FILE"
+          echo "- Line $line_num: (라인을 읽을 수 없음)" >> "$OUTPUT_FILE"
         fi
 
         echo "" >> "$OUTPUT_FILE"

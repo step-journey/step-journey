@@ -138,7 +138,7 @@ export default function CommandMenu({
     } else {
       setFilteredCommands(commands);
     }
-  }, [searchTerm]);
+  }, [commands, searchTerm]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -184,6 +184,7 @@ export default function CommandMenu({
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
+        transform: "translate(0, 8px)",
       }}
     >
       <div className="p-2 border-b border-border">
