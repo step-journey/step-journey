@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { Block, createPageBlock } from "@/types/block";
+import { Block, createPageBlock, TextFormat } from "@/types/block";
 import BlockEditor from "@/components/editor/BlockEditor";
 import db from "@/db";
 import { Button } from "@/components/ui/button";
@@ -55,15 +55,22 @@ export default function EditorPage() {
     setTitle(newTitle);
 
     if (page) {
-      const updatedPage = {
-        ...page,
-        properties: {
-          ...page.properties,
-          title: [[newTitle, []]],
-        },
+      // 타입 캐스팅을 추가하여 문제 해결
+      const updatedProperties = {
+        ...page.properties,
+        title: [[newTitle, []]] as [string, Array<TextFormat>][],
       };
-      await db.updateBlock(page.id, updatedPage);
-      setPage(updatedPage);
+
+      // 페이지 제목 업데이트
+      await db.updateBlock(page.id, {
+        properties: updatedProperties,
+      });
+
+      // 로컬 상태 업데이트
+      setPage({
+        ...page,
+        properties: updatedProperties,
+      });
     }
   };
 
