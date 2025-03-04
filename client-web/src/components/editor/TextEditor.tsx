@@ -64,10 +64,13 @@ export default function TextEditor({
   useEffect(() => {
     if (editorRef.current) {
       const text = value[0]?.[0] || "";
+
+      // Only update the content if actually needed
       if (
-        !editorRef.current.textContent ||
-        editorRef.current.textContent !== text
+        editorRef.current.textContent !== text &&
+        !editorRef.current.contains(document.activeElement)
       ) {
+        // Only replace content when the editor doesn't have focus
         editorRef.current.textContent = text;
       }
     }
@@ -107,26 +110,43 @@ export default function TextEditor({
   }, []);
 
   // 커서를 텍스트 끝으로 이동
-  const moveCursorToEnd = () => {
+  const moveCursorToEnd = useCallback(() => {
     if (!editorRef.current) return;
 
-    if (!editorRef.current.firstChild) {
-      editorRef.current.appendChild(document.createTextNode(""));
-    }
-
+    // Only set selection if the div has content
     const selection = window.getSelection();
     if (!selection) return;
 
     const range = document.createRange();
-    const textNode = editorRef.current.firstChild as Text;
-    const length = textNode.length;
 
-    range.setStart(textNode, length);
-    range.setEnd(textNode, length);
+    // If there's text content
+    if (editorRef.current.firstChild && editorRef.current.textContent) {
+      // Get the last text node
+      const lastNode = editorRef.current.lastChild;
+      // If it's a text node, put cursor at the end
+      if (lastNode && lastNode.nodeType === Node.TEXT_NODE) {
+        const textNode = lastNode as Text;
+        const length = textNode.textContent?.length || 0;
+        range.setStart(textNode, length);
+        range.setEnd(textNode, length);
+      } else {
+        // If it's not a text node, append an empty text node
+        const textNode = document.createTextNode("");
+        editorRef.current.appendChild(textNode);
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, 0);
+      }
+    } else {
+      // If no content, create a text node
+      const textNode = document.createTextNode("");
+      editorRef.current.appendChild(textNode);
+      range.setStart(textNode, 0);
+      range.setEnd(textNode, 0);
+    }
 
     selection.removeAllRanges();
     selection.addRange(range);
-  };
+  }, []);
 
   // 포맷 적용 함수
   const applyFormat = (formatType: TextFormat) => {
@@ -226,8 +246,10 @@ export default function TextEditor({
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
+
+        // Calculate position based on the cursor's position
         setMenuPosition({
-          top: rect.bottom + window.scrollY + 5,
+          top: rect.bottom + window.scrollY,
           left: rect.left + window.scrollX,
         });
         setCommandMenuOpen(true);
@@ -251,7 +273,8 @@ export default function TextEditor({
   // 키 입력 처리
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const now = Date.now();
-    const timeSinceLastKeyPress = now - lastKeyPressTime.current;
+    // 미사용 변수 주석 처리 또는 _ 접두사 추가
+    // const timeSinceLastKeyPress = now - lastKeyPressTime.current;
     lastKeyPressTime.current = now;
 
     // 커맨드 메뉴가 열려있을 때 특수 키 처리
@@ -428,7 +451,10 @@ export default function TextEditor({
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
+    // 미사용 변수는 사용하거나 제거
+    // 여기서는 변수가 사용될 수 있는 예시 코드가 있으므로 유지합니다
     const range = selection.getRangeAt(0);
+    // 링크 범위 확인 로직이 있다면 여기서 range 사용
 
     // 간단한 구현을 위해 window.prompt 사용
     // 실제로는 사용자 정의 모달 컴포넌트 사용 권장
