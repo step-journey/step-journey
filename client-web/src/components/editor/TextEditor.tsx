@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { BlockType, TextFormat } from "@/types/block";
 import { cn } from "@/lib/utils";
-import CommandMenu from "./CommandMenu";
+import SlashCommandMenu from "./SlashCommandMenu";
 import FormatMenu from "./text/FormatMenu";
 import { useTextFormatting } from "./hooks/useTextFormatting";
 import { useTextEditorKeydown } from "./hooks/useTextEditorKeydown";
@@ -390,7 +390,7 @@ export default function TextEditor({
 
       {/* 커맨드 메뉴 */}
       {commandMenuOpen && (
-        <CommandMenu
+        <SlashCommandMenu
           onSelect={handleSelectBlockType}
           onClose={closeCommandMenu}
           searchTerm={searchTerm}
