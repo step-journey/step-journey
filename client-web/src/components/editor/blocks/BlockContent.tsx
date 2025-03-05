@@ -261,7 +261,7 @@ const BlockContent: React.FC<BlockContentProps> = ({
 
           // 캐럿 관리 로깅
           if (import.meta.env.DEV) {
-            console.log("[CARET:SPLIT]", {
+            console.log("[BlockContent] CARET:SPLIT", {
               blockId: block.id,
               splitPosition: currentPosition.offset,
             });

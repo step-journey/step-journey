@@ -27,6 +27,9 @@ export function useEditorState({
   // 에디터 루트 DOM
   const rootRef = useRef<HTMLElement | null>(null);
 
+  // 이전 selection 상태를 문자열로 직렬화하여 기억
+  const prevSelectionStringRef = useRef("");
+
   // 1) EditorController를 생성 & 구독
   useEffect(() => {
     // EditorController 생성
@@ -91,6 +94,14 @@ export function useEditorState({
         }
       }
       if (isInEditor) {
+        const newSelString = `${selection.anchorNode}-${selection.anchorOffset}-${selection.focusNode}-${selection.focusOffset}`;
+
+        // 직전 상태와 같으면 skip => 중복 update 막기
+        if (newSelString === prevSelectionStringRef.current) {
+          return;
+        }
+        prevSelectionStringRef.current = newSelString;
+
         // editorController가 DOM selection을 읽어 에디터 상태에 반영
         controllerRef.current.updateSelectionFromDOM();
       }

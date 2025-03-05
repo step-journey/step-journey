@@ -376,12 +376,16 @@ export function useCaretManager({
   useEffect(() => {
     if (debug) {
       return subscribeToCaretEvents((event) => {
-        console.log(`%c[CARET DEBUG]`, "background: #ffcc00; color: #000", {
-          operation: event.operation,
-          blockId,
-          position: event.position,
-          timestamp: new Date(event.timestamp).toISOString(),
-        });
+        console.log(
+          `%c[useCaretManager] CARET DEBUG`,
+          "background: #ffcc00; color: #000",
+          {
+            operation: event.operation,
+            blockId,
+            position: event.position,
+            timestamp: new Date(event.timestamp).toISOString(),
+          },
+        );
       });
     }
     return undefined;

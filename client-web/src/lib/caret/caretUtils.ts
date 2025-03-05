@@ -30,7 +30,7 @@ export function emitCaretEvent(
   // 개발 모드에서 로깅
   if (import.meta.env.DEV) {
     console.log(
-      `%c[CARET:${operation}]`,
+      `%c[caretUtils] CARET:${operation}`,
       "color: #0066cc; font-weight: bold",
       event,
     );
