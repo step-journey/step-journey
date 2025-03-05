@@ -5,6 +5,7 @@ import BlocksContainer from "./BlocksContainer";
 import { useBlockOperations } from "./hooks/useBlockOperations";
 import { useBlockSelection } from "./hooks/useBlockSelection";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
+import { useEditorState } from "@/lib/editor";
 
 interface BlockEditorProps {
   pageId: string;
@@ -13,6 +14,19 @@ interface BlockEditorProps {
 
 export default function BlockEditor({ pageId, className }: BlockEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // 에디터 상태 초기화
+  const {
+    state: editorState,
+    controller: editorController,
+    setRootElement,
+  } = useEditorState({
+    pageId,
+    onChange: (newState) => {
+      // 에디터 상태 변경 시 호출되는 콜백
+      console.log("Editor state updated:", newState.version);
+    },
+  });
 
   // 블록 CRUD 작업 관련 훅
   const {
@@ -29,11 +43,6 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
     outdentBlock,
   } = useBlockOperations(pageId);
 
-  // Load blocks when component mounts
-  useEffect(() => {
-    loadBlocks();
-  }, [loadBlocks, pageId]);
-
   // 블록 선택 관련 훅
   const {
     selectedBlockIds,
@@ -43,7 +52,11 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
     navigateBlocks,
     setBlockRef,
     clearSelection,
-  } = useBlockSelection({ blocks });
+  } = useBlockSelection({
+    blocks,
+    editorState,
+    editorController,
+  });
 
   // 드래그 앤 드롭 관련 훅
   const {
@@ -58,6 +71,25 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
     moveBlockToParent,
     onDragComplete: loadBlocks,
   });
+
+  // 에디터 루트 요소 설정
+  useEffect(() => {
+    if (editorRef.current) {
+      setRootElement(editorRef.current);
+    }
+  }, [setRootElement]);
+
+  // Load blocks when component mounts
+  useEffect(() => {
+    loadBlocks();
+  }, [loadBlocks, pageId]);
+
+  // 에디터 상태의 블록과 로컬 블록 동기화
+  useEffect(() => {
+    if (editorController && blocks.length > 0 && !isLoading) {
+      editorController.updateBlocks(blocks);
+    }
+  }, [blocks, editorController, isLoading]);
 
   // 블록 복제
   const handleDuplicate = useCallback(
@@ -74,9 +106,14 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
       // 블록 내부가 아닌 빈 영역 클릭 시에만 선택 초기화
       if (e.target === editorRef.current) {
         clearSelection();
+
+        // EditorState의 selection도 null로 업데이트
+        if (editorController) {
+          editorController.updateSelection(null);
+        }
       }
     },
-    [clearSelection],
+    [clearSelection, editorController],
   );
 
   return (
@@ -84,6 +121,7 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
       ref={editorRef}
       className={cn("block-editor w-full py-4", className)}
       onClick={handleEditorClick}
+      data-editor-root="true"
     >
       {/* 블록 목록 */}
       <BlocksContainer
@@ -108,6 +146,8 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
         handleDrop={handleDrop}
         dropTarget={dropTarget}
         onEmptyAreaClick={handleEditorClick}
+        editorState={editorState}
+        editorController={editorController}
       />
     </div>
   );

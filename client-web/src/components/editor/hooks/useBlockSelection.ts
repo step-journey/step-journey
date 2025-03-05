@@ -1,9 +1,14 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Block } from "@/types/block";
+import { EditorState, createBlockStart, SelectionState } from "@/lib/editor";
 
 interface UseBlockSelectionOptions {
   blocks: Block[];
   onFocusChange?: (blockId: string | null) => void;
+  editorState?: EditorState | null;
+  editorController?: {
+    updateSelection: (selection: SelectionState | null) => void;
+  } | null;
 }
 
 /**
@@ -12,6 +17,8 @@ interface UseBlockSelectionOptions {
 export function useBlockSelection({
   blocks,
   onFocusChange,
+  editorState,
+  editorController,
 }: UseBlockSelectionOptions) {
   const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(
     new Set(),
@@ -41,8 +48,19 @@ export function useBlockSelection({
 
       setFocusedBlockId(blockId);
       if (onFocusChange) onFocusChange(blockId);
+
+      // EditorState 업데이트
+      if (editorController) {
+        const position = createBlockStart(blockId);
+        editorController.updateSelection({
+          anchor: position,
+          focus: position,
+          isCollapsed: true,
+          isBackward: false,
+        });
+      }
     },
-    [onFocusChange],
+    [onFocusChange, editorController],
   );
 
   // 블록 포커스
@@ -50,6 +68,17 @@ export function useBlockSelection({
     (blockId: string) => {
       setFocusedBlockId(blockId);
       if (onFocusChange) onFocusChange(blockId);
+
+      // EditorState 업데이트
+      if (editorController) {
+        const position = createBlockStart(blockId);
+        editorController.updateSelection({
+          anchor: position,
+          focus: position,
+          isCollapsed: true,
+          isBackward: false,
+        });
+      }
 
       // DOM이 업데이트된 후 포커스 적용
       setTimeout(() => {
@@ -80,7 +109,7 @@ export function useBlockSelection({
         }
       }, 10);
     },
-    [onFocusChange],
+    [onFocusChange, editorController],
   );
 
   // 방향키로 블록 간 이동
@@ -117,7 +146,24 @@ export function useBlockSelection({
   // 선택 초기화
   const clearSelection = useCallback(() => {
     setSelectedBlockIds(new Set());
-  }, []);
+    // EditorState도 초기화
+    if (editorController) {
+      editorController.updateSelection(null);
+    }
+  }, [editorController]);
+
+  // EditorState의 selection 변경 감지
+  useEffect(() => {
+    if (editorState?.selection) {
+      const { anchor } = editorState.selection;
+
+      // 현재 포커스된 블록이 에디터 상태의 포커스와 다르면 업데이트
+      if (anchor.blockId !== focusedBlockId) {
+        setFocusedBlockId(anchor.blockId);
+        setSelectedBlockIds(new Set([anchor.blockId]));
+      }
+    }
+  }, [editorState?.selection, focusedBlockId]);
 
   return {
     selectedBlockIds,

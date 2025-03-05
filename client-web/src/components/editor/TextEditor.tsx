@@ -7,6 +7,12 @@ import { useTextFormatting } from "./hooks/useTextFormatting";
 import { useTextEditorKeydown } from "./hooks/useTextEditorKeydown";
 import { useTextCommands } from "./hooks/useTextCommands";
 import { useCaretManager } from "@/lib/caret";
+import {
+  EditorState,
+  SelectionState,
+  createBlockStart,
+  createBlockEnd,
+} from "@/lib/editor";
 
 interface TextEditorProps {
   value: Array<[string, Array<TextFormat>]>;
@@ -22,6 +28,10 @@ interface TextEditorProps {
   onArrowDown?: () => void;
   placeholder?: string;
   caretManager?: ReturnType<typeof useCaretManager>; // 추가된 caretManager prop
+  editorState?: EditorState | null;
+  editorController?: {
+    updateSelection: (selection: SelectionState | null) => void;
+  } | null;
 }
 
 export default function TextEditor({
@@ -38,6 +48,8 @@ export default function TextEditor({
   onArrowDown,
   placeholder = "Type '/' for commands...",
   caretManager: externalCaretManager, // 외부에서 주입된 캐럿 관리자
+  editorState,
+  editorController,
 }: TextEditorProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [formatMenuOpen, setFormatMenuOpen] = useState(false);
@@ -75,6 +87,19 @@ export default function TextEditor({
       }
     }
   }, [value]);
+
+  // EditorState에서 선택 영역 변화 감지
+  useEffect(() => {
+    if (!editorState?.selection || !editorRef.current) return;
+
+    const { anchor, focus } = editorState.selection;
+
+    // 현재 블록에 관련된 선택 영역인 경우만 처리
+    if (anchor.blockId === blockId || focus.blockId === blockId) {
+      // 여기에서는 DOM 선택 영역이 EditorState의 선택 영역과 일치하는지 확인만 함
+      // 실제 DOM 선택 영역 동기화는 상위 컴포넌트에서 통합적으로 처리
+    }
+  }, [editorState?.selection, blockId]);
 
   // CARET: 블록 간 이동 시 캐럿 관리 수정
   useEffect(() => {
@@ -129,12 +154,28 @@ export default function TextEditor({
     blockType,
     onChangeType,
     caretManager,
+    editorState,
+    editorController,
+    blockId,
   });
 
   // 커서를 텍스트 끝으로 이동 (공개 메서드)
   const handleMoveCursorToEnd = useCallback(() => {
     caretManager.moveToEnd();
-  }, [caretManager]);
+
+    // EditorState의 selection도 업데이트
+    if (editorController && editorRef.current) {
+      const text = editorRef.current.textContent || "";
+      const position = createBlockEnd(blockId, text);
+
+      editorController.updateSelection({
+        anchor: position,
+        focus: position,
+        isCollapsed: true,
+        isBackward: false,
+      });
+    }
+  }, [caretManager, editorController, blockId, editorRef]);
 
   // 단축키 서식 적용
   const applyShortcutFormat = useCallback(
@@ -190,6 +231,7 @@ export default function TextEditor({
   const { handleKeyDown } = useTextEditorKeydown({
     editorRef,
     blockType,
+    blockId,
     value,
     onChange,
     onEnter,
@@ -205,6 +247,8 @@ export default function TextEditor({
     caretManager,
     selectWord,
     selectEntireBlock,
+    editorState,
+    editorController,
   });
 
   // 텍스트 입력 처리
@@ -227,7 +271,36 @@ export default function TextEditor({
         caretManager.setCaretPosition(caretPosition);
       }
     }, 0);
-  }, [handleCommandInput, processMarkdown, caretManager]);
+
+    // EditorState도 업데이트
+    if (editorController) {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const offset = range.startOffset;
+
+        // 현재 블록 내의 위치를 나타내는 selection 생성
+        const position = {
+          blockId,
+          offset,
+          type: "text" as const,
+        };
+
+        editorController.updateSelection({
+          anchor: position,
+          focus: position,
+          isCollapsed: true,
+          isBackward: false,
+        });
+      }
+    }
+  }, [
+    handleCommandInput,
+    processMarkdown,
+    caretManager,
+    blockId,
+    editorController,
+  ]);
 
   // 클릭 처리
   const handleClick = useCallback(
@@ -246,8 +319,28 @@ export default function TextEditor({
         selectEntireBlock();
         e.preventDefault();
       }
+      // 단일 클릭 처리
+      else if (editorController) {
+        // 현재 캐럿 위치를 EditorState에 반영
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const position = {
+            blockId,
+            offset: range.startOffset,
+            type: "text" as const,
+          };
+
+          editorController.updateSelection({
+            anchor: position,
+            focus: position,
+            isCollapsed: true,
+            isBackward: false,
+          });
+        }
+      }
     },
-    [selectWord, selectEntireBlock],
+    [selectWord, selectEntireBlock, blockId, editorController],
   );
 
   // 포맷 메뉴 표시/위치 설정
@@ -269,12 +362,34 @@ export default function TextEditor({
             left: rect.left + window.scrollX + rect.width / 2,
           });
           setFormatMenuOpen(true);
+
+          // EditorState의 selection 업데이트
+          if (editorController) {
+            const startPosition = {
+              blockId,
+              offset: range.startOffset,
+              type: "text" as const,
+            };
+
+            const endPosition = {
+              blockId,
+              offset: range.endOffset,
+              type: "text" as const,
+            };
+
+            editorController.updateSelection({
+              anchor: startPosition,
+              focus: endPosition,
+              isCollapsed: range.collapsed,
+              isBackward: false,
+            });
+          }
         }
       } else {
         setFormatMenuOpen(false);
       }
     }, 50); // 짧은 딜레이로 선택이 완료된 후 메뉴 표시
-  }, [detectSelection]);
+  }, [detectSelection, blockId, editorController]);
 
   // 붙여넣기 처리
   const handlePaste = useCallback(
@@ -306,6 +421,22 @@ export default function TextEditor({
       // 값 업데이트
       if (editorRef.current) {
         onChange([[editorRef.current.textContent || "", []]]);
+
+        // EditorState도 업데이트
+        if (editorController) {
+          const newPosition = {
+            blockId,
+            offset: (editorRef.current.textContent || "").length,
+            type: "text" as const,
+          };
+
+          editorController.updateSelection({
+            anchor: newPosition,
+            focus: newPosition,
+            isCollapsed: true,
+            isBackward: false,
+          });
+        }
       }
 
       // 저장된 위치 활용 - 필요시 커서 위치 로깅
@@ -316,7 +447,7 @@ export default function TextEditor({
         });
       }
     },
-    [onChange, caretManager],
+    [onChange, caretManager, blockId, editorController],
   );
 
   // 에디터 클래스 계산
@@ -343,6 +474,17 @@ export default function TextEditor({
           // 포커스 시 커서 위치 복원 또는 기본 위치로 이동
           if (editorRef.current?.textContent === "") {
             setTimeout(handleMoveCursorToEnd, 0);
+          }
+
+          // EditorState 업데이트
+          if (editorController) {
+            const position = createBlockStart(blockId);
+            editorController.updateSelection({
+              anchor: position,
+              focus: position,
+              isCollapsed: true,
+              isBackward: false,
+            });
           }
         }}
         onBlur={() => {

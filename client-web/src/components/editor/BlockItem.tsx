@@ -9,6 +9,7 @@ import { useBlockActions } from "./hooks/useBlockActions";
 import { useBlockDrag } from "./hooks/useBlockDrag";
 import { useCaretManager } from "@/lib/caret";
 import { scrollCaretIntoView } from "@/lib/caret/caretUtils";
+import { EditorState, SelectionState, createBlockStart } from "@/lib/editor";
 
 interface BlockItemProps {
   block: Block;
@@ -35,6 +36,10 @@ interface BlockItemProps {
   isDragged?: boolean;
   dropIndicator?: "before" | "after" | "child" | null;
   classNameExtra?: string;
+  editorState?: EditorState | null;
+  editorController?: {
+    updateSelection: (selection: SelectionState | null) => void;
+  } | null;
 }
 
 export default function BlockItem({
@@ -62,6 +67,8 @@ export default function BlockItem({
   isDragged = false,
   dropIndicator = null,
   classNameExtra = "",
+  editorState,
+  editorController,
 }: BlockItemProps) {
   const blockRef = useRef<HTMLDivElement>(null);
   const [hasChildren, setHasChildren] = useState(false);
@@ -115,6 +122,21 @@ export default function BlockItem({
     }
   }, [block.id, setBlockRef, isFocused, caretManager]);
 
+  // 에디터 상태에서 현재 블록의 선택 영역 확인
+  useEffect(() => {
+    if (editorState?.selection && isFocused) {
+      // 현재 블록에 선택 영역이 있는지 확인
+      const { anchor, focus } = editorState.selection;
+      const isSelected =
+        anchor.blockId === block.id || focus.blockId === block.id;
+
+      if (isSelected) {
+        // editorState의 선택 영역을 DOM에 반영하는 로직은 상위 컴포넌트에서 처리
+        // 여기서는 필요한 추가 동작만 수행
+      }
+    }
+  }, [editorState?.selection, block.id, isFocused]);
+
   // 블록 액션 훅
   const {
     isExpanded,
@@ -159,6 +181,17 @@ export default function BlockItem({
   // 블록 선택 처리
   const handleBlockClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // 에디터 상태의 selection 업데이트
+    if (editorController) {
+      const selection = createBlockStart(block.id);
+      editorController.updateSelection({
+        anchor: selection,
+        focus: selection,
+        isCollapsed: true,
+        isBackward: false,
+      });
+    }
 
     // CARET: 블록 클릭 시 캐럿 관리
     if (onSelect) {
@@ -314,6 +347,8 @@ export default function BlockItem({
           onArrowUp={handleArrowUp}
           onArrowDown={handleArrowDown}
           caretManager={caretManager}
+          editorState={editorState}
+          editorController={editorController}
         />
       </div>
 
@@ -328,6 +363,8 @@ export default function BlockItem({
           indentBlock={indentBlock}
           outdentBlock={outdentBlock}
           depth={depth + 1}
+          editorState={editorState}
+          editorController={editorController}
         />
       )}
     </div>

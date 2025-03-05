@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { BlockType, TextFormat } from "@/types/block";
 import { useCaretManager, CaretPosition } from "@/lib/caret";
+import { EditorState, SelectionState } from "@/lib/editor";
 
 type TextSelection = {
   start: number;
@@ -15,6 +16,11 @@ interface UseTextFormattingOptions {
   blockType: BlockType;
   onChangeType?: (type: BlockType) => void;
   caretManager?: ReturnType<typeof useCaretManager>;
+  editorState?: EditorState | null;
+  editorController?: {
+    updateSelection: (selection: SelectionState | null) => void;
+  } | null;
+  blockId: string;
 }
 
 /**
@@ -27,6 +33,9 @@ export function useTextFormatting({
   blockType,
   onChangeType,
   caretManager,
+  editorState,
+  editorController,
+  blockId,
 }: UseTextFormattingOptions) {
   const [activeFormats, setActiveFormats] = useState<TextFormat[]>([]);
   const [selectedRange, setSelectedRange] = useState<TextSelection | null>(
@@ -42,6 +51,39 @@ export function useTextFormatting({
 
   // 제공된 캐럿 관리자 또는 기본 관리자 사용
   const caret = caretManager || defaultCaretManager;
+
+  // EditorState 선택 영역 관찰
+  useEffect(() => {
+    if (!editorState?.selection || !editorRef.current) return;
+
+    const { anchor, focus } = editorState.selection;
+
+    // 현재 블록에 관련된 선택 영역만 처리
+    if (anchor.blockId === blockId || focus.blockId === blockId) {
+      // 같은 블록 내의 선택 영역인 경우
+      if (anchor.blockId === blockId && focus.blockId === blockId) {
+        // 선택 상태 업데이트
+        const start = Math.min(anchor.offset, focus.offset);
+        const end = Math.max(anchor.offset, focus.offset);
+        const text = editorRef.current.textContent?.substring(start, end) || "";
+
+        setSelectedRange({
+          start,
+          end,
+          text,
+        });
+
+        // 선택 영역의 포맷 감지
+        if (start !== end) {
+          detectAppliedFormats({
+            start,
+            end,
+            text,
+          });
+        }
+      }
+    }
+  }, [editorState?.selection, blockId, editorRef]);
 
   // 현재 선택된 텍스트 감지
   const detectSelection = useCallback(() => {
@@ -70,12 +112,34 @@ export function useTextFormatting({
       // 현재 적용된 포맷 감지
       detectAppliedFormats(newSelection);
 
+      // EditorState 업데이트
+      if (editorController) {
+        const anchorPosition = {
+          blockId,
+          offset: range.startOffset,
+          type: "text" as const,
+        };
+
+        const focusPosition = {
+          blockId,
+          offset: range.endOffset,
+          type: "text" as const,
+        };
+
+        editorController.updateSelection({
+          anchor: anchorPosition,
+          focus: focusPosition,
+          isCollapsed: false,
+          isBackward: false,
+        });
+      }
+
       return newSelection;
     }
 
     setSelectedRange(null);
     return null;
-  }, [editorRef]);
+  }, [editorRef, blockId, editorController]);
 
   // 적용된 포맷 감지하기
   const detectAppliedFormats = useCallback(
@@ -144,9 +208,35 @@ export function useTextFormatting({
       // 포맷 적용 후 캐럿 위치 복원
       setTimeout(() => {
         caret.restoreCaret("format");
+
+        // EditorState도 업데이트
+        if (editorController) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const anchorPosition = {
+              blockId,
+              offset: range.startOffset,
+              type: "text" as const,
+            };
+
+            const focusPosition = {
+              blockId,
+              offset: range.endOffset,
+              type: "text" as const,
+            };
+
+            editorController.updateSelection({
+              anchor: anchorPosition,
+              focus: focusPosition,
+              isCollapsed: range.collapsed,
+              isBackward: false,
+            });
+          }
+        }
       }, 0);
     },
-    [editorRef, onChange, selectedRange, caret],
+    [editorRef, onChange, selectedRange, caret, blockId, editorController],
   );
 
   // 마크다운 자동 변환 처리
@@ -207,8 +297,43 @@ export function useTextFormatting({
                         node: caretPosition.node,
                         offset: Math.min(caretPosition.offset, match[1].length),
                       });
+
+                      // EditorState 업데이트
+                      if (editorController) {
+                        const position = {
+                          blockId,
+                          offset: Math.min(
+                            caretPosition.offset,
+                            match[1].length,
+                          ),
+                          type: "text" as const,
+                        };
+
+                        editorController.updateSelection({
+                          anchor: position,
+                          focus: position,
+                          isCollapsed: true,
+                          isBackward: false,
+                        });
+                      }
                     } else {
                       caret.moveToEnd();
+
+                      // EditorState 업데이트
+                      if (editorController && editorRef.current) {
+                        const position = {
+                          blockId,
+                          offset: match[1].length,
+                          type: "text" as const,
+                        };
+
+                        editorController.updateSelection({
+                          anchor: position,
+                          focus: position,
+                          isCollapsed: true,
+                          isBackward: false,
+                        });
+                      }
                     }
                   }, 0);
                 }
@@ -223,6 +348,22 @@ export function useTextFormatting({
                 if (editorRef.current) {
                   editorRef.current.textContent = "";
                   onChange([["", []]]);
+
+                  // EditorState 업데이트
+                  if (editorController) {
+                    const position = {
+                      blockId,
+                      offset: 0,
+                      type: "text" as const,
+                    };
+
+                    editorController.updateSelection({
+                      anchor: position,
+                      focus: position,
+                      isCollapsed: true,
+                      isBackward: false,
+                    });
+                  }
                 }
               }, 0);
             }
@@ -232,7 +373,7 @@ export function useTextFormatting({
       }
       return false;
     },
-    [editorRef, caret, onChange, onChangeType],
+    [editorRef, caret, onChange, onChangeType, blockId, editorController],
   );
 
   // 줄바꿈 삽입
@@ -258,11 +399,27 @@ export function useTextFormatting({
         offset: cursorPos + 1,
       };
       caret.setCaretPosition(updatedPosition);
+
+      // EditorState 업데이트
+      if (editorController) {
+        const newPosition = {
+          blockId,
+          offset: cursorPos + 1,
+          type: "text" as const,
+        };
+
+        editorController.updateSelection({
+          anchor: newPosition,
+          focus: newPosition,
+          isCollapsed: true,
+          isBackward: false,
+        });
+      }
     }, 0);
 
     // 부모 컴포넌트에 변경 알림
     onChange([[newText, []]]);
-  }, [editorRef, caret, onChange]);
+  }, [editorRef, caret, onChange, blockId, editorController]);
 
   // 링크 삽입
   const promptForLink = useCallback(() => {
@@ -290,6 +447,22 @@ export function useTextFormatting({
             offset: currentPos.offset + selectedRange.text.length,
           };
           caret.setCaretPosition(newPos);
+
+          // EditorState 업데이트
+          if (editorController) {
+            const position = {
+              blockId,
+              offset: currentPos.offset + selectedRange.text.length,
+              type: "text" as const,
+            };
+
+            editorController.updateSelection({
+              anchor: position,
+              focus: position,
+              isCollapsed: true,
+              isBackward: false,
+            });
+          }
         }
       }, 0);
     } else {
@@ -298,7 +471,7 @@ export function useTextFormatting({
         caret.restoreCaret("link");
       }, 0);
     }
-  }, [applyFormat, selectedRange, caret]);
+  }, [applyFormat, selectedRange, caret, blockId, editorController]);
 
   // 현재 커서 위치의 단어 선택
   const selectWord = useCallback(() => {
@@ -344,7 +517,29 @@ export function useTextFormatting({
       end,
       text: text.substring(start, end),
     });
-  }, [editorRef]);
+
+    // EditorState 업데이트
+    if (editorController) {
+      const anchorPosition = {
+        blockId,
+        offset: start,
+        type: "text" as const,
+      };
+
+      const focusPosition = {
+        blockId,
+        offset: end,
+        type: "text" as const,
+      };
+
+      editorController.updateSelection({
+        anchor: anchorPosition,
+        focus: focusPosition,
+        isCollapsed: false,
+        isBackward: false,
+      });
+    }
+  }, [editorRef, blockId, editorController]);
 
   // 블록 전체 선택
   const selectEntireBlock = useCallback(() => {
@@ -366,7 +561,29 @@ export function useTextFormatting({
       end: text.length,
       text,
     });
-  }, [editorRef]);
+
+    // EditorState 업데이트
+    if (editorController) {
+      const anchorPosition = {
+        blockId,
+        offset: 0,
+        type: "text" as const,
+      };
+
+      const focusPosition = {
+        blockId,
+        offset: text.length,
+        type: "text" as const,
+      };
+
+      editorController.updateSelection({
+        anchor: anchorPosition,
+        focus: focusPosition,
+        isCollapsed: false,
+        isBackward: false,
+      });
+    }
+  }, [editorRef, blockId, editorController]);
 
   return {
     selectedRange,

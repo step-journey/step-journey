@@ -3,6 +3,7 @@ import { Block, BlockType } from "@/types/block";
 import BlockItem from "./BlockItem";
 import db from "@/db";
 import { cn } from "@/lib/utils";
+import { EditorState } from "@/lib/editor";
 
 interface ChildBlocksProps {
   parentId: string;
@@ -13,6 +14,8 @@ interface ChildBlocksProps {
   indentBlock: (id: string) => Promise<void>;
   outdentBlock: (id: string) => Promise<void>;
   depth: number;
+  editorState?: EditorState | null;
+  editorController?: any | null;
 }
 
 export default function ChildBlocks({
@@ -23,6 +26,8 @@ export default function ChildBlocks({
   indentBlock,
   outdentBlock,
   depth,
+  editorState,
+  editorController,
 }: ChildBlocksProps) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -235,6 +240,8 @@ export default function ChildBlocks({
               ]
                 .filter(Boolean)
                 .join(" ")}
+              editorState={editorState}
+              editorController={editorController}
             />
           );
         })

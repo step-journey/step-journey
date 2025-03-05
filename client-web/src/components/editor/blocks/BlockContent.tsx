@@ -3,6 +3,7 @@ import { Block, BlockType } from "@/types/block";
 import TextEditor from "../TextEditor";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 import { useCaretManager } from "@/lib/caret";
+import { EditorState, SelectionState } from "@/lib/editor";
 
 interface BlockContentProps {
   block: Block;
@@ -19,6 +20,10 @@ interface BlockContentProps {
   onArrowUp?: () => void;
   onArrowDown?: () => void;
   caretManager?: ReturnType<typeof useCaretManager>;
+  editorState?: EditorState | null;
+  editorController?: {
+    updateSelection: (selection: SelectionState | null) => void;
+  } | null;
 }
 
 const BlockContent: React.FC<BlockContentProps> = ({
@@ -36,6 +41,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
   onArrowUp,
   onArrowDown,
   caretManager,
+  editorState,
+  editorController,
 }) => {
   const renderContent = () => {
     switch (blockType) {
@@ -85,6 +92,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
           onArrowUp={onArrowUp}
           onArrowDown={onArrowDown}
           caretManager={caretManager}
+          editorState={editorState}
+          editorController={editorController}
         />
       </div>
     </div>
@@ -117,6 +126,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
           onArrowUp={onArrowUp}
           onArrowDown={onArrowDown}
           caretManager={caretManager}
+          editorState={editorState}
+          editorController={editorController}
         />
       </div>
     </div>
@@ -139,6 +150,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
           onArrowUp={onArrowUp}
           onArrowDown={onArrowDown}
           caretManager={caretManager}
+          editorState={editorState}
+          editorController={editorController}
         />
       </div>
     </div>
@@ -159,6 +172,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
         onArrowUp={onArrowUp}
         onArrowDown={onArrowDown}
         caretManager={caretManager}
+        editorState={editorState}
+        editorController={editorController}
       />
     </div>
   );
@@ -185,6 +200,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
       onArrowUp={onArrowUp}
       onArrowDown={onArrowDown}
       caretManager={caretManager}
+      editorState={editorState}
+      editorController={editorController}
     />
   );
 
@@ -218,6 +235,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
           onArrowUp={onArrowUp}
           onArrowDown={onArrowDown}
           caretManager={caretManager}
+          editorState={editorState}
+          editorController={editorController}
         />
       </div>
     </div>
@@ -259,6 +278,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
       onArrowUp={onArrowUp}
       onArrowDown={onArrowDown}
       caretManager={caretManager}
+      editorState={editorState}
+      editorController={editorController}
     />
   );
 

@@ -2,6 +2,7 @@ import React from "react";
 import { Block, BlockType } from "@/types/block";
 import BlockItem from "./BlockItem";
 import { cn } from "@/lib/utils";
+import { EditorState } from "@/lib/editor";
 
 interface BlocksContainerProps {
   blocks: Block[];
@@ -29,6 +30,8 @@ interface BlocksContainerProps {
   dropTarget: { id: string; position: "before" | "after" | "child" } | null;
   onEmptyAreaClick: (e: React.MouseEvent) => void;
   className?: string;
+  editorState?: EditorState | null;
+  editorController?: any | null;
 }
 
 /**
@@ -57,6 +60,8 @@ const BlocksContainer: React.FC<BlocksContainerProps> = ({
   dropTarget,
   onEmptyAreaClick,
   className,
+  editorState,
+  editorController,
 }) => {
   if (isLoading) {
     return (
@@ -110,6 +115,8 @@ const BlocksContainer: React.FC<BlocksContainerProps> = ({
           dropIndicator={
             dropTarget?.id === block.id ? dropTarget.position : null
           }
+          editorState={editorState}
+          editorController={editorController}
         />
       ))}
     </div>
