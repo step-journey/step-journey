@@ -4,7 +4,7 @@ import BlockItem from "./BlockItem";
 import db from "@/db";
 import { cn } from "@/lib/utils";
 
-interface BlockChildrenProps {
+interface ChildBlocksProps {
   parentId: string;
   addBlock: (blockType: BlockType, index: number) => Promise<string | null>;
   updateBlock: (id: string, changes: Partial<Block>) => Promise<void>;
@@ -15,7 +15,7 @@ interface BlockChildrenProps {
   depth: number;
 }
 
-export default function BlockChildren({
+export default function ChildBlocks({
   parentId,
   addBlock,
   updateBlock,
@@ -23,7 +23,7 @@ export default function BlockChildren({
   indentBlock,
   outdentBlock,
   depth,
-}: BlockChildrenProps) {
+}: ChildBlocksProps) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -198,7 +198,7 @@ export default function BlockChildren({
   };
 
   return (
-    <div className={cn("block-children ml-6 pl-2 border-l border-border/30")}>
+    <div className={cn("child-blocks ml-6 pl-2 border-l border-border/30")}>
       {isLoading ? (
         <div className="py-2 px-1 text-sm text-muted-foreground">
           로딩 중...

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Block, BlockType } from "@/types/block";
 import { cn } from "@/lib/utils";
-import BlockChildren from "./BlockChildren";
+import ChildBlocks from "./ChildBlocks";
 import db from "@/db";
 import BlockContent from "./blocks/BlockContent";
 import BlockHandle from "./blocks/BlockHandle";
@@ -355,7 +355,7 @@ export default function BlockItem({
 
       {/* 자식 블록 */}
       {hasChildren && isExpanded && (
-        <BlockChildren
+        <ChildBlocks
           parentId={block.id}
           addBlock={addBlock}
           updateBlock={updateBlock}
