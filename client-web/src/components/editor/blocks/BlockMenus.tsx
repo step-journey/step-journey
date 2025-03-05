@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { COMMON_BLOCK_TYPES } from "./BlockTypes";
+import { BLOCK_LABELS } from "./BlockTypes";
 import { BlockType } from "@/types/block";
 
 interface BlockMenusProps {
@@ -28,6 +28,22 @@ interface BlockMenusProps {
   isFirstChild: boolean;
   hasParent: boolean;
 }
+
+// 자주 사용되는 블록 타입 배열 (BlockTypes.tsx의 COMMON_BLOCK_TYPES 대체)
+const COMMON_BLOCK_TYPES: BlockType[] = [
+  "text",
+  "heading_1",
+  "heading_2",
+  "heading_3",
+  "bulleted_list",
+  "numbered_list",
+  "to_do",
+  "toggle",
+  "callout",
+  "quote",
+  "divider",
+  "code",
+];
 
 const BlockMenus: React.FC<BlockMenusProps> = ({
   onAddBlock,
@@ -55,7 +71,7 @@ const BlockMenus: React.FC<BlockMenusProps> = ({
             <DropdownMenuItem key={type} onClick={() => onTypeChange(type)}>
               {type === "text"
                 ? "텍스트로 변환"
-                : `${type.replace("_", " ")}로 변환`}
+                : `${BLOCK_LABELS[type]}로 변환`}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
