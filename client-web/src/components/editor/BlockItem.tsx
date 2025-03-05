@@ -180,7 +180,10 @@ export default function BlockItem({
       } else {
         // 새로 포커스된 경우, 저장된 위치나 블록 끝으로 이동
         setTimeout(() => {
-          caretManager.restoreCaret() || caretManager.moveToEnd();
+          // 조건문으로 변경하여 no-unused-expressions 에러 해결
+          if (!caretManager.restoreCaret()) {
+            caretManager.moveToEnd();
+          }
         }, 0);
       }
     }
