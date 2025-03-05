@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import BlockList from "./BlockList";
+import BlocksContainer from "./BlocksContainer";
 import { useBlockOperations } from "./hooks/useBlockOperations";
 import { useBlockSelection } from "./hooks/useBlockSelection";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
@@ -86,7 +86,7 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
       onClick={handleEditorClick}
     >
       {/* 블록 목록 */}
-      <BlockList
+      <BlocksContainer
         blocks={blocks}
         isLoading={isLoading}
         updateBlock={updateBlock}

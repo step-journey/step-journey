@@ -3,7 +3,7 @@ import { Block, BlockType } from "@/types/block";
 import BlockComponent from "./BlockComponent";
 import { cn } from "@/lib/utils";
 
-interface BlockListProps {
+interface BlocksContainerProps {
   blocks: Block[];
   isLoading: boolean;
   updateBlock: (id: string, changes: Partial<Block>) => Promise<void>;
@@ -34,7 +34,7 @@ interface BlockListProps {
 /**
  * 블록 목록을 렌더링하는 컴포넌트
  */
-const BlockList: React.FC<BlockListProps> = ({
+const BlocksContainer: React.FC<BlocksContainerProps> = ({
   blocks,
   isLoading,
   updateBlock,
@@ -79,7 +79,10 @@ const BlockList: React.FC<BlockListProps> = ({
   }
 
   return (
-    <div onClick={onEmptyAreaClick} className={cn("block-list", className)}>
+    <div
+      onClick={onEmptyAreaClick}
+      className={cn("blocks-container", className)}
+    >
       {blocks.map((block, index) => (
         <BlockComponent
           key={block.id}
@@ -113,4 +116,4 @@ const BlockList: React.FC<BlockListProps> = ({
   );
 };
 
-export default BlockList;
+export default BlocksContainer;
