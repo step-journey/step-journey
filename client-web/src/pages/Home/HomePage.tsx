@@ -15,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import PATH from "@/constants/path";
+import { cn } from "@/lib/utils";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -119,7 +120,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div
+      className={cn(
+        "home-page flex flex-col min-h-screen bg-background text-foreground",
+      )}
+    >
       {/* 상단 Header: user, onClickLogin, onClickLogout 전달 */}
       <Header
         // user는 (User | null | undefined)이므로, undefined 인 경우 null 로 대체

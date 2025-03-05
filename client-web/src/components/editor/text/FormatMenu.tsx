@@ -34,7 +34,9 @@ const FormatMenu: React.FC<FormatMenuProps> = ({
 
   const menu = (
     <div
-      className="fixed bg-background border border-border shadow-md rounded-md flex items-center p-1 z-50"
+      className={cn(
+        "format-menu fixed bg-background border border-border shadow-md rounded-md flex items-center p-1 z-50",
+      )}
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,

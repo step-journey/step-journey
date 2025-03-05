@@ -6,6 +6,7 @@ import {
   BLOCK_LABELS,
   BLOCK_DESCRIPTIONS,
 } from "./blocks/BlockTypes";
+import { cn } from "@/lib/utils";
 
 interface CommandMenuProps {
   onSelect: (type: BlockType) => void;
@@ -93,7 +94,9 @@ export default function SlashCommandMenu({
   return (
     <div
       ref={menuRef}
-      className="absolute z-50 bg-background border border-border rounded-md shadow-lg w-72 max-h-96 overflow-y-auto"
+      className={cn(
+        "slash-command-menu absolute z-50 bg-background border border-border rounded-md shadow-lg w-72 max-h-96 overflow-y-auto",
+      )}
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,

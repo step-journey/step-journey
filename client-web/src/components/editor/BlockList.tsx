@@ -1,6 +1,7 @@
 import React from "react";
 import { Block, BlockType } from "@/types/block";
 import BlockComponent from "./BlockComponent";
+import { cn } from "@/lib/utils";
 
 interface BlockListProps {
   blocks: Block[];
@@ -27,6 +28,7 @@ interface BlockListProps {
   handleDrop: () => Promise<void>;
   dropTarget: { id: string; position: "before" | "after" | "child" } | null;
   onEmptyAreaClick: (e: React.MouseEvent) => void;
+  className?: string;
 }
 
 /**
@@ -54,6 +56,7 @@ const BlockList: React.FC<BlockListProps> = ({
   handleDrop,
   dropTarget,
   onEmptyAreaClick,
+  className,
 }) => {
   if (isLoading) {
     return (
@@ -76,7 +79,7 @@ const BlockList: React.FC<BlockListProps> = ({
   }
 
   return (
-    <div onClick={onEmptyAreaClick}>
+    <div onClick={onEmptyAreaClick} className={cn("block-list", className)}>
       {blocks.map((block, index) => (
         <BlockComponent
           key={block.id}

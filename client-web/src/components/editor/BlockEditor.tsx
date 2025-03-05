@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import BlockList from "./BlockList";
-import BlockEditorToolbar from "./toolbar/BlockEditorToolbar";
 import { useBlockOperations } from "./hooks/useBlockOperations";
 import { useBlockSelection } from "./hooks/useBlockSelection";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
@@ -23,13 +22,11 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
     addBlock,
     updateBlock,
     deleteBlock,
-    deleteMultipleBlocks,
     duplicateBlock,
     moveBlock,
     moveBlockToParent,
     indentBlock,
     outdentBlock,
-    pasteBlocks,
   } = useBlockOperations(pageId);
 
   // Load blocks when component mounts
@@ -41,13 +38,10 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
   const {
     selectedBlockIds,
     focusedBlockId,
-    clipboard,
-    blockRefs,
     handleBlockSelect,
     focusBlock,
     navigateBlocks,
     setBlockRef,
-    copySelectedBlocks,
     clearSelection,
   } = useBlockSelection({ blocks });
 
@@ -64,38 +58,6 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
     moveBlockToParent,
     onDragComplete: loadBlocks,
   });
-
-  // 실행 취소
-  const handleUndo = useCallback(async () => {
-    const success = await window.db?.undo?.();
-    if (success) {
-      await loadBlocks();
-    } else {
-      toast.error("실행 취소할 작업이 없습니다");
-    }
-  }, [loadBlocks]);
-
-  // 클립보드 작업
-  const handleCopy = useCallback(() => {
-    const selectedBlocks = copySelectedBlocks();
-    toast.success(`${selectedBlocks.length}개 블록 복사됨`);
-  }, [copySelectedBlocks]);
-
-  const handleCut = useCallback(() => {
-    const selectedBlocks = copySelectedBlocks();
-    deleteMultipleBlocks(Array.from(selectedBlockIds));
-    toast.success(`${selectedBlocks.length}개 블록 잘라내기 완료`);
-  }, [copySelectedBlocks, deleteMultipleBlocks, selectedBlockIds]);
-
-  const handlePaste = useCallback(async () => {
-    if (clipboard.length === 0 || !focusedBlockId) return;
-
-    const focusedIndex = blocks.findIndex((b) => b.id === focusedBlockId);
-    if (focusedIndex === -1) return;
-
-    await pasteBlocks(clipboard, focusedIndex);
-    toast.success(`${clipboard.length}개 블록 붙여넣기 완료`);
-  }, [blocks, clipboard, focusedBlockId, pasteBlocks]);
 
   // 블록 복제
   const handleDuplicate = useCallback(
@@ -123,14 +85,6 @@ export default function BlockEditor({ pageId, className }: BlockEditorProps) {
       className={cn("block-editor w-full py-4", className)}
       onClick={handleEditorClick}
     >
-      {/* 선택된 블록이 있을 때 표시되는 툴바 */}
-      <BlockEditorToolbar
-        selectedIds={selectedBlockIds}
-        onCopy={handleCopy}
-        onCut={handleCut}
-        onDelete={() => deleteMultipleBlocks(Array.from(selectedBlockIds))}
-      />
-
       {/* 블록 목록 */}
       <BlockList
         blocks={blocks}

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { IconUserCircle } from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 
 /**
  * 헤더 컴포넌트
@@ -21,7 +22,11 @@ export default function Header({
   onClickLogout,
 }: HeaderProps) {
   return (
-    <header className="h-14 w-full px-4 pr-6 border-b border-border flex items-center">
+    <header
+      className={cn(
+        "home-header h-14 w-full px-4 pr-6 border-b border-border flex items-center",
+      )}
+    >
       {/* 좌측 로고 텍스트 */}
       <div className="text-xl font-semibold">StepJourney</div>
 

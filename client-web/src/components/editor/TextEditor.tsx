@@ -355,7 +355,7 @@ export default function TextEditor({
   );
 
   return (
-    <div className="relative w-full">
+    <div className={cn("text-editor relative w-full")}>
       <div
         ref={editorRef}
         className={editorClasses}

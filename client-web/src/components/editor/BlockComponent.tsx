@@ -256,7 +256,7 @@ export default function BlockComponent({
       ref={blockRef}
       data-block-id={block.id}
       className={cn(
-        "notion-selectable group relative",
+        "block-component notion-selectable group relative",
         notionBlockClass,
         classNameExtra,
         isSelected && "bg-accent/20 rounded",

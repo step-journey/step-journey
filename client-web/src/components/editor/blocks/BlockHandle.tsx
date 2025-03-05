@@ -34,7 +34,7 @@ const BlockHandle: React.FC<BlockHandleProps> = ({
   return (
     <div
       className={cn(
-        "absolute -ml-10 h-full pt-1.5 flex items-start",
+        "block-handle absolute -ml-10 h-full pt-1.5 flex items-start",
         "opacity-0 transition-opacity group-hover:opacity-100",
         (isHovered || isSelected) && "opacity-100",
       )}

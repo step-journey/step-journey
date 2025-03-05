@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Block, BlockType } from "@/types/block";
 import BlockComponent from "./BlockComponent";
 import db from "@/db";
+import { cn } from "@/lib/utils";
 
 interface BlockChildrenProps {
   parentId: string;
@@ -197,7 +198,7 @@ export default function BlockChildren({
   };
 
   return (
-    <div className="ml-6 pl-2 border-l border-border/30">
+    <div className={cn("block-children ml-6 pl-2 border-l border-border/30")}>
       {isLoading ? (
         <div className="py-2 px-1 text-sm text-muted-foreground">
           로딩 중...
