@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Block, BlockType } from "@/types/block";
-import BlockComponent from "./BlockComponent";
+import BlockItem from "./BlockItem";
 import db from "@/db";
 import { cn } from "@/lib/utils";
 
@@ -213,7 +213,7 @@ export default function BlockChildren({
           const isLast = index === blocks.length - 1;
 
           return (
-            <BlockComponent
+            <BlockItem
               key={block.id}
               block={block}
               updateBlock={handleUpdateChildBlock}

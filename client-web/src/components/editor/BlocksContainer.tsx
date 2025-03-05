@@ -1,6 +1,6 @@
 import React from "react";
 import { Block, BlockType } from "@/types/block";
-import BlockComponent from "./BlockComponent";
+import BlockItem from "./BlockItem";
 import { cn } from "@/lib/utils";
 
 interface BlocksContainerProps {
@@ -84,7 +84,7 @@ const BlocksContainer: React.FC<BlocksContainerProps> = ({
       className={cn("blocks-container", className)}
     >
       {blocks.map((block, index) => (
-        <BlockComponent
+        <BlockItem
           key={block.id}
           block={block}
           updateBlock={updateBlock}

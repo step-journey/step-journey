@@ -9,7 +9,7 @@ import { useBlockActions } from "./hooks/useBlockActions";
 import { useBlockDrag } from "./hooks/useBlockDrag";
 import { getNotionBlockClassName } from "./blocks/BlockTypes";
 
-interface BlockComponentProps {
+interface BlockItemProps {
   block: Block;
   updateBlock: (id: string, changes: Partial<Block>) => Promise<void>;
   deleteBlock: (id: string) => Promise<void>;
@@ -36,7 +36,7 @@ interface BlockComponentProps {
   classNameExtra?: string;
 }
 
-export default function BlockComponent({
+export default function BlockItem({
   block,
   updateBlock,
   deleteBlock,
@@ -61,7 +61,7 @@ export default function BlockComponent({
   isDragged = false,
   dropIndicator = null,
   classNameExtra = "",
-}: BlockComponentProps) {
+}: BlockItemProps) {
   const blockRef = useRef<HTMLDivElement>(null);
   const [hasChildren, setHasChildren] = useState(false);
 
@@ -281,7 +281,7 @@ export default function BlockComponent({
       ref={blockRef}
       data-block-id={block.id}
       className={cn(
-        "block-component notion-selectable group relative",
+        "block-item notion-selectable group relative",
         notionBlockClass,
         classNameExtra,
         isSelected && "bg-accent/20 rounded",
