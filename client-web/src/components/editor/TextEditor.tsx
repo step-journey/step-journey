@@ -342,7 +342,7 @@ export default function TextEditor({
 
   // 에디터 클래스 계산
   const editorClasses = cn(
-    "outline-none min-h-[1.5em] px-1 whitespace-pre-wrap break-words caret-primary transition-colors",
+    "outline-none min-h-[1.5em] px-1 whitespace-pre-wrap break-words transition-colors",
     blockType === "heading_1" && "text-3xl font-bold my-2",
     blockType === "heading_2" && "text-2xl font-bold my-2",
     blockType === "heading_3" && "text-xl font-bold my-1.5",
@@ -350,7 +350,6 @@ export default function TextEditor({
     (!value[0][0] || value[0][0] === "/") &&
       !isFocused &&
       "text-muted-foreground",
-    isFocused && "caret-blink",
   );
 
   return (
