@@ -4,13 +4,12 @@
 import {
   CaretPosition,
   CaretSelection,
-  CaretContext,
   CaretOperation,
   CaretEvent,
 } from "./types";
 import { defaultCaretStore } from "./caretStore";
 
-// 이벤트 구독 시스템
+// CARET: 이벤트 구독 시스템
 const subscribers: ((event: CaretEvent) => void)[] = [];
 
 /**
@@ -28,7 +27,7 @@ export function emitCaretEvent(
 
   subscribers.forEach((subscriber) => subscriber(event));
 
-  // 개발 모드에서 로깅 (필요시 활성화)
+  // 개발 모드에서 로깅
   if (import.meta.env.DEV) {
     console.log(
       `%c[CARET:${operation}]`,
@@ -57,6 +56,7 @@ export function subscribeToCaretEvents(
  * 현재 선택 영역에서 캐럿 위치 가져오기
  */
 export function getCurrentCaretPosition(): CaretPosition | null {
+  // CARET: 현재 DOM에서 캐럿 위치 파악
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return null;
 
@@ -72,6 +72,7 @@ export function getCurrentCaretPosition(): CaretPosition | null {
  * 현재 선택 영역 정보 가져오기
  */
 export function getCurrentSelection(): CaretSelection | null {
+  // CARET: 전체 선택 영역 정보 반환
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return null;
 
@@ -99,6 +100,7 @@ export function setCaretPosition(position: CaretPosition): boolean {
   if (!position.node) return false;
 
   try {
+    // CARET: Selection API를 사용하여 캐럿 위치 지정
     const selection = window.getSelection();
     if (!selection) return false;
 
@@ -124,6 +126,7 @@ export function setCaretPosition(position: CaretPosition): boolean {
  * 특정 DOM 요소의 시작 위치로 캐럿 설정
  */
 export function moveCaretToStart(element: HTMLElement): boolean {
+  // CARET: 블록 시작으로 캐럿 이동
   const firstTextNode = findFirstTextNode(element);
 
   if (!firstTextNode) {
@@ -158,6 +161,7 @@ export function moveCaretToStart(element: HTMLElement): boolean {
  * 특정 DOM 요소의 끝 위치로 캐럿 설정
  */
 export function moveCaretToEnd(element: HTMLElement): boolean {
+  // CARET: 블록 끝으로 캐럿 이동
   const lastTextNode = findLastTextNode(element);
 
   if (!lastTextNode) {
@@ -194,6 +198,7 @@ export function moveCaretToEnd(element: HTMLElement): boolean {
  * 현재 캐럿 위치를 저장소에 저장하기
  */
 export function saveCaretPosition(key: string): CaretPosition | null {
+  // CARET: 현재 위치 저장
   const position = getCurrentCaretPosition();
 
   if (position) {
@@ -208,6 +213,7 @@ export function saveCaretPosition(key: string): CaretPosition | null {
  * 저장소에서 캐럿 위치 복원하기
  */
 export function restoreCaretPosition(key: string): boolean {
+  // CARET: 저장된 위치 복원
   const position = defaultCaretStore.get(key);
 
   if (!position) return false;
@@ -241,6 +247,7 @@ export function getColumnPositionForBlockNavigation(): number | null {
   try {
     return parseInt(saved, 10);
   } catch (e) {
+    console.log(e);
     return null;
   }
 }
@@ -253,12 +260,70 @@ export function clearColumnPositionForBlockNavigation(): void {
 }
 
 /**
- * CaretContext 타입 사용 예제
- * 에디터 내에서 블록 간 이동 시 컨텍스트 기반 캐럿 위치 조정
+ * 현재 캐럿이 표시된 위치가 블록의 시작인지 확인
+ * @param element 기준 DOM 엘리먼트
+ * @returns 블록 시작이면 true
  */
-export function adjustCaretForBlockContext(context: CaretContext): void {
-  console.log("Adjusting caret position for block context:", context);
-  // 실제 구현은 여기에...
+export function isCaretAtBlockStart(element: HTMLElement): boolean {
+  // CARET: 블록 시작 여부 확인
+  const position = getCurrentCaretPosition();
+  if (!position) return false;
+
+  const firstTextNode = findFirstTextNode(element);
+  if (!firstTextNode) return position.offset === 0;
+
+  return position.node === firstTextNode && position.offset === 0;
+}
+
+/**
+ * 현재 캐럿이 표시된 위치가 블록의 끝인지 확인
+ * @param element 기준 DOM 엘리먼트
+ * @returns 블록 끝이면 true
+ */
+export function isCaretAtBlockEnd(element: HTMLElement): boolean {
+  // CARET: 블록 끝 여부 확인
+  const position = getCurrentCaretPosition();
+  if (!position) return false;
+
+  const lastTextNode = findLastTextNode(element);
+  if (!lastTextNode) return false;
+
+  return (
+    position.node === lastTextNode &&
+    position.offset === (lastTextNode.textContent?.length || 0)
+  );
+}
+
+/**
+ * 캐럿이 완전히 보이는 위치로 스크롤 조정
+ */
+export function scrollCaretIntoView(): void {
+  // CARET: 커서가 화면에 보이도록 스크롤 조정
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+
+  const range = selection.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+
+  // 현재 보이는 영역
+  const viewportHeight = window.innerHeight;
+
+  // 커서가 뷰포트 밖에 있는지 확인
+  if (rect.top < 0 || rect.bottom > viewportHeight) {
+    // scrollIntoView 옵션으로 부드럽게 스크롤
+    const node = range.startContainer;
+    if (node.nodeType === Node.TEXT_NODE && node.parentElement) {
+      node.parentElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      (node as Element).scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }
 }
 
 // 헬퍼 함수: 노드의 길이 계산

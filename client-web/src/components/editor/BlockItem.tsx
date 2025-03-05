@@ -8,6 +8,7 @@ import BlockHandle from "./blocks/BlockHandle";
 import { useBlockActions } from "./hooks/useBlockActions";
 import { useBlockDrag } from "./hooks/useBlockDrag";
 import { useCaretManager } from "@/lib/caret";
+import { scrollCaretIntoView } from "@/lib/caret/caretUtils";
 
 interface BlockItemProps {
   block: Block;
@@ -94,16 +95,22 @@ export default function BlockItem({
       setBlockRef(block.id, blockRef.current);
     }
 
-    // 포커스된 블록이면 contenteditable 영역 포커스
+    // CARET: 포커스된 블록 캐럿 관리
     if (isFocused && blockRef.current) {
       const editableElement = caretManager.getEditableElement();
 
       if (editableElement) {
-        // contenteditable 요소에 포커스
-        editableElement.focus();
+        // 포커스 및 캐럿 복원 강화
+        setTimeout(() => {
+          // 1. contenteditable 요소에 포커스
+          editableElement.focus();
 
-        // 저장된 커서 위치 정보가 있는지 확인하고 복원
-        caretManager.restoreColumnAfterBlockNavigation();
+          // 2. 저장된 커서 위치 정보가 있는지 확인하고 복원
+          caretManager.restoreColumnAfterBlockNavigation();
+
+          // 3. 보이는 영역으로 스크롤
+          scrollCaretIntoView();
+        }, 0);
       }
     }
   }, [block.id, setBlockRef, isFocused, caretManager]);
@@ -152,12 +159,30 @@ export default function BlockItem({
   // 블록 선택 처리
   const handleBlockClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // CARET: 블록 클릭 시 캐럿 관리
     if (onSelect) {
       const multiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
       onSelect(block.id, multiSelect);
     }
+
     if (focusBlock) {
+      // 이전에 포커스 상태 저장
+      const wasAlreadyFocused = isFocused;
+
+      // 포커스 설정
       focusBlock(block.id);
+
+      // 블록이 이미 포커스된 상태였는데 다시 클릭했다면
+      // 캐럿을 클릭 위치로 조정 (기본 동작 허용)
+      if (wasAlreadyFocused) {
+        // 브라우저가 캐럿을 처리하도록 둠
+      } else {
+        // 새로 포커스된 경우, 저장된 위치나 블록 끝으로 이동
+        setTimeout(() => {
+          caretManager.restoreCaret() || caretManager.moveToEnd();
+        }, 0);
+      }
     }
   };
 

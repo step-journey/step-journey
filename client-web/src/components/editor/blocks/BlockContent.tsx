@@ -229,7 +229,29 @@ const BlockContent: React.FC<BlockContentProps> = ({
       onChange={handleContentChange}
       blockType={blockType}
       blockId={block.id}
-      onEnter={handleAddBlock}
+      onEnter={() => {
+        // CARET: Enter 키로 블록 추가 시 캐럿 위치 관리
+        const currentPosition = caretManager?.getCaretPosition();
+
+        if (currentPosition) {
+          // 현재 위치 저장
+          caretManager?.saveCaret("beforeSplit");
+
+          // 블록 분할
+          handleAddBlock();
+
+          // 캐럿 관리 로깅
+          if (import.meta.env.DEV) {
+            console.log("[CARET:SPLIT]", {
+              blockId: block.id,
+              splitPosition: currentPosition.offset,
+            });
+          }
+        } else {
+          // 위치 알 수 없는 경우 그냥 블록 추가
+          handleAddBlock();
+        }
+      }}
       onTab={handleIndent}
       onShiftTab={handleOutdent}
       onDelete={handleDeleteBlock}

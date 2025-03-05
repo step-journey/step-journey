@@ -76,21 +76,24 @@ export default function TextEditor({
     }
   }, [value]);
 
+  // CARET: 블록 간 이동 시 캐럿 관리 수정
   useEffect(() => {
     const editorElement = editorRef.current;
     if (!editorElement) return;
 
     const handleKeyDownEvent = (e: KeyboardEvent) => {
-      // Arrow key handling for cursor position maintenance
-      if (e.key === "ArrowUp" && caretManager.isAtLineStart()) {
+      // CARET: 방향키 캐럿 이동 처리
+      if (e.key === "ArrowUp" && caretManager.isAtBlockStart()) {
         if (onArrowUp) {
-          // Save the current horizontal position for when we move to the previous block
+          // 이전 블록으로 이동 시 캐럿 위치 저장
           caretManager.saveColumnForBlockNavigation();
+          onArrowUp();
         }
-      } else if (e.key === "ArrowDown" && caretManager.isAtLineEnd()) {
+      } else if (e.key === "ArrowDown" && caretManager.isAtBlockEnd()) {
         if (onArrowDown) {
-          // Save the current horizontal position for when we move to the next block
+          // 다음 블록으로 이동 시 캐럿 위치 저장
           caretManager.saveColumnForBlockNavigation();
+          onArrowDown();
         }
       }
     };
@@ -100,6 +103,14 @@ export default function TextEditor({
       editorElement.removeEventListener("keydown", handleKeyDownEvent);
     };
   }, [editorRef, caretManager, onArrowUp, onArrowDown]);
+
+  // CARET: 블록 포커스 시 캐럿 위치 복원
+  useEffect(() => {
+    if (isFocused) {
+      // 저장된 열 위치 확인 및 복원
+      caretManager.restoreColumnAfterBlockNavigation();
+    }
+  }, [isFocused, caretManager]);
 
   // 텍스트 포맷팅 훅
   const {
@@ -218,14 +229,6 @@ export default function TextEditor({
     }, 0);
   }, [handleCommandInput, processMarkdown, caretManager]);
 
-  // 블록 포커스 시 캐럿 위치 복원
-  useEffect(() => {
-    if (isFocused) {
-      // 저장된 열 위치 확인 및 복원
-      caretManager.restoreColumnAfterBlockNavigation();
-    }
-  }, [isFocused, caretManager]);
-
   // 클릭 처리
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -278,8 +281,9 @@ export default function TextEditor({
     (e: React.ClipboardEvent) => {
       e.preventDefault();
 
-      // 클립보드 텍스트 가져오기
+      // CARET: 붙여넣기 후 캐럿 위치 관리
       const text = e.clipboardData.getData("text/plain");
+      const savedPosition = caretManager.saveCaret("paste");
 
       // 현재 선택 영역 가져오기
       const selection = window.getSelection();
@@ -303,8 +307,16 @@ export default function TextEditor({
       if (editorRef.current) {
         onChange([[editorRef.current.textContent || "", []]]);
       }
+
+      // 저장된 위치 활용 - 필요시 커서 위치 로깅
+      if (savedPosition && import.meta.env.DEV) {
+        console.log("Paste operation:", {
+          before: savedPosition,
+          after: caretManager.getCaretPosition(),
+        });
+      }
     },
-    [onChange],
+    [onChange, caretManager],
   );
 
   // 에디터 클래스 계산

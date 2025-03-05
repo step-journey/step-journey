@@ -26,11 +26,11 @@ export interface CaretSelection {
 
 // 캐럿 위치 계산을 위한 컨텍스트
 export interface CaretContext {
-  blockId: string;
-  parentBlockId?: string;
-  blockType: string;
-  isFirstBlock: boolean;
-  isLastBlock: boolean;
+  blockId: string; // 캐럿이 위치한 블록 ID
+  parentBlockId?: string; // 선택적 부모 블록 ID
+  blockType: string; // 블록 타입 (text, heading 등)
+  isFirstBlock: boolean; // 첫 번째 블록인지 여부
+  isLastBlock: boolean; // 마지막 블록인지 여부
 }
 
 // 캐럿 동작 로깅을 위한 타입
