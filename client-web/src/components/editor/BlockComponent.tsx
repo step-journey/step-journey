@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Block, BlockType } from "@/types/block";
 import { cn } from "@/lib/utils";
 import BlockChildren from "./BlockChildren";
@@ -249,6 +249,31 @@ export default function BlockComponent({
     }
   };
 
+  const handleChangeColor = useCallback(
+    async (color: string) => {
+      // 색상 값의 종류에 따라 처리
+      if (color.endsWith("-bg")) {
+        // 배경색 변경
+        const bgColor = color.replace("-bg", "");
+        await updateBlock(block.id, {
+          format: {
+            ...block.format,
+            backgroundColor: bgColor || null, // 빈 문자열이면 null로 설정하여 삭제
+          },
+        });
+      } else {
+        // 텍스트 색상 변경
+        await updateBlock(block.id, {
+          format: {
+            ...block.format,
+            color: color || null, // 빈 문자열이면 null로 설정하여 삭제
+          },
+        });
+      }
+    },
+    [block.id, block.format, updateBlock],
+  );
+
   const notionBlockClass = getNotionBlockClassName(block.type);
 
   return (
@@ -307,6 +332,7 @@ export default function BlockComponent({
           onDelete={handleDeleteBlock}
           isFirstChild={index <= 0}
           hasParent={!!block.parent}
+          onChangeColor={handleChangeColor}
         />
 
         {/* 실제 블록 콘텐츠 */}
