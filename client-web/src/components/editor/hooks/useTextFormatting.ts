@@ -305,7 +305,6 @@ export function useTextFormatting({
 
         // 블록 요소
         { pattern: /^> (.+)$/, action: () => onChangeType?.("quote") },
-        { pattern: /^```(.*)$/, action: () => onChangeType?.("code") },
 
         // 구분선
         { pattern: /^---$/, action: () => onChangeType?.("divider") },

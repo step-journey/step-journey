@@ -14,15 +14,7 @@ export type BlockType =
   | "callout"
   | "quote"
   | "divider"
-  | "image"
-  | "video"
-  | "file"
-  | "bookmark"
-  | "code"
-  | "equation"
-  | "table"
-  | "column"
-  | "column_list";
+  | "table";
 
 // 공통 블록 인터페이스 확장
 export interface Block {

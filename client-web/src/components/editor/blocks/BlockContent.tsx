@@ -1,7 +1,6 @@
 import React from "react";
 import { Block, BlockType } from "@/types/block";
 import TextEditor from "../TextEditor";
-import { Button } from "@/components/ui/button";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 
 interface BlockContentProps {
@@ -60,10 +59,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
         return renderCalloutBlock();
       case "quote":
         return renderQuoteBlock();
-      case "code":
-        return renderCodeBlock();
-      case "image":
-        return renderImageBlock();
+      case "table":
+        return renderTableBlock();
       case "heading_1":
       case "heading_2":
       case "heading_3":
@@ -168,62 +165,13 @@ const BlockContent: React.FC<BlockContentProps> = ({
     </div>
   );
 
-  const renderCodeBlock = () => (
-    <div className="font-mono bg-muted p-3 rounded overflow-x-auto">
-      <TextEditor
-        value={block.properties.title || [["", []]]}
-        onChange={handleContentChange}
-        blockType={blockType}
-        onEnter={(e) => {
-          // code 블록 내에서는 줄바꿈만 삽입
-          const event = e as unknown as React.KeyboardEvent;
-          if (!event.shiftKey) {
-            e();
-          }
-        }}
-        onTab={handleIndent}
-        onShiftTab={handleOutdent}
-        onDelete={handleDeleteBlock}
-        onChangeType={handleChangeType}
-        onArrowUp={handleArrowUp}
-        onArrowDown={handleArrowDown}
-      />
+  const renderTableBlock = () => (
+    <div className="w-full overflow-x-auto">
+      <div className="border border-border rounded-md p-2 text-center text-muted-foreground">
+        Table block placeholder
+      </div>
     </div>
   );
-
-  const renderImageBlock = () => {
-    return block.properties.source?.[0]?.[0] ? (
-      <div className="w-full">
-        <img
-          src={block.properties.source[0][0]}
-          alt={block.properties.caption?.[0]?.[0] || "Image"}
-          className="max-w-full rounded-md"
-        />
-        <div className="text-sm text-muted-foreground mt-1">
-          <TextEditor
-            value={block.properties.caption || [["", []]]}
-            onChange={(value) => handleContentChange(value)}
-            blockType="text"
-            placeholder="이미지 설명 추가..."
-            onEnter={handleAddBlock}
-            onTab={handleIndent}
-            onShiftTab={handleOutdent}
-            onArrowUp={handleArrowUp}
-            onArrowDown={handleArrowDown}
-          />
-        </div>
-      </div>
-    ) : (
-      <div className="border-2 border-dashed border-border rounded-md p-8 text-center">
-        <div className="text-muted-foreground mb-2">
-          이미지를 여기에 드래그하거나 클릭하여 업로드
-        </div>
-        <Button variant="outline" size="sm">
-          이미지 업로드
-        </Button>
-      </div>
-    );
-  };
 
   const renderHeadingBlock = () => (
     <TextEditor

@@ -347,7 +347,6 @@ export default function TextEditor({
     blockType === "heading_2" && "text-2xl font-bold my-2",
     blockType === "heading_3" && "text-xl font-bold my-1.5",
     blockType === "quote" && "italic",
-    blockType === "code" && "font-mono",
     (!value[0][0] || value[0][0] === "/") &&
       !isFocused &&
       "text-muted-foreground",

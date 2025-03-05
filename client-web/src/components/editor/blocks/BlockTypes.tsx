@@ -9,9 +9,7 @@ import {
   IconMessageCircle,
   IconQuote,
   IconSeparator,
-  IconCode,
-  IconPhoto,
-  IconLink,
+  IconTable,
 } from "@tabler/icons-react";
 import React from "react";
 
@@ -28,16 +26,8 @@ export const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   callout: <IconMessageCircle />,
   quote: <IconQuote />,
   divider: <IconSeparator />,
-  code: <IconCode />,
-  image: <IconPhoto />,
-  video: <IconPhoto />,
-  file: <IconPhoto />,
-  bookmark: <IconLink />,
+  table: <IconTable />,
   page: <IconLetterT />,
-  equation: <IconCode />,
-  table: <IconSeparator />,
-  column: <IconSeparator />,
-  column_list: <IconSeparator />,
 };
 
 // 블록 타입별 라벨
@@ -53,16 +43,8 @@ export const BLOCK_LABELS: Record<BlockType, string> = {
   callout: "Callout",
   quote: "Quote",
   divider: "Divider",
-  code: "Code",
-  image: "Image",
-  video: "Video",
-  file: "File",
-  bookmark: "Bookmark",
-  page: "Page",
-  equation: "Equation",
   table: "Table",
-  column: "Column",
-  column_list: "Column List",
+  page: "Page",
 };
 
 // 블록 타입별 설명
@@ -78,16 +60,8 @@ export const BLOCK_DESCRIPTIONS: Record<BlockType, string> = {
   callout: "Make your text stand out.",
   quote: "Capture a quote.",
   divider: "Visually divide blocks.",
-  code: "Capture a code snippet.",
-  image: "Upload or embed an image.",
-  video: "Upload or embed a video.",
-  file: "Upload a file.",
-  bookmark: "Save a link as a visual bookmark.",
-  page: "Create a new page inside this page.",
-  equation: "Display a math equation.",
   table: "Add a table.",
-  column: "Add a column.",
-  column_list: "Add a column list.",
+  page: "Create a new page inside this page.",
 };
 
 // 노션 스타일 클래스명 매핑
@@ -113,10 +87,8 @@ export function getNotionBlockClassName(type: BlockType): string {
       return "notion-quote-block";
     case "divider":
       return "notion-divider-block";
-    case "code":
-      return "notion-code-block";
-    case "image":
-      return "notion-image-block";
+    case "table":
+      return "notion-table-block";
     default:
       return "notion-text-block";
   }
@@ -135,5 +107,5 @@ export const COMMON_BLOCK_TYPES: BlockType[] = [
   "callout",
   "quote",
   "divider",
-  "code",
+  "table",
 ];
