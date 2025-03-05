@@ -1,6 +1,6 @@
 import Dexie from "dexie";
 import { v4 as uuidv4 } from "uuid";
-import { Block, BlockType, cloneBlock } from "@/types/block";
+import { Block, cloneBlock } from "@/types/block";
 
 class StepJourneyDatabase extends Dexie {
   blocks: Dexie.Table<Block, string>;

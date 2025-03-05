@@ -64,36 +64,6 @@ export const BLOCK_DESCRIPTIONS: Record<BlockType, string> = {
   page: "Create a new page inside this page.",
 };
 
-// 노션 스타일 클래스명 매핑
-export function getNotionBlockClassName(type: BlockType): string {
-  switch (type) {
-    case "text":
-      return "notion-text-block";
-    case "heading_1":
-    case "heading_2":
-    case "heading_3":
-      return "notion-header-block";
-    case "bulleted_list":
-      return "notion-bulleted_list-block notion-synthetic-group-block";
-    case "numbered_list":
-      return "notion-numbered_list-block notion-synthetic-group-block";
-    case "to_do":
-      return "notion-to_do-block";
-    case "toggle":
-      return "notion-toggle-block";
-    case "callout":
-      return "notion-callout-block";
-    case "quote":
-      return "notion-quote-block";
-    case "divider":
-      return "notion-divider-block";
-    case "table":
-      return "notion-table-block";
-    default:
-      return "notion-text-block";
-  }
-}
-
 // 자주 사용되는 블록 타입 배열
 export const COMMON_BLOCK_TYPES: BlockType[] = [
   "text",

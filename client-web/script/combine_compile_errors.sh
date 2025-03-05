@@ -22,11 +22,6 @@ echo "- React 클라이언트에서 필요한 컴포넌트를 \`npx shadcn@lates
 echo "- React 클라이언트에서 아이콘은 \`\"@tabler/icons-react\"\` 혹은 'lucide-react' 에서 적절한 것을 가져다가 사용해야함" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
-# 프로젝트 구조 추가
-echo "# Project Structure:" >> "$OUTPUT_FILE"
-tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
 # 프로젝트 기술 스택 추가
 echo "# Project Tech stack:" >> "$OUTPUT_FILE"
 echo "- React" >> "$OUTPUT_FILE"
@@ -36,6 +31,11 @@ echo "- Tailwind CSS" >> "$OUTPUT_FILE"
 echo "- shadcn/ui" >> "$OUTPUT_FILE"
 echo "- radix-ui" >> "$OUTPUT_FILE"
 echo "- tabler/icons-react" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+# 프로젝트 구조 추가
+echo "# Project Structure:" >> "$OUTPUT_FILE"
+tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
 # `client-web/src/types` 경로의 모든 .ts 파일 추가

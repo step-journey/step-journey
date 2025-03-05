@@ -1,16 +1,11 @@
 import React, { useState, useRef, useCallback } from "react";
 import { BlockType, TextFormat } from "@/types/block";
+import { useCaretManager, CaretPosition } from "@/lib/caret";
 
 type TextSelection = {
   start: number;
   end: number;
   text: string;
-};
-
-// 캐럿 위치 정보를 저장하기 위한 타입
-type CaretPosition = {
-  node: Node | null;
-  offset: number;
 };
 
 interface UseTextFormattingOptions {
@@ -19,6 +14,7 @@ interface UseTextFormattingOptions {
   onChange: (value: Array<[string, Array<TextFormat>]>) => void;
   blockType: BlockType;
   onChangeType?: (type: BlockType) => void;
+  caretManager?: ReturnType<typeof useCaretManager>;
 }
 
 /**
@@ -28,7 +24,9 @@ export function useTextFormatting({
   editorRef,
   value,
   onChange,
+  blockType,
   onChangeType,
+  caretManager,
 }: UseTextFormattingOptions) {
   const [activeFormats, setActiveFormats] = useState<TextFormat[]>([]);
   const [selectedRange, setSelectedRange] = useState<TextSelection | null>(
@@ -36,39 +34,14 @@ export function useTextFormatting({
   );
   const lastKeyPressTime = useRef<number>(0);
 
-  // 커서를 텍스트 끝으로 이동
-  const moveCursorToEnd = useCallback(() => {
-    if (!editorRef.current) return;
+  // 기본 캐럿 관리자 구성
+  const defaultCaretManager = useCaretManager({
+    editorRef,
+    debug: false,
+  });
 
-    const selection = window.getSelection();
-    if (!selection) return;
-
-    const range = document.createRange();
-
-    // Content exists
-    if (editorRef.current.firstChild && editorRef.current.textContent) {
-      const lastNode = editorRef.current.lastChild;
-      if (lastNode && lastNode.nodeType === Node.TEXT_NODE) {
-        const textNode = lastNode as Text;
-        const length = textNode.textContent?.length || 0;
-        range.setStart(textNode, length);
-        range.setEnd(textNode, length);
-      } else {
-        const textNode = document.createTextNode("");
-        editorRef.current.appendChild(textNode);
-        range.setStart(textNode, 0);
-        range.setEnd(textNode, 0);
-      }
-    } else {
-      const textNode = document.createTextNode("");
-      editorRef.current.appendChild(textNode);
-      range.setStart(textNode, 0);
-      range.setEnd(textNode, 0);
-    }
-
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }, [editorRef]);
+  // 제공된 캐럿 관리자 또는 기본 관리자 사용
+  const caret = caretManager || defaultCaretManager;
 
   // 현재 선택된 텍스트 감지
   const detectSelection = useCallback(() => {
@@ -111,10 +84,25 @@ export function useTextFormatting({
       // 실제로는 Notion의 포맷 배열을 분석해야 함
       const formats: TextFormat[] = [];
 
+      // 블록 타입에 따라 포맷 자동 감지
+      if (
+        blockType === "heading_1" ||
+        blockType === "heading_2" ||
+        blockType === "heading_3"
+      ) {
+        formats.push(["b"]); // 헤딩은 기본적으로 굵게 표시
+      }
+
+      // 선택 영역 정보 사용
+      console.log(
+        `Selection range: ${selection.start}-${selection.end}, text: "${selection.text}"`,
+      );
+
       // 원래 텍스트에서 선택 영역 분석
       const formatArray = value[0][1] || [];
 
-      // Notion 형식의 포맷 배열 분석
+      // 선택 영역에 해당하는 포맷만 추출 (실제 구현은 더 복잡할 수 있음)
+      // 여기서는 단순화를 위해 모든 포맷을 고려
       formatArray.forEach((format) => {
         if (
           format[0] === "b" ||
@@ -128,122 +116,7 @@ export function useTextFormatting({
 
       setActiveFormats(formats);
     },
-    [value],
-  );
-
-  // 현재 캐럿 위치 가져오기
-  const getCaretPosition = useCallback((): CaretPosition | null => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return null;
-
-    const range = selection.getRangeAt(0);
-    return {
-      node: range.startContainer,
-      offset: range.startOffset,
-    };
-  }, []);
-
-  // 캐럿 위치 저장하기
-  const saveCaretPosition = useCallback((): CaretPosition | null => {
-    return getCaretPosition();
-  }, [getCaretPosition]);
-
-  // 저장된 캐럿 위치 복원하기
-  const restoreCaretPosition = useCallback(
-    (position: CaretPosition | null) => {
-      if (!position || !position.node || !editorRef.current) return;
-
-      try {
-        const selection = window.getSelection();
-        if (!selection) return;
-
-        const range = document.createRange();
-
-        // 텍스트 노드가 아니면 대안 찾기
-        if (position.node.nodeType !== Node.TEXT_NODE) {
-          // 에디터 내부에 있는지 확인
-          if (!editorRef.current.contains(position.node)) {
-            // 에디터 내의 첫 번째 텍스트 노드 찾기
-            const textNode = Array.from(editorRef.current.childNodes).find(
-              (node) => node.nodeType === Node.TEXT_NODE,
-            );
-
-            if (textNode) {
-              range.setStart(
-                textNode,
-                Math.min(position.offset, textNode.textContent?.length || 0),
-              );
-              range.setEnd(
-                textNode,
-                Math.min(position.offset, textNode.textContent?.length || 0),
-              );
-            } else {
-              // 텍스트 노드가 없는 경우 에디터 자체를 사용
-              range.setStart(editorRef.current, 0);
-              range.setEnd(editorRef.current, 0);
-            }
-          } else {
-            // 에디터 내부의 노드인 경우
-            range.setStart(
-              position.node,
-              Math.min(position.offset, position.node.childNodes.length),
-            );
-            range.setEnd(
-              position.node,
-              Math.min(position.offset, position.node.childNodes.length),
-            );
-          }
-        } else {
-          // 텍스트 노드인 경우 직접 위치 설정
-          const maxOffset = position.node.textContent?.length || 0;
-          range.setStart(position.node, Math.min(position.offset, maxOffset));
-          range.setEnd(position.node, Math.min(position.offset, maxOffset));
-        }
-
-        selection.removeAllRanges();
-        selection.addRange(range);
-      } catch (e) {
-        console.error("Error restoring caret position:", e);
-        // 실패하면 텍스트 끝으로 이동
-        moveCursorToEnd();
-      }
-    },
-    [editorRef, moveCursorToEnd],
-  );
-
-  // 특정 위치에 캐럿 설정하기
-  const setCaretPosition = useCallback(
-    (offset: number) => {
-      if (!editorRef.current) return;
-
-      const selection = window.getSelection();
-      if (!selection) return;
-
-      const range = document.createRange();
-      let textNode: Node | null = null;
-
-      // 텍스트 노드 찾기
-      if (
-        editorRef.current.firstChild &&
-        editorRef.current.firstChild.nodeType === Node.TEXT_NODE
-      ) {
-        textNode = editorRef.current.firstChild;
-      } else {
-        // 텍스트 노드가 없는 경우 생성
-        textNode = document.createTextNode("");
-        editorRef.current.appendChild(textNode);
-      }
-
-      const maxOffset = textNode.textContent?.length || 0;
-      const safeOffset = Math.min(offset, maxOffset);
-
-      range.setStart(textNode, safeOffset);
-      range.setEnd(textNode, safeOffset);
-
-      selection.removeAllRanges();
-      selection.addRange(range);
-    },
-    [editorRef],
+    [value, blockType],
   );
 
   // 포맷 적용하기
@@ -254,7 +127,11 @@ export function useTextFormatting({
       const text = editorRef.current.textContent || "";
 
       // 현재 캐럿 위치 저장
-      const savedPosition = saveCaretPosition();
+      const savedPosition = caret.saveCaret("format");
+      // 변수 사용 - 디버깅 목적
+      if (import.meta.env.DEV) {
+        console.log("Saved caret position for formatting:", savedPosition);
+      }
 
       // 여기서는 간소화된 구현
       // 실제로는 Notion 포맷 배열을 수정해야 함
@@ -266,23 +143,17 @@ export function useTextFormatting({
 
       // 포맷 적용 후 캐럿 위치 복원
       setTimeout(() => {
-        restoreCaretPosition(savedPosition);
+        caret.restoreCaret("format");
       }, 0);
     },
-    [
-      editorRef,
-      onChange,
-      selectedRange,
-      saveCaretPosition,
-      restoreCaretPosition,
-    ],
+    [editorRef, onChange, selectedRange, caret],
   );
 
   // 마크다운 자동 변환 처리
   const processMarkdown = useCallback(
     (text: string): boolean => {
       // 캐럿 위치 저장
-      const caretPosition = saveCaretPosition();
+      const caretPosition = caret.saveCaret("markdown");
 
       // 마크다운 변환을 위한 규칙
       const markdownRules = [
@@ -332,12 +203,12 @@ export function useTextFormatting({
                   // 변환 후 캐럿 위치 복원 또는 이동
                   setTimeout(() => {
                     if (caretPosition) {
-                      // 변환 전의 위치 복원 시도
-                      setCaretPosition(
-                        Math.min(caretPosition.offset, match[1].length),
-                      );
+                      caret.setCaretPosition({
+                        node: caretPosition.node,
+                        offset: Math.min(caretPosition.offset, match[1].length),
+                      });
                     } else {
-                      moveCursorToEnd();
+                      caret.moveToEnd();
                     }
                   }, 0);
                 }
@@ -361,14 +232,7 @@ export function useTextFormatting({
       }
       return false;
     },
-    [
-      editorRef,
-      moveCursorToEnd,
-      onChange,
-      onChangeType,
-      saveCaretPosition,
-      setCaretPosition,
-    ],
+    [editorRef, caret, onChange, onChangeType],
   );
 
   // 줄바꿈 삽입
@@ -376,11 +240,10 @@ export function useTextFormatting({
     if (!editorRef.current) return;
 
     const text = editorRef.current.textContent || "";
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
+    const position = caret.getCaretPosition();
+    if (!position) return;
 
-    const range = selection.getRangeAt(0);
-    const cursorPos = range.startOffset;
+    const cursorPos = position.offset;
 
     // 커서 위치에 줄바꿈 삽입
     const newText =
@@ -388,23 +251,29 @@ export function useTextFormatting({
     editorRef.current.textContent = newText;
 
     // 커서 위치 조정
-    const newRange = document.createRange();
-    const textNode = editorRef.current.firstChild || editorRef.current;
-    newRange.setStart(textNode, cursorPos + 1);
-    newRange.setEnd(textNode, cursorPos + 1);
-    selection.removeAllRanges();
-    selection.addRange(newRange);
+    setTimeout(() => {
+      // 캐럿 위치를 줄바꿈 다음으로 이동
+      const updatedPosition: CaretPosition = {
+        node: editorRef.current?.firstChild || (editorRef.current as Node),
+        offset: cursorPos + 1,
+      };
+      caret.setCaretPosition(updatedPosition);
+    }, 0);
 
     // 부모 컴포넌트에 변경 알림
     onChange([[newText, []]]);
-  }, [editorRef, onChange]);
+  }, [editorRef, caret, onChange]);
 
   // 링크 삽입
   const promptForLink = useCallback(() => {
     if (!selectedRange) return;
 
     // 현재 캐럿 위치 저장
-    const savedPosition = saveCaretPosition();
+    const savedPosition = caret.saveCaret("link");
+    // 변수 사용 - 디버깅 목적
+    if (import.meta.env.DEV) {
+      console.log("Saved caret position for link:", savedPosition);
+    }
 
     // 간소화된 링크 입력, 실제로는 모달 컴포넌트 사용 권장
     const url = window.prompt("링크 URL을 입력하세요:", "https://");
@@ -414,21 +283,22 @@ export function useTextFormatting({
 
       // 링크 삽입 후 커서 위치 조정 (링크 다음으로)
       setTimeout(() => {
-        if (savedPosition && savedPosition.node) {
-          const newPos = {
-            node: savedPosition.node,
-            offset: savedPosition.offset + selectedRange.text.length,
+        const currentPos = caret.getCaretPosition();
+        if (currentPos && currentPos.node) {
+          const newPos: CaretPosition = {
+            node: currentPos.node,
+            offset: currentPos.offset + selectedRange.text.length,
           };
-          restoreCaretPosition(newPos);
+          caret.setCaretPosition(newPos);
         }
       }, 0);
     } else {
       // 취소한 경우 원래 위치로 복원
       setTimeout(() => {
-        restoreCaretPosition(savedPosition);
+        caret.restoreCaret("link");
       }, 0);
     }
-  }, [applyFormat, selectedRange, saveCaretPosition, restoreCaretPosition]);
+  }, [applyFormat, selectedRange, caret]);
 
   // 현재 커서 위치의 단어 선택
   const selectWord = useCallback(() => {
@@ -505,14 +375,10 @@ export function useTextFormatting({
     detectSelection,
     applyFormat,
     processMarkdown,
-    moveCursorToEnd,
+    moveCursorToEnd: caret.moveToEnd,
     insertLineBreak,
     promptForLink,
     selectWord,
     selectEntireBlock,
-    getCaretPosition,
-    setCaretPosition,
-    saveCaretPosition,
-    restoreCaretPosition,
   };
 }

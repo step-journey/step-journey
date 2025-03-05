@@ -141,7 +141,7 @@ export default function HomePage() {
           <div className="p-3 border-b border-border">
             <div className="flex items-center justify-between mb-3">
               {user ? (
-                <span className="font-medium">{user.name}&#39;s Notion</span>
+                <span className="font-medium">{user.name}&#39;s Journey</span>
               ) : (
                 <span className="font-medium">StepJourney</span>
               )}

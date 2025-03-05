@@ -2,6 +2,7 @@ import React from "react";
 import { Block, BlockType } from "@/types/block";
 import TextEditor from "../TextEditor";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+import { useCaretManager } from "@/lib/caret";
 
 interface BlockContentProps {
   block: Block;
@@ -17,6 +18,7 @@ interface BlockContentProps {
   toggleTodo?: () => void;
   onArrowUp?: () => void;
   onArrowDown?: () => void;
+  caretManager?: ReturnType<typeof useCaretManager>;
 }
 
 const BlockContent: React.FC<BlockContentProps> = ({
@@ -33,20 +35,8 @@ const BlockContent: React.FC<BlockContentProps> = ({
   toggleTodo,
   onArrowUp,
   onArrowDown,
+  caretManager,
 }) => {
-  // Handle cursor positioning when navigating between blocks
-  const handleArrowUp = () => {
-    if (onArrowUp) {
-      onArrowUp();
-    }
-  };
-
-  const handleArrowDown = () => {
-    if (onArrowDown) {
-      onArrowDown();
-    }
-  };
-
   const renderContent = () => {
     switch (blockType) {
       case "to_do":
@@ -86,13 +76,15 @@ const BlockContent: React.FC<BlockContentProps> = ({
           value={block.properties.title || [["", []]]}
           onChange={handleContentChange}
           blockType={blockType}
+          blockId={block.id}
           onEnter={handleAddBlock}
           onTab={handleIndent}
           onShiftTab={handleOutdent}
           onDelete={handleDeleteBlock}
           onChangeType={handleChangeType}
-          onArrowUp={handleArrowUp}
-          onArrowDown={handleArrowDown}
+          onArrowUp={onArrowUp}
+          onArrowDown={onArrowDown}
+          caretManager={caretManager}
         />
       </div>
     </div>
@@ -116,13 +108,15 @@ const BlockContent: React.FC<BlockContentProps> = ({
           value={block.properties.title || [["", []]]}
           onChange={handleContentChange}
           blockType="text"
+          blockId={block.id}
           onEnter={handleAddBlock}
           onTab={handleIndent}
           onShiftTab={handleOutdent}
           onDelete={handleDeleteBlock}
           onChangeType={handleChangeType}
-          onArrowUp={handleArrowUp}
-          onArrowDown={handleArrowDown}
+          onArrowUp={onArrowUp}
+          onArrowDown={onArrowDown}
+          caretManager={caretManager}
         />
       </div>
     </div>
@@ -136,13 +130,15 @@ const BlockContent: React.FC<BlockContentProps> = ({
           value={block.properties.title || [["", []]]}
           onChange={handleContentChange}
           blockType="text"
+          blockId={block.id}
           onEnter={handleAddBlock}
           onTab={handleIndent}
           onShiftTab={handleOutdent}
           onDelete={handleDeleteBlock}
           onChangeType={handleChangeType}
-          onArrowUp={handleArrowUp}
-          onArrowDown={handleArrowDown}
+          onArrowUp={onArrowUp}
+          onArrowDown={onArrowDown}
+          caretManager={caretManager}
         />
       </div>
     </div>
@@ -154,13 +150,15 @@ const BlockContent: React.FC<BlockContentProps> = ({
         value={block.properties.title || [["", []]]}
         onChange={handleContentChange}
         blockType={blockType}
+        blockId={block.id}
         onEnter={handleAddBlock}
         onTab={handleIndent}
         onShiftTab={handleOutdent}
         onDelete={handleDeleteBlock}
         onChangeType={handleChangeType}
-        onArrowUp={handleArrowUp}
-        onArrowDown={handleArrowDown}
+        onArrowUp={onArrowUp}
+        onArrowDown={onArrowDown}
+        caretManager={caretManager}
       />
     </div>
   );
@@ -178,13 +176,15 @@ const BlockContent: React.FC<BlockContentProps> = ({
       value={block.properties.title || [["", []]]}
       onChange={handleContentChange}
       blockType={blockType}
+      blockId={block.id}
       onEnter={handleAddBlock}
       onTab={handleIndent}
       onShiftTab={handleOutdent}
       onDelete={handleDeleteBlock}
       onChangeType={handleChangeType}
-      onArrowUp={handleArrowUp}
-      onArrowDown={handleArrowDown}
+      onArrowUp={onArrowUp}
+      onArrowDown={onArrowDown}
+      caretManager={caretManager}
     />
   );
 
@@ -197,10 +197,7 @@ const BlockContent: React.FC<BlockContentProps> = ({
         paddingLeft: "2px",
       }}
     >
-      <div
-        contentEditable={false}
-        className="notion-list-item-bullet flex-shrink-0 mr-2 mt-1.5"
-      >
+      <div contentEditable={false} className="flex-shrink-0 mr-2 mt-1.5">
         {blockType === "bulleted_list" ? (
           <div className="bullet-disc">•</div>
         ) : (
@@ -212,13 +209,15 @@ const BlockContent: React.FC<BlockContentProps> = ({
           value={block.properties.title || [["", []]]}
           onChange={handleContentChange}
           blockType={blockType}
+          blockId={block.id}
           onEnter={handleAddBlock}
           onTab={handleIndent}
           onShiftTab={handleOutdent}
           onDelete={handleDeleteBlock}
           onChangeType={handleChangeType}
-          onArrowUp={handleArrowUp}
-          onArrowDown={handleArrowDown}
+          onArrowUp={onArrowUp}
+          onArrowDown={onArrowDown}
+          caretManager={caretManager}
         />
       </div>
     </div>
@@ -229,13 +228,15 @@ const BlockContent: React.FC<BlockContentProps> = ({
       value={block.properties.title || [["", []]]}
       onChange={handleContentChange}
       blockType={blockType}
+      blockId={block.id}
       onEnter={handleAddBlock}
       onTab={handleIndent}
       onShiftTab={handleOutdent}
       onDelete={handleDeleteBlock}
       onChangeType={handleChangeType}
-      onArrowUp={handleArrowUp}
-      onArrowDown={handleArrowDown}
+      onArrowUp={onArrowUp}
+      onArrowDown={onArrowDown}
+      caretManager={caretManager}
     />
   );
 

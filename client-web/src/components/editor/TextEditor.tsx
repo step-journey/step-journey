@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { BlockType, TextFormat } from "@/types/block";
 import { cn } from "@/lib/utils";
 import SlashCommandMenu from "./SlashCommandMenu";
@@ -6,11 +6,13 @@ import FormatMenu from "./text/FormatMenu";
 import { useTextFormatting } from "./hooks/useTextFormatting";
 import { useTextEditorKeydown } from "./hooks/useTextEditorKeydown";
 import { useTextCommands } from "./hooks/useTextCommands";
+import { useCaretManager } from "@/lib/caret";
 
 interface TextEditorProps {
   value: Array<[string, Array<TextFormat>]>;
   onChange: (value: Array<[string, Array<TextFormat>]>) => void;
   blockType: BlockType;
+  blockId: string;
   onEnter?: (e?: any) => void;
   onTab?: () => void;
   onShiftTab?: () => void;
@@ -19,12 +21,14 @@ interface TextEditorProps {
   onArrowUp?: () => void;
   onArrowDown?: () => void;
   placeholder?: string;
+  caretManager?: ReturnType<typeof useCaretManager>; // 추가된 caretManager prop
 }
 
 export default function TextEditor({
   value,
   onChange,
   blockType,
+  blockId,
   onEnter,
   onTab,
   onShiftTab,
@@ -33,6 +37,7 @@ export default function TextEditor({
   onArrowUp,
   onArrowDown,
   placeholder = "Type '/' for commands...",
+  caretManager: externalCaretManager, // 외부에서 주입된 캐럿 관리자
 }: TextEditorProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [formatMenuOpen, setFormatMenuOpen] = useState(false);
@@ -43,6 +48,17 @@ export default function TextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastClickTimeRef = useRef<number>(0);
+
+  // 내부 캐럿 관리자 생성
+  const internalCaretManager = useCaretManager({
+    editorRef,
+    blockId,
+    onFocus: () => setIsFocused(true),
+    debug: import.meta.env.DEV,
+  });
+
+  // 외부 또는 내부 캐럿 관리자 사용
+  const caretManager = externalCaretManager || internalCaretManager;
 
   // 에디터 초기화
   useEffect(() => {
@@ -66,109 +82,60 @@ export default function TextEditor({
 
     const handleKeyDownEvent = (e: KeyboardEvent) => {
       // Arrow key handling for cursor position maintenance
-      if (e.key === "ArrowUp" && isFirstLine(editorElement)) {
-        const cursorPos = getCursorPosition();
-        if (cursorPos) {
+      if (e.key === "ArrowUp" && caretManager.isAtLineStart()) {
+        if (onArrowUp) {
           // Save the current horizontal position for when we move to the previous block
-          const column = getColumnPosition(cursorPos);
-          localStorage.setItem("caretColumn", column.toString());
+          caretManager.saveColumnForBlockNavigation();
         }
-      } else if (e.key === "ArrowDown" && isLastLine(editorElement)) {
-        const cursorPos = getCursorPosition();
-        if (cursorPos) {
+      } else if (e.key === "ArrowDown" && caretManager.isAtLineEnd()) {
+        if (onArrowDown) {
           // Save the current horizontal position for when we move to the next block
-          const column = getColumnPosition(cursorPos);
-          localStorage.setItem("caretColumn", column.toString());
+          caretManager.saveColumnForBlockNavigation();
         }
       }
-    };
-
-    // Helper functions for cursor position
-    const isFirstLine = (element: HTMLElement) => {
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return false;
-
-      const range = selection.getRangeAt(0);
-      const text = element.textContent || "";
-      const cursorPos = range.startOffset;
-
-      // If there's no newline or cursor is before the first newline
-      return text.indexOf("\n") === -1 || cursorPos <= text.indexOf("\n");
-    };
-
-    const isLastLine = (element: HTMLElement) => {
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return false;
-
-      const range = selection.getRangeAt(0);
-      const text = element.textContent || "";
-      const cursorPos = range.startOffset;
-      const lastNewlinePos = text.lastIndexOf("\n");
-
-      // If there's no newline or cursor is after the last newline
-      return lastNewlinePos === -1 || cursorPos > lastNewlinePos;
-    };
-
-    const getCursorPosition = (): number | null => {
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return null;
-
-      const range = selection.getRangeAt(0);
-      return range.startOffset;
-    };
-
-    const getColumnPosition = (cursorPos: number): number => {
-      const text = editorElement.textContent || "";
-      const textBeforeCursor = text.substring(0, cursorPos);
-      const lastNewlinePos = textBeforeCursor.lastIndexOf("\n");
-
-      // If there's no newline, cursor column is just the cursor position
-      // Otherwise, it's the position relative to the last newline
-      return lastNewlinePos === -1 ? cursorPos : cursorPos - lastNewlinePos - 1;
     };
 
     editorElement.addEventListener("keydown", handleKeyDownEvent);
     return () => {
       editorElement.removeEventListener("keydown", handleKeyDownEvent);
     };
-  }, [editorRef]);
+  }, [editorRef, caretManager, onArrowUp, onArrowDown]);
 
   // 텍스트 포맷팅 훅
   const {
-    selectedRange,
     activeFormats,
-    lastKeyPressTime,
     detectSelection,
     applyFormat,
     processMarkdown,
-    moveCursorToEnd,
     insertLineBreak,
     promptForLink,
     selectWord,
     selectEntireBlock,
-    setCaretPosition,
-    getCaretPosition,
-    saveCaretPosition,
-    restoreCaretPosition,
   } = useTextFormatting({
     editorRef,
     value,
     onChange,
     blockType,
     onChangeType,
+    caretManager,
   });
 
   // 커서를 텍스트 끝으로 이동 (공개 메서드)
   const handleMoveCursorToEnd = useCallback(() => {
-    moveCursorToEnd();
-  }, [moveCursorToEnd]);
+    caretManager.moveToEnd();
+  }, [caretManager]);
 
   // 단축키 서식 적용
   const applyShortcutFormat = useCallback(
     (key: string) => {
-      const savedCaretPos = saveCaretPosition();
+      const savedCaretPos = caretManager.saveCaret("format");
 
-      switch (key) {
+      // 디버깅 용도로 savedCaretPos 사용
+      if (import.meta.env.DEV) {
+        console.log("Format shortcut caret saved:", savedCaretPos);
+      }
+
+      switch (key.toLowerCase()) {
         case "b":
           applyFormat(["b"]);
           break;
@@ -187,9 +154,9 @@ export default function TextEditor({
       }
 
       // 서식 적용 후 커서 위치 복원
-      setTimeout(() => restoreCaretPosition(savedCaretPos), 0);
+      setTimeout(() => caretManager.restoreCaret("format"), 0);
     },
-    [applyFormat, promptForLink, saveCaretPosition, restoreCaretPosition],
+    [applyFormat, promptForLink, caretManager],
   );
 
   // 텍스트 명령어 처리 훅
@@ -205,7 +172,7 @@ export default function TextEditor({
     editorRef,
     onChange,
     onChangeType,
-    moveCursorToEnd,
+    moveCursorToEnd: caretManager.moveToEnd,
   });
 
   // 키보드 이벤트 처리 훅
@@ -224,10 +191,7 @@ export default function TextEditor({
     applyShortcutFormat,
     setCommandMenuOpen,
     setFormatMenuOpen,
-    setCaretPosition,
-    getCaretPosition,
-    saveCaretPosition,
-    restoreCaretPosition,
+    caretManager,
     selectWord,
     selectEntireBlock,
   });
@@ -238,7 +202,7 @@ export default function TextEditor({
     const text = editorRef.current.textContent || "";
 
     // 커서 위치 저장
-    const caretPosition = getCaretPosition();
+    const caretPosition = caretManager.getCaretPosition();
 
     // 커맨드 메뉴 처리
     handleCommandInput();
@@ -249,15 +213,18 @@ export default function TextEditor({
     // 변환 후에도 커서 위치가 바뀌지 않게 복원
     setTimeout(() => {
       if (caretPosition) {
-        restoreCaretPosition(caretPosition);
+        caretManager.setCaretPosition(caretPosition);
       }
     }, 0);
-  }, [
-    handleCommandInput,
-    processMarkdown,
-    getCaretPosition,
-    restoreCaretPosition,
-  ]);
+  }, [handleCommandInput, processMarkdown, caretManager]);
+
+  // 블록 포커스 시 캐럿 위치 복원
+  useEffect(() => {
+    if (isFocused) {
+      // 저장된 열 위치 확인 및 복원
+      caretManager.restoreColumnAfterBlockNavigation();
+    }
+  }, [isFocused, caretManager]);
 
   // 클릭 처리
   const handleClick = useCallback(
@@ -384,6 +351,7 @@ export default function TextEditor({
         onSelect={handleSelectText}
         onPaste={handlePaste}
         data-placeholder={isFocused && !value[0][0] ? placeholder : ""}
+        data-block-id={blockId}
       />
 
       {/* 커맨드 메뉴 */}

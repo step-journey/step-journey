@@ -7,7 +7,7 @@ import BlockContent from "./blocks/BlockContent";
 import BlockHandle from "./blocks/BlockHandle";
 import { useBlockActions } from "./hooks/useBlockActions";
 import { useBlockDrag } from "./hooks/useBlockDrag";
-import { getNotionBlockClassName } from "./blocks/BlockTypes";
+import { useCaretManager } from "@/lib/caret";
 
 interface BlockItemProps {
   block: Block;
@@ -65,6 +65,12 @@ export default function BlockItem({
   const blockRef = useRef<HTMLDivElement>(null);
   const [hasChildren, setHasChildren] = useState(false);
 
+  // 캐럿 관리자 초기화
+  const caretManager = useCaretManager({
+    editorRef: blockRef,
+    blockId: block.id,
+  });
+
   // 자식 블록 존재 여부 확인
   useEffect(() => {
     const loadChildBlocks = async () => {
@@ -90,48 +96,17 @@ export default function BlockItem({
 
     // 포커스된 블록이면 contenteditable 영역 포커스
     if (isFocused && blockRef.current) {
-      const editableDiv = blockRef.current.querySelector(
-        '[contenteditable="true"]',
-      );
-      if (editableDiv) {
-        // 저장된 커서 위치 정보가 있는지 확인
-        const savedColumn = localStorage.getItem("caretColumn");
+      const editableElement = caretManager.getEditableElement();
 
+      if (editableElement) {
         // contenteditable 요소에 포커스
-        (editableDiv as HTMLElement).focus();
+        editableElement.focus();
 
-        // 저장된 커서 위치가 있으면 해당 위치로 커서 이동
-        if (savedColumn) {
-          const column = parseInt(savedColumn, 10);
-          const text = (editableDiv as HTMLElement).textContent || "";
-
-          // 텍스트 내용과 커서 위치를 고려하여 적절한 위치 계산
-          const firstLineEnd = text.indexOf("\n");
-          const lineLength = firstLineEnd === -1 ? text.length : firstLineEnd;
-          const targetPosition = Math.min(column, lineLength);
-
-          // 캐럿 위치 설정
-          try {
-            const selection = window.getSelection();
-            if (selection) {
-              const range = document.createRange();
-              const textNode =
-                (editableDiv as HTMLElement).firstChild || editableDiv;
-              range.setStart(textNode, targetPosition);
-              range.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(range);
-            }
-          } catch (e) {
-            console.error("Error setting caret position:", e);
-          }
-
-          // 사용 후 삭제
-          localStorage.removeItem("caretColumn");
-        }
+        // 저장된 커서 위치 정보가 있는지 확인하고 복원
+        caretManager.restoreColumnAfterBlockNavigation();
       }
     }
-  }, [block.id, setBlockRef, isFocused]);
+  }, [block.id, setBlockRef, isFocused, caretManager]);
 
   // 블록 액션 훅
   const {
@@ -194,57 +169,20 @@ export default function BlockItem({
   // 방향키 핸들러
   const handleArrowUp = () => {
     if (onArrowUp) {
-      // 현재 블록의 contenteditable 요소에서 커서 위치를 저장
-      const editableDiv = blockRef.current?.querySelector(
-        '[contenteditable="true"]',
-      );
-      if (editableDiv) {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          // 첫 번째 줄에서의 커서 위치 계산
-          const text = editableDiv.textContent || "";
-          const firstLineEnd = text.indexOf("\n");
-          const cursorPos = range.startOffset;
-
-          // 커서가 첫 번째 줄에 있는 경우
-          if (firstLineEnd === -1 || cursorPos <= firstLineEnd) {
-            // 현재 줄에서의 열(column) 위치 저장
-            localStorage.setItem("caretColumn", cursorPos.toString());
-            onArrowUp();
-          }
-        }
+      // 현재 블록의 캐럿 위치를 저장하고 이전 블록으로 이동
+      if (caretManager.isAtLineStart()) {
+        caretManager.saveColumnForBlockNavigation();
+        onArrowUp();
       }
     }
   };
 
   const handleArrowDown = () => {
     if (onArrowDown) {
-      // 현재 블록의 contenteditable 요소에서 커서 위치를 저장
-      const editableDiv = blockRef.current?.querySelector(
-        '[contenteditable="true"]',
-      );
-      if (editableDiv) {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const text = editableDiv.textContent || "";
-          const cursorPos = range.startOffset;
-
-          // 마지막 줄에서의 커서 위치 계산
-          const lastNewlinePos = text.lastIndexOf("\n");
-          const columnPos =
-            lastNewlinePos === -1
-              ? cursorPos // 단일 줄인 경우
-              : cursorPos - lastNewlinePos - 1; // 여러 줄인 경우
-
-          // 마지막 줄에 있는 경우
-          if (lastNewlinePos === -1 || cursorPos > lastNewlinePos) {
-            // 현재 줄에서의 열(column) 위치 저장
-            localStorage.setItem("caretColumn", columnPos.toString());
-            onArrowDown();
-          }
-        }
+      // 현재 블록의 캐럿 위치를 저장하고 다음 블록으로 이동
+      if (caretManager.isAtLineEnd()) {
+        caretManager.saveColumnForBlockNavigation();
+        onArrowDown();
       }
     }
   };
@@ -274,15 +212,12 @@ export default function BlockItem({
     [block.id, block.format, updateBlock],
   );
 
-  const notionBlockClass = getNotionBlockClassName(block.type);
-
   return (
     <div
       ref={blockRef}
       data-block-id={block.id}
       className={cn(
-        "block-item notion-selectable group relative",
-        notionBlockClass,
+        "block-item group relative",
         classNameExtra,
         isSelected && "bg-accent/20 rounded",
         isFocused && "ring-primary/40 rounded",
@@ -350,6 +285,7 @@ export default function BlockItem({
           toggleTodo={toggleTodo}
           onArrowUp={handleArrowUp}
           onArrowDown={handleArrowDown}
+          caretManager={caretManager}
         />
       </div>
 

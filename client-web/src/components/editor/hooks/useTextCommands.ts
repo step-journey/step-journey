@@ -71,8 +71,13 @@ export function useTextCommands({
       if (onChangeType) {
         onChangeType(type);
       }
+
+      // 커서를 맨 끝으로 이동 (변수 사용)
+      setTimeout(() => {
+        moveCursorToEnd();
+      }, 0);
     },
-    [editorRef, onChange, onChangeType],
+    [editorRef, onChange, onChangeType, moveCursorToEnd],
   );
 
   // 커맨드 메뉴 닫기

@@ -36,14 +36,7 @@ echo "- React 클라이언트에서 아이콘은 \`\"@tabler/icons-react\"\` 혹
 echo "" >> "$OUTPUT_FILE"
 
 ##############################################
-# 2) 프로젝트 구조(tree) 출력
-##############################################
-echo "# Project Structure:" >> "$OUTPUT_FILE"
-tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-##############################################
-# 3) 프로젝트 기술 스택 출력
+# 프로젝트 기술 스택 출력
 ##############################################
 echo "# Project Tech stack:" >> "$OUTPUT_FILE"
 echo "- React" >> "$OUTPUT_FILE"
@@ -53,6 +46,13 @@ echo "- Tailwind CSS" >> "$OUTPUT_FILE"
 echo "- shadcn/ui" >> "$OUTPUT_FILE"
 echo "- radix-ui" >> "$OUTPUT_FILE"
 echo "- tabler/icons-react" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+##############################################
+# 프로젝트 구조(tree) 출력
+##############################################
+echo "# Project Structure:" >> "$OUTPUT_FILE"
+tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
 ##############################################

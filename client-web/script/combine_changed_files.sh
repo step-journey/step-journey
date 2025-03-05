@@ -17,7 +17,7 @@ PROJECT_ROOT="$(git rev-parse --show-toplevel)"
 cd "$PROJECT_ROOT"
 
 ##############################################
-# 1) 결과를 저장할 파일 (루트 기준)
+# 결과를 저장할 파일 (루트 기준)
 ##############################################
 OUTPUT_FILE="client-web/script/combined_changed.txt"
 
@@ -35,14 +35,7 @@ echo "- React 클라이언트에서 아이콘은 \`\"@tabler/icons-react\"\` 혹
 echo "" >> "$OUTPUT_FILE"
 
 ##############################################
-# 2) client-web 디렉토리 구조 출력
-##############################################
-echo "# Project Structure (client-web only):" >> "$OUTPUT_FILE"
-tree client-web --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-##############################################
-# 3) 프로젝트 기술 스택 출력
+# 프로젝트 기술 스택 출력
 ##############################################
 echo "# Project Tech stack:" >> "$OUTPUT_FILE"
 echo "- React" >> "$OUTPUT_FILE"
@@ -54,8 +47,16 @@ echo "- radix-ui" >> "$OUTPUT_FILE"
 echo "- tabler/icons-react" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
+
 ##############################################
-# 4) "커밋되지 않은 (Tracked) 변경 파일" 수집
+# client-web 디렉토리 구조 출력
+##############################################
+echo "# Project Structure (client-web only):" >> "$OUTPUT_FILE"
+tree client-web --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+##############################################
+# "커밋되지 않은 (Tracked) 변경 파일" 수집
 ##############################################
 echo "# Changed (Uncommitted) Source Code in client-web:" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
