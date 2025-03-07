@@ -6,12 +6,7 @@
 ##############################################
 # 병합할 경로 목록 (client-web 포함 경로 또는 절대 경로)
 TARGET_PATHS=(
-    "client-web/src/lib/caret"
-    "client-web/src/components/editor/BlockItem.tsx"
-    "client-web/src/components/editor/TextEditor.tsx"
-    "client-web/src/components/editor/blocks/BlockContent.tsx"
-    "client-web/src/components/editor/hooks/useTextEditorKeydown.ts"
-    "client-web/src/components/editor/hooks/useTextFormatting.ts"
+    "client-web/src/pages/Home/Header.tsx"
 )
 
 # 결과를 저장할 파일 (client-web 기준 상대 경로)

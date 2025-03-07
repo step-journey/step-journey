@@ -46,6 +46,7 @@ echo "- Tailwind CSS" >> "$OUTPUT_FILE"
 echo "- shadcn/ui" >> "$OUTPUT_FILE"
 echo "- radix-ui" >> "$OUTPUT_FILE"
 echo "- tabler/icons-react" >> "$OUTPUT_FILE"
+echo "- lucide-react" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
 ##############################################

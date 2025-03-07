@@ -1,33 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import Header from "./Header";
 import LoginModal from "./LoginModal";
-import { useUserQuery, useLogoutMutation } from "@/hooks/useAuth";
-import { createPageBlock, Block } from "@/types/block";
-import db from "@/db";
-import {
-  IconPlus,
-  IconDots,
-  IconChevronRight,
-  IconFileText,
-  IconStar,
-  IconSearch,
-} from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import PATH from "@/constants/path";
-import { cn } from "@/lib/utils";
+
+import { useUserQuery, useLogoutMutation } from "@/hooks/useAuth";
+import { journeys } from "@/data";
 
 export default function HomePage() {
-  const navigate = useNavigate();
   // 로그인 모달 열림 여부
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [rootPageId, setRootPageId] = useState<string | null>(null);
-  const [pages, setPages] = useState<Block[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // TanStack Query
+  // 1) useUserQuery: 유저 정보를 불러옴 (없으면 null)
+  // 2) useLogoutMutation: 로그아웃 처리
   const { data: user } = useUserQuery();
   const logoutMutation = useLogoutMutation();
+
+  const navigate = useNavigate();
 
   // 로그인 모달 열고 닫기
   const openLoginModal = () => setIsLoginModalOpen(true);
@@ -42,89 +34,13 @@ export default function HomePage() {
     }
   };
 
-  // 루트 페이지 로드 또는 생성
-  useEffect(() => {
-    const initRootPage = async () => {
-      setIsLoading(true);
-      // 로컬 스토리지에서 루트 페이지 ID 확인
-      const storedRootPageId = localStorage.getItem("rootPageId");
-
-      try {
-        if (storedRootPageId) {
-          // 저장된 루트 페이지가 존재하는지 확인
-          const page = await db.getBlock(storedRootPageId);
-          if (page) {
-            setRootPageId(storedRootPageId);
-            loadPages(storedRootPageId);
-            return;
-          }
-        }
-
-        // 루트 페이지 생성
-        const rootPage = createPageBlock("Welcome to StepJourney");
-        await db.createBlock(rootPage);
-
-        // 로컬 스토리지에 루트 페이지 ID 저장
-        localStorage.setItem("rootPageId", rootPage.id);
-        setRootPageId(rootPage.id);
-        setPages([]);
-      } catch (error) {
-        console.error("Failed to initialize root page:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initRootPage();
-  }, []);
-
-  // 페이지 목록 로드
-  const loadPages = async (parentId: string) => {
-    try {
-      const childPages = await db.getBlocksWithParent(parentId);
-      setPages(childPages.filter((p) => p.type === "page"));
-    } catch (error) {
-      console.error("Failed to load pages:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 새 페이지 생성
-  const createNewPage = async () => {
-    if (!rootPageId) return;
-
-    try {
-      const newPage = createPageBlock("Untitled", rootPageId);
-      await db.createBlock(newPage);
-
-      // 루트 페이지에 새 페이지 추가
-      const rootPage = await db.getBlock(rootPageId);
-      if (rootPage) {
-        const newContent = [...rootPage.content, newPage.id];
-        await db.updateBlock(rootPageId, { content: newContent });
-
-        // 페이지 목록 새로고침
-        loadPages(rootPageId);
-
-        // 새 페이지로 이동
-        navigate(`${PATH.EDITOR}/${newPage.id}`);
-      }
-    } catch (error) {
-      console.error("Failed to create new page:", error);
-    }
-  };
-
-  const handlePageClick = (pageId: string) => {
-    navigate(`${PATH.EDITOR}/${pageId}`);
+  // Card 클릭 시 Journey 페이지로 이동 (journeyId를 파라미터로 전달)
+  const handleCardClick = (journeyId: string) => {
+    navigate(`${PATH.JOURNEY}/${journeyId}`);
   };
 
   return (
-    <div
-      className={cn(
-        "home-page flex flex-col min-h-screen bg-background text-foreground",
-      )}
-    >
+    <div className="flex flex-col min-h-screen">
       {/* 상단 Header: user, onClickLogin, onClickLogout 전달 */}
       <Header
         // user는 (User | null | undefined)이므로, undefined 인 경우 null 로 대체
@@ -133,150 +49,59 @@ export default function HomePage() {
         onClickLogout={handleLogout}
       />
 
-      {/* 메인 레이아웃 (좌 사이드바 - 중앙 본문) */}
+      {/* 메인 레이아웃 (좌 사이드바 - 중앙 본문 - 우 사이드바) */}
       <div className="flex flex-1 bg-background text-foreground">
         {/* 좌측 사이드바 */}
-        <aside className="w-60 border-r border-border overflow-y-auto flex flex-col">
-          {/* 사이드바 상단 검색 및 새 페이지 버튼 */}
-          <div className="p-3 border-b border-border">
-            <div className="flex items-center justify-between mb-3">
-              {user ? (
-                <span className="font-medium">{user.name}&#39;s Journey</span>
-              ) : (
-                <span className="font-medium">StepJourney</span>
-              )}
-              <Button size="icon" variant="ghost" className="h-6 w-6">
-                <IconDots className="h-4 w-4" />
-              </Button>
-            </div>
+        <aside className="hidden md:flex flex-col w-60 border-r border-border p-4">
+          <nav className="space-y-4">
+            <div className="text-sm font-semibold">Home</div>
+            <div className="text-sm font-semibold">Popular</div>
+            <div className="text-sm font-semibold">Explore</div>
+            <div className="text-sm font-semibold">All</div>
 
-            <Button
-              variant="outline"
-              className="w-full justify-start text-sm gap-2"
-              onClick={() => {}}
-            >
-              <IconSearch className="h-4 w-4" />
-              Search
-            </Button>
-          </div>
+            <hr className="my-2 border-border" />
 
-          {/* Favorites section */}
-          <div className="py-2">
-            <div className="px-3 py-1 flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <IconChevronRight className="h-3.5 w-3.5" />
-                <span>FAVORITES</span>
-              </div>
-            </div>
-          </div>
+            <div className="text-xs text-muted-foreground">MODERATION</div>
+            <div className="text-sm text-foreground">Mod Queue</div>
+            <div className="text-sm text-foreground">Mod Mail</div>
+            <div className="text-sm text-foreground">r/Mod</div>
 
-          {/* Pages section */}
-          <div className="py-2">
-            <div className="px-3 py-1 flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <IconChevronRight className="h-3.5 w-3.5" />
-                <span>PRIVATE</span>
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-5 w-5"
-                onClick={createNewPage}
-              >
-                <IconPlus className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+            <hr className="my-2 border-border" />
 
-            {/* Page list */}
-            <div className="mt-1">
-              {isLoading ? (
-                <div className="px-3 py-1 text-sm text-muted-foreground">
-                  Loading...
-                </div>
-              ) : pages.length > 0 ? (
-                pages.map((page) => (
-                  <div
-                    key={page.id}
-                    className="px-3 py-1 hover:bg-accent/50 cursor-pointer flex items-center gap-2 text-sm group"
-                    onClick={() => handlePageClick(page.id)}
-                  >
-                    <IconFileText className="h-4 w-4 text-muted-foreground" />
-                    <span>{page.properties.title?.[0]?.[0] || "Untitled"}</span>
-                    <IconStar className="h-3.5 w-3.5 ml-auto opacity-0 group-hover:opacity-100 text-muted-foreground" />
-                  </div>
-                ))
-              ) : (
-                <div className="px-3 py-1 text-sm text-muted-foreground">
-                  No pages yet
-                </div>
-              )}
-            </div>
-          </div>
+            <div className="text-xs text-muted-foreground">CUSTOM FEEDS</div>
+            <div className="text-sm text-foreground">Create a custom feed</div>
 
-          {/* Bottom create button */}
-          <div className="mt-auto p-3 border-t border-border">
-            <Button
-              variant="outline"
-              className="w-full justify-start text-sm gap-2"
-              onClick={createNewPage}
-            >
-              <IconPlus className="h-4 w-4" />
-              New page
-            </Button>
-          </div>
+            <hr className="my-2 border-border" />
+
+            <div className="text-xs text-muted-foreground">RECENT</div>
+            <div className="text-sm text-foreground">r/logodesign</div>
+            <div className="text-sm text-foreground">r/graphic_design</div>
+            <div className="text-sm text-foreground">r/golang</div>
+            <div className="text-sm text-foreground">r/reppley</div>
+          </nav>
         </aside>
 
         {/* 중앙 본문 */}
-        <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">Welcome to StepJourney</h1>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              <div
-                className="border border-border rounded-lg p-4 hover:bg-accent/10 cursor-pointer"
-                onClick={createNewPage}
+        <main className="flex-1 p-4">
+          <h2 className="text-xl font-semibold mb-4">All Journeys</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {journeys.map((journey) => (
+              <Card
+                key={journey.id}
+                className="cursor-pointer"
+                onClick={() => handleCardClick(journey.id)}
               >
-                <h3 className="font-medium mb-2">Create a new page</h3>
-                <p className="text-sm text-muted-foreground">
-                  Start writing and organizing your ideas
-                </p>
-              </div>
-
-              <div className="border border-border rounded-lg p-4 hover:bg-accent/10 cursor-pointer">
-                <h3 className="font-medium mb-2">Explore templates</h3>
-                <p className="text-sm text-muted-foreground">
-                  Choose from pre-made templates
-                </p>
-              </div>
-            </div>
-
-            {pages.length > 0 && (
-              <div>
-                <h2 className="text-xl font-medium mb-4">Your pages</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {pages.map((page) => (
-                    <div
-                      key={page.id}
-                      className="border border-border rounded-lg p-3 hover:bg-accent/10 cursor-pointer"
-                      onClick={() => handlePageClick(page.id)}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <IconFileText className="h-4 w-4" />
-                        <span className="font-medium">
-                          {page.properties.title?.[0]?.[0] || "Untitled"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Created:{" "}
-                        {new Date(page.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                <CardHeader>
+                  <CardTitle>{journey.title}</CardTitle>
+                </CardHeader>
+                <CardContent>{journey.description}</CardContent>
+              </Card>
+            ))}
           </div>
         </main>
+
+        {/* 우측 사이드바 */}
+        <aside className="hidden lg:flex flex-col w-64 border-l border-border p-4"></aside>
       </div>
 
       {/* 로그인 모달 */}
