@@ -38,26 +38,26 @@ echo "# Project Structure:" >> "$OUTPUT_FILE"
 tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
-# `client-web/src/types` 경로의 모든 .ts 파일 추가
-echo "# Type Definitions (client-web/src/types):" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-# src/types 디렉토리의 모든 .ts 파일을 찾음
-type_files=$(find src/types -name "*.ts" 2>/dev/null)
-if [ -n "$type_files" ]; then
-  for file in $type_files; do
-    if [ -f "$file" ]; then
-      echo "## $file" >> "$OUTPUT_FILE"
-      echo '```ts' >> "$OUTPUT_FILE"
-      cat "$file" >> "$OUTPUT_FILE"
-      echo '```' >> "$OUTPUT_FILE"
-      echo "" >> "$OUTPUT_FILE"
-    fi
-  done
-else
-  echo "No type definition files found in src/types." >> "$OUTPUT_FILE"
-  echo "" >> "$OUTPUT_FILE"
-fi
+## `client-web/src/types` 경로의 모든 .ts 파일 추가
+#echo "# Type Definitions (client-web/src/types):" >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
+#
+## src/types 디렉토리의 모든 .ts 파일을 찾음
+#type_files=$(find src/types -name "*.ts" 2>/dev/null)
+#if [ -n "$type_files" ]; then
+#  for file in $type_files; do
+#    if [ -f "$file" ]; then
+#      echo "## $file" >> "$OUTPUT_FILE"
+#      echo '```ts' >> "$OUTPUT_FILE"
+#      cat "$file" >> "$OUTPUT_FILE"
+#      echo '```' >> "$OUTPUT_FILE"
+#      echo "" >> "$OUTPUT_FILE"
+#    fi
+#  done
+#else
+#  echo "No type definition files found in src/types." >> "$OUTPUT_FILE"
+#  echo "" >> "$OUTPUT_FILE"
+#fi
 
 # 컴파일 오류 섹션 헤더 추가
 echo "# Compilation Errors:" >> "$OUTPUT_FILE"
