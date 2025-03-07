@@ -42,7 +42,6 @@ export interface Journey {
   title: string;
   description: string;
   groups: GroupData[];
-  pinnedProblem?: string; // 고정된 문제 설명 (선택적)
 }
 
 export type StepContainerMap = Record<string, HTMLDivElement | null>;

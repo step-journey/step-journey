@@ -7,7 +7,6 @@ export const journeys: Journey[] = [
     id: "cubic-problem", // 새 항목 추가
     title: "삼차함수 B - A 문제 풀이",
     description: "미적분/정적분을 이용하여 넓이 차이를 구하는 문제",
-    pinnedProblem: cubicProblem.pinnedProblem, // 이 값을 Journey 객체에도 설정
     groups: [cubicProblem.groups[0]],
   },
 ];
