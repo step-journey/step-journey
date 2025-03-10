@@ -37,12 +37,20 @@ export interface FlattenedStep extends Step {
   stepIdInGroup: number;
 }
 
+export interface PinnedProblem {
+  text: string;
+  media?: Media;
+}
+
 export interface Journey {
   id: string;
   title: string;
   description: string;
   groups: GroupData[];
-  pinnedProblem?: string; // 고정된 문제 설명 (선택적)
+  pinnedProblem?: PinnedProblem | string;
 }
 
 export type StepContainerMap = Record<string, HTMLDivElement | null>;
+
+// 에디터 모드 타입
+export type EditorMode = "view" | "edit";

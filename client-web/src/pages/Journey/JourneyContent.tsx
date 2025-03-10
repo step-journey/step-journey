@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { FlattenedStep, Journey } from "@/types/journey";
+import { FlattenedStep, Journey, PinnedProblem } from "@/types/journey";
 import { Separator } from "@/components/ui/separator";
 import { mathMarkdownToHtml } from "@/utils/mathMarkdown";
 
@@ -12,7 +12,22 @@ interface Props {
 export function JourneyContent({ currentStep, allSteps, journey }: Props) {
   // 콘텐츠가 있는지 여부 확인
   const hasContent = !!currentStep.content;
-  const problemDescription = journey.pinnedProblem || "";
+
+  // 문제 설명이 있는지 확인
+  const hasPinnedProblem = !!journey.pinnedProblem;
+
+  // pinnedProblem 객체화
+  let pinnedProblem: PinnedProblem | null = null;
+  if (hasPinnedProblem) {
+    if (typeof journey.pinnedProblem === "string") {
+      pinnedProblem = { text: journey.pinnedProblem };
+    } else {
+      pinnedProblem = journey.pinnedProblem as PinnedProblem;
+    }
+  }
+
+  // 문제 설명 텍스트
+  const problemDescription = pinnedProblem ? pinnedProblem.text : "";
 
   // 현재 단계까지의 모든 내용을 누적하여 표시
   const accumulatedContent = hasContent
@@ -20,7 +35,7 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
         .filter(
           (step) => step.globalIndex <= currentStep.globalIndex && step.content,
         )
-        .map((step, index, filteredSteps) => {
+        .map((step) => {
           const isCurrentStep = step.globalIndex === currentStep.globalIndex;
           const content = Array.isArray(step.content)
             ? step.content.join("\n")
@@ -40,19 +55,37 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
       {/* 좌우 2열 레이아웃 (강제) */}
       <div className="flex flex-row gap-6 h-full">
         {/* 좌측: 문제가 항상 표시되는 영역 */}
-        {journey.pinnedProblem && (
+        {hasPinnedProblem && pinnedProblem && (
           <div className="w-2/5 shrink-0">
             <Card className="border border-gray-200 bg-white p-4 h-full overflow-auto">
               <div className="text-lg font-semibold mb-4">문제</div>
               <div className="whitespace-pre-wrap text-sm leading-relaxed">
                 {problemDescription}
               </div>
+
+              {/* 문제에 해당하는 이미지 추가 */}
+              {pinnedProblem.media && (
+                <div className="mt-4">
+                  <figure>
+                    <img
+                      src={pinnedProblem.media.url}
+                      alt={pinnedProblem.media.alt || "문제 이미지"}
+                      className="max-w-full rounded-md mt-2"
+                    />
+                    {pinnedProblem.media.caption && (
+                      <figcaption className="mt-2 text-xs text-gray-500 text-center">
+                        {pinnedProblem.media.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                </div>
+              )}
             </Card>
           </div>
         )}
 
         {/* 우측: 현재 단계의 내용이 표시되는 영역 */}
-        <div className={journey.pinnedProblem ? "w-3/5" : "w-full"}>
+        <div className={hasPinnedProblem ? "w-3/5" : "w-full"}>
           <p className="mb-1 text-lg font-semibold">{currentStep.label}</p>
           <p className="mb-4 text-sm text-gray-500">{currentStep.desc}</p>
 
