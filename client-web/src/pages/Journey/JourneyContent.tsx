@@ -9,9 +9,10 @@ interface Props {
   journey: Journey;
 }
 
-export function JourneyContent({ currentStep, allSteps }: Props) {
+export function JourneyContent({ currentStep, allSteps, journey }: Props) {
   // 콘텐츠가 있는지 여부 확인
   const hasContent = !!currentStep.content;
+  const problemDescription = journey.pinnedProblem || "";
 
   // 현재 단계까지의 모든 내용을 누적하여 표시
   const accumulatedContent = hasContent
@@ -19,7 +20,7 @@ export function JourneyContent({ currentStep, allSteps }: Props) {
         .filter(
           (step) => step.globalIndex <= currentStep.globalIndex && step.content,
         )
-        .map((step) => {
+        .map((step, index, filteredSteps) => {
           const isCurrentStep = step.globalIndex === currentStep.globalIndex;
           const content = Array.isArray(step.content)
             ? step.content.join("\n")
@@ -39,19 +40,19 @@ export function JourneyContent({ currentStep, allSteps }: Props) {
       {/* 좌우 2열 레이아웃 (강제) */}
       <div className="flex flex-row gap-6 h-full">
         {/* 좌측: 문제가 항상 표시되는 영역 */}
-        {/*{journey.pinnedProblem && (*/}
-        {/*  <div className="w-2/5 shrink-0">*/}
-        {/*    <Card className="border border-gray-200 bg-white p-4 h-full overflow-auto">*/}
-        {/*      <div className="text-lg font-semibold mb-4">문제</div>*/}
-        {/*      <div className="whitespace-pre-wrap text-sm leading-relaxed">*/}
-        {/*        {problemDescription}*/}
-        {/*      </div>*/}
-        {/*    </Card>*/}
-        {/*  </div>*/}
-        {/*)}*/}
+        {journey.pinnedProblem && (
+          <div className="w-2/5 shrink-0">
+            <Card className="border border-gray-200 bg-white p-4 h-full overflow-auto">
+              <div className="text-lg font-semibold mb-4">문제</div>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                {problemDescription}
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* 우측: 현재 단계의 내용이 표시되는 영역 */}
-        <div className={"w-full"}>
+        <div className={journey.pinnedProblem ? "w-3/5" : "w-full"}>
           <p className="mb-1 text-lg font-semibold">{currentStep.label}</p>
           <p className="mb-4 text-sm text-gray-500">{currentStep.desc}</p>
 
