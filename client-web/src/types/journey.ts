@@ -22,6 +22,7 @@ export interface Step {
   example?: string; // 예시 코드나 텍스트
   debugVariables?: DebugVariable[]; // 디버그 변수 추가
   content?: string | string[];
+  relatedKeywords?: string[]; // 문제와의 연관성을 표시하기 위한 키워드들
 }
 
 export interface GroupData {

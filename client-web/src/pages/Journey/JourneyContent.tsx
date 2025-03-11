@@ -29,6 +29,32 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
   // 문제 설명 텍스트
   const problemDescription = pinnedProblem ? pinnedProblem.text : "";
 
+  // 현재 단계의 관련 키워드를 이용해 문제 텍스트에서 해당 부분 강조 표시
+  const highlightedProblemText = () => {
+    if (
+      !problemDescription ||
+      !currentStep.relatedKeywords ||
+      currentStep.relatedKeywords.length === 0
+    ) {
+      return problemDescription;
+    }
+
+    let highlightedText = problemDescription;
+
+    // 각 키워드를 강조 표시용 HTML로 교체
+    currentStep.relatedKeywords.forEach((keyword) => {
+      // 정규식에서 특수 문자 이스케이프
+      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escapedKeyword, "g");
+      highlightedText = highlightedText.replace(
+        regex,
+        `<mark class="bg-yellow-100 dark:bg-yellow-800 dark:text-yellow-100 px-1 rounded">$&</mark>`,
+      );
+    });
+
+    return highlightedText;
+  };
+
   // 현재 단계까지의 모든 내용을 누적하여 표시
   const accumulatedContent = hasContent
     ? allSteps
@@ -59,9 +85,10 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
           <div className="w-2/5 shrink-0">
             <Card className="border border-gray-200 bg-white p-4 h-full overflow-auto">
               <div className="text-lg font-semibold mb-4">문제</div>
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                {problemDescription}
-              </div>
+              <div
+                className="whitespace-pre-wrap text-sm leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: highlightedProblemText() }}
+              />
 
               {/* 문제에 해당하는 이미지 추가 */}
               {pinnedProblem.media && (
