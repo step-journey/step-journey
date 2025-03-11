@@ -14,7 +14,7 @@
           "label": "1. 삼차함수 f(x)의 일반형 설정",
           "desc": "문제에서 f(x)는 최고차항의 계수가 1인 삼차함수이므로, 일반형을 설정합니다.",
           "content": "f(x) = x^3 + ax^2 + bx + c",
-          "relatedKeywords": ["최고차항의 계수가 1인 삼차함수"]
+          "highlightedKeywordsInProblem": ["최고차항의 계수가 1인 삼차함수"]
         },
         {
           "id": 2,
@@ -25,7 +25,7 @@
             "2) f(2) = 0 ⇒ 8 + 4a + 2b + c = 0",
             "3) f'(x) = 3x^2 + 2ax + b,  따라서 f'(0)=b=-7 ⇒ b=-7"
           ],
-          "relatedKeywords": ["f(1) = f(2) = 0", "f'(0) = -7"]
+          "highlightedKeywordsInProblem": ["f(1) = f(2) = 0", "f'(0) = -7"]
         },
         {
           "id": 3,
@@ -37,14 +37,14 @@
             "f(2)=0 ⇒ 8 + 4a + 2(-7) + c = 0 ⇒ 8 + 4a -14 + c = 0 ⇒ 4a + c - 6 = 0 ⇒ 4a + c = 6",
             "두 식 a+c=6, 4a+c=6을 연립 ⇒ 4a+c - (a+c)=0 ⇒ 3a=0 ⇒ a=0 ⇒ a+c=6 ⇒ c=6"
           ],
-          "relatedKeywords": ["f(1) = f(2) = 0", "f'(0) = -7"]
+          "highlightedKeywordsInProblem": ["f(1) = f(2) = 0", "f'(0) = -7"]
         },
         {
           "id": 4,
           "label": "4. 삼차함수 완성",
           "desc": "a=0, b=-7, c=6이므로 삼차함수를 확정합니다.",
           "content": "f(x) = x^3 - 7x + 6",
-          "relatedKeywords": []
+          "highlightedKeywordsInProblem": []
         },
         {
           "id": 5,
@@ -54,7 +54,7 @@
             "f(3) = 3^3 - 7·3 + 6 = 27 - 21 + 6 = 12",
             "따라서 P(3, 12)"
           ],
-          "relatedKeywords": ["P(3, f(3))"]
+          "highlightedKeywordsInProblem": ["P(3, f(3))"]
         },
         {
           "id": 6,
@@ -64,7 +64,7 @@
             "기울기 = (12 - 0)/(3 - 0) = 4",
             "직선 OP : y = 4x"
           ],
-          "relatedKeywords": ["원점 O", "P(3, f(3))"]
+          "highlightedKeywordsInProblem": ["원점 O", "P(3, f(3))"]
         },
         {
           "id": 7,
@@ -78,7 +78,7 @@
             "그중 0< x <3 인 해 ⇒ α=( -3+√17 )/2",
             "Q( α, 4α )"
           ],
-          "relatedKeywords": ["선분 OP", "곡선 y = f(x)와 만나는 점", "P가 아닌 점을 Q"]
+          "highlightedKeywordsInProblem": ["선분 OP", "곡선 y = f(x)와 만나는 점", "P가 아닌 점을 Q"]
         },
         {
           "id": 8,
@@ -88,7 +88,7 @@
             "A = ∫[0→α] [f(x) - 4x] dx  (이 구간에서 f(x)가 더 위)",
             "B = ∫[α→3] [4x - f(x)] dx  (이 구간에서는 4x가 더 위)"
           ],
-          "relatedKeywords": ["곡선 y = f(x)", "선분", "둘러싸인 부분의 넓이", "A", "B"]
+          "highlightedKeywordsInProblem": ["곡선 y = f(x)", "둘러싸인 부분의 넓이"]
         },
         {
           "id": 9,
@@ -97,7 +97,7 @@
           "content": [
             "B - A = ∫[0→3] (4x) dx - ∫[0→3] f(x) dx"
           ],
-          "relatedKeywords": ["B - A"]
+          "highlightedKeywordsInProblem": ["B - A"]
         },
         {
           "id": 10,
@@ -109,7 +109,7 @@
             "= (3^4/4) -7(9/2) +6(3)",
             "= 81/4 -63/2 +18 = 81/4 -126/4 +72/4 = 27/4"
           ],
-          "relatedKeywords": ["B - A"]
+          "highlightedKeywordsInProblem": ["B - A"]
         },
         {
           "id": 11,
@@ -118,7 +118,7 @@
           "content": [
             "따라서 B - A = 45/4"
           ],
-          "relatedKeywords": ["B - A의 값"]
+          "highlightedKeywordsInProblem": ["B - A의 값"]
         }
       ]
     }

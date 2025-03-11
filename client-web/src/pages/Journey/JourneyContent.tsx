@@ -33,8 +33,8 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
   const highlightedProblemText = () => {
     if (
       !problemDescription ||
-      !currentStep.relatedKeywords ||
-      currentStep.relatedKeywords.length === 0
+      !currentStep.highlightedKeywordsInProblem ||
+      currentStep.highlightedKeywordsInProblem.length === 0
     ) {
       return problemDescription;
     }
@@ -42,7 +42,7 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
     let highlightedText = problemDescription;
 
     // 각 키워드를 강조 표시용 HTML로 교체
-    currentStep.relatedKeywords.forEach((keyword) => {
+    currentStep.highlightedKeywordsInProblem.forEach((keyword) => {
       // 정규식에서 특수 문자 이스케이프
       const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(escapedKeyword, "g");
