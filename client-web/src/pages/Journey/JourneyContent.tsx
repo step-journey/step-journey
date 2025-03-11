@@ -82,7 +82,7 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
       <div className="flex flex-row gap-6 h-full">
         {/* 좌측: 문제가 항상 표시되는 영역 */}
         {hasPinnedProblem && pinnedProblem && (
-          <div className="w-2/5 shrink-0">
+          <div className="w-1/3 shrink-0">
             <Card className="border border-gray-200 bg-white p-4 h-full overflow-auto">
               <div className="text-lg font-semibold mb-4">문제</div>
               <div
@@ -112,7 +112,7 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
         )}
 
         {/* 우측: 현재 단계의 내용이 표시되는 영역 */}
-        <div className={hasPinnedProblem ? "w-3/5" : "w-full"}>
+        <div className={hasPinnedProblem ? "w-2/3" : "w-full"}>
           <p className="mb-1 text-lg font-semibold">{currentStep.label}</p>
           <p className="mb-4 text-sm text-gray-500">{currentStep.desc}</p>
 
