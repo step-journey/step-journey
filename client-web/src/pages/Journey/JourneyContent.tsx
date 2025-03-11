@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
 import { FlattenedStep, Journey, PinnedProblem } from "@/types/journey";
-import { Separator } from "@/components/ui/separator";
 import { mathMarkdownToHtml } from "@/utils/mathMarkdown";
 
 interface Props {
@@ -117,64 +116,31 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
           <p className="mb-4 text-sm text-gray-500">{currentStep.desc}</p>
 
           <Card className="border border-gray-200 bg-white p-4">
-            {hasContent ? (
-              /* 누적된 내용 표시 */
-              <div className="math-content">
-                {accumulatedContent.map((item, index) => (
-                  <div
-                    key={item.step.globalIndex}
-                    className={`${index > 0 ? "mt-3 pt-2" : ""}`}
-                  >
+            <div className="math-content">
+              {/* 누적된 내용 표시 */}
+              {accumulatedContent.map((item, index) => (
+                <div
+                  key={item.step.globalIndex}
+                  className={`${index > 0 ? "mt-3 pt-2" : ""} relative`}
+                >
+                  <div className="flex">
+                    {/* 현재 step 내용에는 세로선 추가 */}
+                    <div className="relative flex-shrink-0 w-3">
+                      {item.isCurrentStep && (
+                        <div className="absolute left-0 top-0 h-full w-0.5 bg-blue-500"></div>
+                      )}
+                    </div>
+
+                    {/* 내용 */}
                     <div
-                      className={`${
-                        item.isCurrentStep ? "bg-blue-50 p-3 rounded" : ""
-                      }`}
                       dangerouslySetInnerHTML={{
                         __html: `<p>${mathMarkdownToHtml(item.content)}</p>`,
                       }}
                     />
                   </div>
-                ))}
-              </div>
-            ) : (
-              /* 기존 예시 내용 표시 */
-              <>
-                <p className="mb-2 text-sm font-medium">
-                  여기에 해당 단계 내용
-                </p>
-                <ul className="list-inside list-disc text-sm text-gray-600">
-                  <li>코드 스니펫, 서버로그, API 응답 등</li>
-                  <li>직접 조작 예시</li>
-                </ul>
-              </>
-            )}
-
-            {/* 예시 내용이 있는 경우 표시 */}
-            {currentStep.example && (
-              <div className="mt-4 p-3 bg-gray-50 rounded border border-gray-100">
-                <p className="text-xs text-gray-500 mb-1">Example:</p>
-                <code className="text-sm">{currentStep.example}</code>
-              </div>
-            )}
-
-            {/* 미디어가 있는 경우 표시 */}
-            {currentStep.media && (
-              <div className="mt-4">
-                <Separator className="my-4" />
-                <figure>
-                  <img
-                    src={currentStep.media.url}
-                    alt={currentStep.media.alt || "단계 이미지"}
-                    className="max-w-full rounded-md"
-                  />
-                  {currentStep.media.caption && (
-                    <figcaption className="mt-2 text-sm text-gray-500 text-center">
-                      {currentStep.media.caption}
-                    </figcaption>
-                  )}
-                </figure>
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </Card>
         </div>
       </div>
