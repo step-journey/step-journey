@@ -48,7 +48,7 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
       const regex = new RegExp(escapedKeyword, "g");
       highlightedText = highlightedText.replace(
         regex,
-        `<mark class="bg-yellow-100 dark:bg-yellow-800 dark:text-yellow-100 px-1 rounded">$&</mark>`,
+        `<span class="underline decoration-blue-500 decoration-1">$&</span>`,
       );
     });
 
