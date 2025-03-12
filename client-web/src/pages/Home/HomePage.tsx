@@ -14,15 +14,27 @@ import { Button } from "@/components/ui/button";
 import PATH from "@/constants/path";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 
-import { useAuthStore } from "@/store/authStore";
-import { useJourneyStore } from "@/store/journeyStore";
-import { useUIStore } from "@/store/uiStore";
+// 분리된 selector 함수 사용
+import { useAuthUser, useAuthStore } from "@/store/authStore";
+import {
+  useJourneysList,
+  useJourneysLoading,
+  useJourneyStore,
+} from "@/store/journeyStore";
+import { useLoginModalState, useUIStore } from "@/store/uiStore";
 
 export default function HomePage() {
-  // Zustand 스토어에서 상태와 액션 가져오기
-  const { user, fetchUser, logout } = useAuthStore();
-  const { journeys, isLoadingJourneys, loadJourneys } = useJourneyStore();
-  const { isLoginModalOpen, openLoginModal, closeLoginModal } = useUIStore();
+  // Zustand 스토어에서 상태와 액션 가져오기 (selector 함수 사용)
+  const user = useAuthUser();
+  const journeys = useJourneysList();
+  const isLoadingJourneys = useJourneysLoading();
+  const isLoginModalOpen = useLoginModalState();
+
+  // 액션 함수들
+  const { fetchUser } = useAuthStore();
+  const { loadJourneys } = useJourneyStore();
+  const { openLoginModal, closeLoginModal } = useUIStore();
+  const logout = useAuthStore((state) => state.logout);
 
   const navigate = useNavigate();
 

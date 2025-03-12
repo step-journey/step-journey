@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { IconUserCircle } from "@tabler/icons-react";
-import { User } from "@/store/authStore";
+import { User } from "@/types/auth";
 
 /**
  * 헤더 컴포넌트

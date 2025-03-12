@@ -12,31 +12,33 @@ import { Button } from "@/components/ui/button";
 import PATH from "@/constants/path";
 
 import { toast } from "sonner";
-import { useJourneyStore } from "@/store/journeyStore";
+import {
+  useCurrentJourney,
+  useCurrentJourneyLoading,
+  useFlattenedSteps,
+  useCurrentStepIndex,
+  useExpandedGroups,
+  useCurrentStep,
+  useJourneyStore,
+} from "@/store/journeyStore";
 
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();
   const navigate = useNavigate();
 
-  // Zustand 스토어에서 상태와 액션 가져오기
-  const {
-    currentJourney,
-    isLoadingCurrentJourney,
-    flattenedSteps,
-    currentStepIndex,
-    expandedGroups,
-    loadJourney,
-    setCurrentStepIndex,
-    nextStep,
-    prevStep,
-    toggleGroup,
-  } = useJourneyStore();
+  // Selector 함수를 사용하여 상태 가져오기
+  const currentJourney = useCurrentJourney();
+  const isLoadingCurrentJourney = useCurrentJourneyLoading();
+  const flattenedSteps = useFlattenedSteps();
+  const currentStepIndex = useCurrentStepIndex();
+  const expandedGroups = useExpandedGroups();
+  const currentStep = useCurrentStep();
+
+  // 액션 가져오기
+  const { loadJourney, setCurrentStepIndex, nextStep, prevStep, toggleGroup } =
+    useJourneyStore();
 
   const stepContainerRefs = useRef<StepContainerMap>({});
-
-  // 현재 스텝 계산
-  const currentStep =
-    flattenedSteps.length > 0 ? flattenedSteps[currentStepIndex] : null;
 
   // journey 로드
   useEffect(() => {

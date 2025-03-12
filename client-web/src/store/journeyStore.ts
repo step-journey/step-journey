@@ -1,189 +1,218 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { devtools } from "zustand/middleware";
 import { toast } from "sonner";
-import { getJourney, getAllJourneys } from "@/services/journeyService";
-import { getJourneyById, flattenJourneySteps } from "@/data";
+import * as journeyService from "@/services/journeyService";
 import { Journey, FlattenedStep } from "@/types/journey";
-import { initializeDatabase } from "@/services/journeyService";
 
+// 상태 인터페이스 정의
 interface JourneyState {
   // Journey 목록 관련 상태
   journeys: Journey[];
   isLoadingJourneys: boolean;
+  journeysError: string | null;
 
   // 현재 활성화된 Journey 관련 상태
   currentJourney: Journey | null;
   isLoadingCurrentJourney: boolean;
+  currentJourneyError: string | null;
   flattenedSteps: FlattenedStep[];
   currentStepIndex: number;
   expandedGroups: Record<string, boolean>;
+}
 
-  // 액션
+// 액션 인터페이스 정의
+interface JourneyActions {
+  // Journey 목록 관련 액션
   loadJourneys: () => Promise<void>;
+
+  // 단일 Journey 관련 액션
   loadJourney: (id: string) => Promise<void>;
   setCurrentStepIndex: (index: number) => void;
   nextStep: () => void;
   prevStep: () => void;
   toggleGroup: (groupId: string) => void;
+
+  // 에러 처리
+  clearJourneysError: () => void;
+  clearCurrentJourneyError: () => void;
 }
 
-export const useJourneyStore = create<JourneyState>()(
-  immer((set, get) => ({
-    // Journey 목록 관련 상태
-    journeys: [],
-    isLoadingJourneys: false,
+// 초기 상태 정의
+const initialState: JourneyState = {
+  journeys: [],
+  isLoadingJourneys: false,
+  journeysError: null,
 
-    // 현재 활성화된 Journey 관련 상태
-    currentJourney: null,
-    isLoadingCurrentJourney: false,
-    flattenedSteps: [],
-    currentStepIndex: 0,
-    expandedGroups: {},
+  currentJourney: null,
+  isLoadingCurrentJourney: false,
+  currentJourneyError: null,
+  flattenedSteps: [],
+  currentStepIndex: 0,
+  expandedGroups: {},
+};
 
-    // 액션 구현
-    loadJourneys: async () => {
-      set((state) => {
-        state.isLoadingJourneys = true;
-      });
+// Zustand 스토어 생성
+export const useJourneyStore = create<JourneyState & JourneyActions>()(
+  devtools(
+    immer((set, get) => ({
+      ...initialState,
 
-      try {
-        // DB 초기화
-        await initializeDatabase();
-
-        // IndexedDB에서 Journey 목록 로드
-        const dbJourneys = await getAllJourneys();
-
-        // 정적 데이터와 병합
-        const staticJourneys = await import("@/data").then(
-          (module) => module.journeys,
-        );
-        const combinedJourneys = [...dbJourneys];
-
-        // 정적 데이터 중 DB에 없는 것만 추가
-        for (const staticJourney of staticJourneys) {
-          if (
-            !dbJourneys.some((dbJourney) => dbJourney.id === staticJourney.id)
-          ) {
-            combinedJourneys.push(staticJourney);
-          }
-        }
-
+      // 액션 구현
+      loadJourneys: async () => {
         set((state) => {
-          state.journeys = combinedJourneys;
-          state.isLoadingJourneys = false;
+          state.isLoadingJourneys = true;
+          state.journeysError = null;
         });
-      } catch (error) {
-        console.error("Failed to load journeys:", error);
-        toast.error("Journey 목록을 불러오는 중 오류가 발생했습니다.");
-        set((state) => {
-          state.isLoadingJourneys = false;
-        });
-      }
-    },
 
-    loadJourney: async (id) => {
-      set((state) => {
-        state.isLoadingCurrentJourney = true;
-      });
+        try {
+          // DB 초기화
+          await journeyService.initializeDatabase();
 
-      try {
-        // DB 및 정적 데이터에서 Journey 찾기
-        let journey = await getJourney(id);
-        if (!journey) {
-          journey = getJourneyById(id);
-        }
+          // DB와 정적 데이터에서 Journey 목록 로드
+          const combinedJourneys = await journeyService.getCombinedJourneys();
 
-        if (!journey) {
-          toast.error("Journey를 찾을 수 없습니다.");
           set((state) => {
+            state.journeys = combinedJourneys;
+            state.isLoadingJourneys = false;
+          });
+        } catch (error) {
+          console.error("Failed to load journeys:", error);
+          const errorMessage =
+            "Journey 목록을 불러오는 중 오류가 발생했습니다.";
+
+          toast.error(errorMessage);
+
+          set((state) => {
+            state.isLoadingJourneys = false;
+            state.journeysError = errorMessage;
+          });
+        }
+      },
+
+      loadJourney: async (id) => {
+        set((state) => {
+          state.isLoadingCurrentJourney = true;
+          state.currentJourneyError = null;
+        });
+
+        try {
+          const { journey, flattenedSteps } =
+            await journeyService.loadJourneyWithSteps(id);
+
+          if (!journey) {
+            const errorMessage = "Journey를 찾을 수 없습니다.";
+            toast.error(errorMessage);
+
+            set((state) => {
+              state.currentJourneyError = errorMessage;
+              state.isLoadingCurrentJourney = false;
+            });
+            return;
+          }
+
+          // 첫 번째 그룹 펼치기
+          const expandedGroups: Record<string, boolean> = {};
+          if (flattenedSteps.length > 0) {
+            expandedGroups[flattenedSteps[0].groupId] = true;
+          }
+
+          set((state) => {
+            state.currentJourney = journey;
+            state.flattenedSteps = flattenedSteps;
+            state.currentStepIndex = 0;
+            state.expandedGroups = expandedGroups;
             state.isLoadingCurrentJourney = false;
           });
-          return;
+        } catch (error) {
+          console.error("Failed to load journey:", error);
+          const errorMessage = "Journey를 불러오는 중 오류가 발생했습니다.";
+
+          toast.error(errorMessage);
+
+          set((state) => {
+            state.currentJourneyError = errorMessage;
+            state.isLoadingCurrentJourney = false;
+          });
         }
+      },
 
-        // 그룹 데이터 확인
-        if (
-          !journey.groups ||
-          !Array.isArray(journey.groups) ||
-          journey.groups.length === 0
-        ) {
-          journey.groups = [
-            {
-              groupId: "default-group",
-              groupLabel: "기본 그룹",
-              mapDescription: "이 그룹은 기본적으로 생성되었습니다.",
-              steps: [
-                {
-                  id: "1",
-                  label: "기본 단계",
-                  desc: "내용을 추가하려면 편집 버튼을 클릭하세요.",
-                  content: ["여기에 내용을 추가하세요."],
-                },
-              ],
-            },
-          ];
+      setCurrentStepIndex: (index) => {
+        const { flattenedSteps } = get();
+        if (index >= 0 && index < flattenedSteps.length) {
+          set((state) => {
+            state.currentStepIndex = index;
+
+            // 현재 단계가 속한 그룹을 펼침
+            const currentStep = flattenedSteps[index];
+            if (currentStep) {
+              state.expandedGroups[currentStep.groupId] = true;
+            }
+          });
         }
+      },
 
-        // 단계 평탄화
-        const steps = flattenJourneySteps(journey);
+      nextStep: () => {
+        const { currentStepIndex, flattenedSteps } = get();
+        const maxIndex = flattenedSteps.length - 1;
+        const newIndex = Math.min(
+          currentStepIndex + 1,
+          maxIndex >= 0 ? maxIndex : 0,
+        );
+        get().setCurrentStepIndex(newIndex);
+      },
 
-        // 첫 번째 그룹 펼치기
-        const expandedGroups: Record<string, boolean> = {};
-        if (steps.length > 0) {
-          expandedGroups[steps[0].groupId] = true;
-        }
+      prevStep: () => {
+        const { currentStepIndex } = get();
+        const newIndex = Math.max(0, currentStepIndex - 1);
+        get().setCurrentStepIndex(newIndex);
+      },
 
+      toggleGroup: (groupId) => {
         set((state) => {
-          state.currentJourney = journey;
-          state.flattenedSteps = steps;
-          state.currentStepIndex = 0;
-          state.expandedGroups = expandedGroups;
-          state.isLoadingCurrentJourney = false;
+          state.expandedGroups[groupId] = !state.expandedGroups[groupId];
         });
-      } catch (error) {
-        console.error("Failed to load journey:", error);
-        toast.error("Journey를 불러오는 중 오류가 발생했습니다.");
+      },
+
+      clearJourneysError: () => {
         set((state) => {
-          state.isLoadingCurrentJourney = false;
+          state.journeysError = null;
         });
-      }
-    },
+      },
 
-    setCurrentStepIndex: (index) => {
-      const { flattenedSteps } = get();
-      if (index >= 0 && index < flattenedSteps.length) {
+      clearCurrentJourneyError: () => {
         set((state) => {
-          state.currentStepIndex = index;
-
-          // 현재 단계가 속한 그룹을 펼침
-          const currentStep = flattenedSteps[index];
-          if (currentStep) {
-            state.expandedGroups[currentStep.groupId] = true;
-          }
+          state.currentJourneyError = null;
         });
-      }
-    },
-
-    nextStep: () => {
-      const { currentStepIndex, flattenedSteps } = get();
-      const maxIndex = flattenedSteps.length - 1;
-      const newIndex = Math.min(
-        currentStepIndex + 1,
-        maxIndex >= 0 ? maxIndex : 0,
-      );
-      get().setCurrentStepIndex(newIndex);
-    },
-
-    prevStep: () => {
-      const { currentStepIndex } = get();
-      const newIndex = Math.max(0, currentStepIndex - 1);
-      get().setCurrentStepIndex(newIndex);
-    },
-
-    toggleGroup: (groupId) => {
-      set((state) => {
-        state.expandedGroups[groupId] = !state.expandedGroups[groupId];
-      });
-    },
-  })),
+      },
+    })),
+    { name: "journey-store" },
+  ),
 );
+
+// Selector 함수들 - 불필요한 리렌더링 방지
+export const useJourneysList = () => useJourneyStore((state) => state.journeys);
+export const useJourneysLoading = () =>
+  useJourneyStore((state) => state.isLoadingJourneys);
+export const useJourneysError = () =>
+  useJourneyStore((state) => state.journeysError);
+
+export const useCurrentJourney = () =>
+  useJourneyStore((state) => state.currentJourney);
+export const useCurrentJourneyLoading = () =>
+  useJourneyStore((state) => state.isLoadingCurrentJourney);
+export const useCurrentJourneyError = () =>
+  useJourneyStore((state) => state.currentJourneyError);
+export const useFlattenedSteps = () =>
+  useJourneyStore((state) => state.flattenedSteps);
+export const useCurrentStepIndex = () =>
+  useJourneyStore((state) => state.currentStepIndex);
+export const useExpandedGroups = () =>
+  useJourneyStore((state) => state.expandedGroups);
+
+// 현재 스텝 selector (계산된 값)
+export const useCurrentStep = () => {
+  const flattenedSteps = useJourneyStore((state) => state.flattenedSteps);
+  const currentStepIndex = useJourneyStore((state) => state.currentStepIndex);
+  return flattenedSteps.length > 0 ? flattenedSteps[currentStepIndex] : null;
+};

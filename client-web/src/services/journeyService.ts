@@ -1,5 +1,6 @@
 import db from "./db";
-import { Journey } from "@/types/journey";
+import { Journey, FlattenedStep } from "@/types/journey";
+import { getJourneyById, flattenJourneySteps } from "@/data";
 
 // Journey 조회 기능
 export const getJourney = async (id: string): Promise<Journey | undefined> => {
@@ -8,6 +9,73 @@ export const getJourney = async (id: string): Promise<Journey | undefined> => {
 
 export const getAllJourneys = async (): Promise<Journey[]> => {
   return db.journeys.toArray();
+};
+
+// 정적 데이터와 DB 데이터 병합
+export const getCombinedJourneys = async (): Promise<Journey[]> => {
+  const dbJourneys = await getAllJourneys();
+
+  // 정적 데이터 불러오기
+  const staticJourneys = await import("@/data").then(
+    (module) => module.journeys,
+  );
+
+  const combinedJourneys = [...dbJourneys];
+
+  // 정적 데이터 중 DB에 없는 것만 추가
+  for (const staticJourney of staticJourneys) {
+    if (!dbJourneys.some((dbJourney) => dbJourney.id === staticJourney.id)) {
+      combinedJourneys.push(staticJourney);
+    }
+  }
+
+  return combinedJourneys;
+};
+
+// Journey와 그 단계들 로드
+export const loadJourneyWithSteps = async (
+  id: string,
+): Promise<{
+  journey: Journey | null;
+  flattenedSteps: FlattenedStep[];
+}> => {
+  // DB 및 정적 데이터에서 Journey 찾기
+  let journey = await getJourney(id);
+  if (!journey) {
+    journey = getJourneyById(id);
+  }
+
+  if (!journey) {
+    return { journey: null, flattenedSteps: [] };
+  }
+
+  // 그룹 데이터 확인 및 기본값 설정
+  if (
+    !journey.groups ||
+    !Array.isArray(journey.groups) ||
+    journey.groups.length === 0
+  ) {
+    journey.groups = [
+      {
+        groupId: "default-group",
+        groupLabel: "기본 그룹",
+        mapDescription: "이 그룹은 기본적으로 생성되었습니다.",
+        steps: [
+          {
+            id: "1",
+            label: "기본 단계",
+            desc: "내용을 추가하려면 편집 버튼을 클릭하세요.",
+            content: ["여기에 내용을 추가하세요."],
+          },
+        ],
+      },
+    ];
+  }
+
+  // 단계 평탄화
+  const flattenedSteps = flattenJourneySteps(journey);
+
+  return { journey, flattenedSteps };
 };
 
 // 데이터 초기화
