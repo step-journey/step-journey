@@ -6,8 +6,8 @@ import {
 } from "@tabler/icons-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { FlattenedStep, Journey } from "@/types/journey";
-import { flattenJourneySteps } from "@/data";
+import { FlattenedStep, Journey } from "@/features/journey/types/journey";
+import { flattenJourneySteps } from "@/assets/data";
 import React from "react";
 import { Button } from "@/components/ui/button";
 

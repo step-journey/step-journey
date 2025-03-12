@@ -1,5 +1,5 @@
 import Dexie, { Table } from "dexie";
-import { Journey, Step, Block } from "@/types/journey";
+import { Journey, Step, Block } from "@/features/journey/types/journey";
 
 class StepJourneyDB extends Dexie {
   journeys!: Table<Journey>;
@@ -17,6 +17,6 @@ class StepJourneyDB extends Dexie {
   }
 }
 
-const db = new StepJourneyDB();
+const dbClient = new StepJourneyDB();
 
-export default db;
+export default dbClient;

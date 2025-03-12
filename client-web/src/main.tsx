@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import ReactModal from "react-modal";
 import "@/index.css"; // Tailwind Global Styles
 
-import BootstrapApp from "./components/BootstrapApp.tsx";
+import BootstrapApp from "./components/common/BootstrapApp.tsx";
 
 ReactModal.setAppElement("#root");
 

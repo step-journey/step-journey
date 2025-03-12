@@ -1,14 +1,14 @@
-import db from "./db";
-import { Journey, FlattenedStep } from "@/types/journey";
-import { getJourneyById, flattenJourneySteps } from "@/data";
+import dbClient from "@/services/dbClient";
+import { Journey, FlattenedStep } from "@/features/journey/types/journey";
+import { getJourneyById, flattenJourneySteps } from "@/assets/data";
 
 // Journey 조회 기능
 export const getJourney = async (id: string): Promise<Journey | undefined> => {
-  return db.journeys.get(id);
+  return dbClient.journeys.get(id);
 };
 
 export const getAllJourneys = async (): Promise<Journey[]> => {
-  return db.journeys.toArray();
+  return dbClient.journeys.toArray();
 };
 
 // 정적 데이터와 DB 데이터 병합
@@ -16,7 +16,7 @@ export const getCombinedJourneys = async (): Promise<Journey[]> => {
   const dbJourneys = await getAllJourneys();
 
   // 정적 데이터 불러오기
-  const staticJourneys = await import("@/data").then(
+  const staticJourneys = await import("@/assets/data").then(
     (module) => module.journeys,
   );
 
@@ -80,7 +80,7 @@ export const loadJourneyWithSteps = async (
 
 // 데이터 초기화
 export const initializeDatabase = async (): Promise<void> => {
-  const count = await db.journeys.count();
+  const count = await dbClient.journeys.count();
 
   // 이미 데이터가 있으면 초기화 스킵
   if (count > 0) {

@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { devtools } from "zustand/middleware";
-import * as authService from "@/services/authService";
-import { User } from "@/types/auth";
+import * as authService from "@/features/auth/services/authService";
+import { User } from "@/features/auth/types/auth";
 
 interface AuthState {
   user: User | null;

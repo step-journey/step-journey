@@ -1,8 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import PATH from "./constants/path.ts";
-import Test from "./pages/Test";
-import JourneyPage from "./pages/Journey/JourneyPage";
-import HomePage from "@/pages/Home/HomePage";
+import HomePage from "./features/home/components/HomePage";
+import JourneyPage from "./features/journey/components/JourneyPage";
 
 const App = () => {
   return (
@@ -11,7 +10,6 @@ const App = () => {
         <Route path={PATH.HOME} element={<HomePage />} />
         <Route path={PATH.JOURNEY} element={<JourneyPage />} />
         <Route path={`${PATH.JOURNEY}/:journeyId`} element={<JourneyPage />} />
-        <Route path={PATH.TEST} element={<Test />} />
       </Routes>
     </>
   );

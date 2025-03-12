@@ -1,7 +1,8 @@
+// src/features/home/components/HomePage.tsx
 import { useNavigate } from "react-router-dom";
 
 import Header from "./Header";
-import LoginModal from "./LoginModal";
+import LoginModal from "@/features/auth/components/LoginModal";
 import {
   Card,
   CardHeader,
@@ -14,8 +15,8 @@ import PATH from "@/constants/path";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 
 // React Query 훅 사용
-import { useUser, useLogout } from "@/hooks/useAuth";
-import { useJourneys } from "@/hooks/useJourneys";
+import { useUser, useLogout } from "@/features/auth/hooks/useAuth";
+import { useJourneys } from "@/features/journey/hooks/useJourneys";
 import { useLoginModalState, useUIStore } from "@/store/uiStore";
 
 export default function HomePage() {
@@ -87,7 +88,6 @@ export default function HomePage() {
               New Journey
             </Button>
           </div>
-
           {isLoadingJourneys ? (
             <div className="text-center py-8">로딩 중...</div>
           ) : !journeys || journeys.length === 0 ? (

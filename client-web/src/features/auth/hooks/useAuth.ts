@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchUser, logoutUser } from "@/services/authService";
+import { fetchUser, logoutUser } from "@/features/auth/services/authService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { toast } from "sonner";
 

@@ -2,8 +2,8 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { devtools } from "zustand/middleware";
 import { toast } from "sonner";
-import * as journeyService from "@/services/journeyService";
-import { Journey, FlattenedStep } from "@/types/journey";
+import * as journeyService from "@/features/journey/services/journeyService";
+import { Journey, FlattenedStep } from "@/features/journey/types/journey";
 
 // 상태 인터페이스 정의
 interface JourneyState {

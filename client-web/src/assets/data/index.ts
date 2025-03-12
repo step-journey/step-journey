@@ -1,6 +1,6 @@
 import cubicProblem from "./cubic-problem.json";
-import { FlattenedStep, Journey, Step } from "@/types/journey";
-import cubicProblemImage from "./cubic-problem.png";
+import { FlattenedStep, Journey, Step } from "@/features/journey/types/journey";
+import cubicProblemImage from "../images/cubic-problem.png";
 
 export const journeys: Journey[] = [
   {

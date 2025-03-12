@@ -1,5 +1,5 @@
 import { MutableRefObject } from "react";
-import { FlattenedStep } from "@/types/journey";
+import { FlattenedStep } from "@/features/journey/types/journey";
 
 export function handleKeyboardShortcuts(
   e: KeyboardEvent,

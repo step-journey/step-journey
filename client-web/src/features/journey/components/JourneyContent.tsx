@@ -1,5 +1,9 @@
 import "@blocknote/core/fonts/inter.css";
-import { FlattenedStep, Journey, PinnedProblem } from "@/types/journey";
+import {
+  FlattenedStep,
+  Journey,
+  PinnedProblem,
+} from "@/features/journey/types/journey";
 import { mathMarkdownToHtml } from "@/utils/mathMarkdown";
 
 interface Props {

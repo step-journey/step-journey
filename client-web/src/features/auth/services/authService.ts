@@ -1,6 +1,6 @@
-import apiClient from "./apiClient";
+import apiClient from "@/services/apiClient";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
-import { User } from "@/types/auth";
+import { User } from "@/features/auth/types/auth";
 
 // 사용자 정보 조회
 export async function fetchUser(): Promise<User | null> {

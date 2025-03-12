@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "@blocknote/core/fonts/inter.css";
-import { StepContainerMap } from "@/types/journey";
-import { handleKeyboardShortcuts } from "./journey.utils";
+import { StepContainerMap } from "@/features/journey/types/journey";
+import { handleKeyboardShortcuts } from "../utils/journey.utils";
 
 import { JourneySidebar } from "./JourneySidebar";
 import { JourneyHeader } from "./JourneyHeader";
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import PATH from "@/constants/path";
 
 // React Query 훅 사용
-import { useJourney } from "@/hooks/useJourneys";
+import { useJourney } from "../hooks/useJourneys";
 
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();

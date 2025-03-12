@@ -3,7 +3,7 @@ import {
   getCombinedJourneys,
   loadJourneyWithSteps,
   initializeDatabase,
-} from "@/services/journeyService";
+} from "@/features/journey/services/journeyService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useState } from "react";
 
