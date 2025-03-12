@@ -3,11 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { devtools } from "zustand/middleware";
 import { toast } from "sonner";
 import * as journeyService from "@/features/journey/services/journeyService";
-import {
-  FlattenedBlock,
-  Block,
-  JourneyBlock,
-} from "@/features/journey/types/block";
+import { FlattenedBlock, Block, JourneyBlock } from "@/features/journey/types";
 
 // 상태 인터페이스 정의
 interface JourneyState {

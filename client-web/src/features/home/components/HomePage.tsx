@@ -22,7 +22,7 @@ import {
   getJourneyDescription,
   getJourneyTitle,
   isJourneyBlock,
-} from "@/features/journey/types/block";
+} from "@/features/journey/types";
 
 export default function HomePage() {
   // React Query 훅 사용

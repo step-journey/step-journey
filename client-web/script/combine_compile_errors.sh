@@ -14,14 +14,14 @@ rm -f "$OUTPUT_FILE"
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 # 구현시 주의사항
-echo "# StepJourney React Client 문제 해결시 주의사항:" >> "$OUTPUT_FILE"
-echo "- 너의 답변의 코드를 그대로 복사하여 붙여넣어서 prod 배포할 예정이므로 주석으로 생략하는 부분 없이 완전한 코드로 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
-echo "- 구현 혹은 문제 해결을 위해 조금이라도 수정이 된 파일은 해당 파일의 전체 코드를 완전하게 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
+#echo "# StepJourney React Client 문제 해결시 주의사항:" >> "$OUTPUT_FILE"
+#echo "- 너의 답변의 코드를 그대로 복사하여 붙여넣어서 prod 배포할 예정이므로 주석으로 생략하는 부분 없이 완전한 코드로 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
+#echo "- 구현 혹은 문제 해결을 위해 조금이라도 수정이 된 파일은 해당 파일의 전체 코드를 완전하게 보여줘. 하지만 수정사항이 없는 파일의 코드는 보여주지마." >> "$OUTPUT_FILE"
 #echo "- 상태 관리: 서버로부터 받아오는 데이터(페칭·캐싱·동기화)는 React Query가 전담하고, 모달·로딩 등 클라이언트 전용 UI 상태는 Zustand와 컴포넌트 로컬 상태로 관리 해야함" >> "$OUTPUT_FILE"
-echo "- React 클라이언트에서 UI 디자인은 shadcd/ui (\`radix-ui\`)가 추구하는 것처럼 minimal함을 추구해야함" >> "$OUTPUT_FILE"
-echo "- React 클라이언트에서 필요한 컴포넌트를 \`npx shadcn@latest add [component]\` 커맨드로 추가해서 사용해야함" >> "$OUTPUT_FILE"
-echo "- React 클라이언트에서 아이콘은 \`\"@tabler/icons-react\"\` 혹은 'lucide-react' 에서 적절한 것을 가져다가 사용해야함" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
+#echo "- React 클라이언트에서 UI 디자인은 shadcd/ui (\`radix-ui\`)가 추구하는 것처럼 minimal함을 추구해야함" >> "$OUTPUT_FILE"
+#echo "- React 클라이언트에서 필요한 컴포넌트를 \`npx shadcn@latest add [component]\` 커맨드로 추가해서 사용해야함" >> "$OUTPUT_FILE"
+#echo "- React 클라이언트에서 아이콘은 \`\"@tabler/icons-react\"\` 혹은 'lucide-react' 에서 적절한 것을 가져다가 사용해야함" >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
 
 
 # 프로젝트 파일 구조 설명:
@@ -49,22 +49,22 @@ echo "" >> "$OUTPUT_FILE"
 #echo "" >> "$OUTPUT_FILE"
 
 # 프로젝트 기술 스택 추가
-echo "# Project Tech stack:" >> "$OUTPUT_FILE"
-echo "- React" >> "$OUTPUT_FILE"
-echo "- Vite" >> "$OUTPUT_FILE"
-echo "- TypeScript" >> "$OUTPUT_FILE"
-echo "- zustand" >> "$OUTPUT_FILE"
-echo "- tanstack/react-query" >> "$OUTPUT_FILE"
-echo "- Tailwind CSS" >> "$OUTPUT_FILE"
-echo "- shadcn/ui" >> "$OUTPUT_FILE"
-echo "- radix-ui" >> "$OUTPUT_FILE"
-echo "- tabler/icons-react" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
+#echo "# Project Tech stack:" >> "$OUTPUT_FILE"
+#echo "- React" >> "$OUTPUT_FILE"
+#echo "- Vite" >> "$OUTPUT_FILE"
+#echo "- TypeScript" >> "$OUTPUT_FILE"
+#echo "- zustand" >> "$OUTPUT_FILE"
+#echo "- tanstack/react-query" >> "$OUTPUT_FILE"
+#echo "- Tailwind CSS" >> "$OUTPUT_FILE"
+#echo "- shadcn/ui" >> "$OUTPUT_FILE"
+#echo "- radix-ui" >> "$OUTPUT_FILE"
+#echo "- tabler/icons-react" >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
 
 # 프로젝트 구조 추가
-echo "# Project Structure:" >> "$OUTPUT_FILE"
-tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
+#echo "# Project Structure:" >> "$OUTPUT_FILE"
+#tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
 
 ## `client-web/src/types` 경로의 모든 .ts 파일 추가
 #echo "# Type Definitions (client-web/src/types):" >> "$OUTPUT_FILE"

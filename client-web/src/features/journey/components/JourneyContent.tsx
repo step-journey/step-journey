@@ -4,7 +4,7 @@ import {
   Block,
   isJourneyBlock,
   JourneyBlock,
-} from "@/features/journey/types/block";
+} from "@/features/journey/types";
 import { mathMarkdownToHtml } from "@/utils/mathMarkdown";
 
 interface Props {

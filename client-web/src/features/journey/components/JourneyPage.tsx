@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "@blocknote/core/fonts/inter.css";
-import { StepContainerMap } from "@/features/journey/types/block";
+import { StepContainerMap } from "@/features/journey/types";
 import { handleKeyboardShortcuts } from "../utils/journey.utils";
 
 import { JourneySidebar } from "./JourneySidebar";

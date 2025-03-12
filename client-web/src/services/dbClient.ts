@@ -1,5 +1,5 @@
 import Dexie, { Table } from "dexie";
-import { Block } from "@/features/journey/types/block";
+import { Block } from "@/features/journey/types";
 
 class StepJourneyDB extends Dexie {
   blocks!: Table<Block>;

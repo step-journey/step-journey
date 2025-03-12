@@ -10,7 +10,6 @@ import {
   FlattenedBlock,
   Block,
   BlockType,
-  getChildBlocksByType,
   JourneyBlock,
   StepGroupBlock,
   StepBlock,
@@ -18,9 +17,10 @@ import {
   getJourneyTitle,
   getStepGroupLabel,
   getStepLabel,
-} from "@/features/journey/types/block";
+} from "@/features/journey/types";
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { getChildBlocksByType } from "@/features/journey/utils/block-utils";
 
 interface Props {
   journeyBlock: Block;

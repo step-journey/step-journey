@@ -6,7 +6,7 @@ import {
 } from "@/features/journey/services/journeyService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useState } from "react";
-import { Block, BlockType } from "../types/block";
+import { Block, BlockType } from "@/features/journey/types";
 
 // 여정 목록을 조회하는 훅
 export function useJourneys() {
