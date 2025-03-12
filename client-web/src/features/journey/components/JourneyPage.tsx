@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "@blocknote/core/fonts/inter.css";
-import { StepContainerMap } from "@/features/journey/types";
-import { handleKeyboardShortcuts } from "../utils/keyboardUtils";
+import { StepContainerMap } from "@/features/block/types";
+import { handleKeyboardShortcuts } from "@/features/block/utils/keyboardUtils";
 
 import { JourneySidebar } from "./JourneySidebar";
 import { JourneyHeader } from "./JourneyHeader";
@@ -13,6 +13,11 @@ import PATH from "@/constants/path";
 
 // React Query 훅 사용
 import { useJourney } from "../hooks/useJourneys";
+import {
+  BlockContextProvider,
+  SidebarContextProvider,
+  ContentContextProvider,
+} from "@/features/block/renderers";
 
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();
@@ -76,50 +81,68 @@ export default function JourneyPage() {
     );
   }
 
+  // 스텝 클릭 핸들러
+  const handleStepClick = (groupId: string, stepId: number) => {
+    const found = flattenedSteps.find(
+      (fs) => fs.parentId === groupId && fs.properties.stepIdInGroup === stepId,
+    );
+    if (found) setCurrentStepIndex(found.globalIndex);
+  };
+
+  // 컨텍스트 값 준비
+  const blockContextValue = {
+    allBlocks,
+    currentStepIndex,
+    setCurrentStepIndex,
+  };
+
+  const sidebarContextValue = {
+    expandedGroups,
+    toggleGroup,
+    onClickStep: handleStepClick,
+    currentStepId: currentStep?.id,
+  };
+
+  const contentContextValue = {
+    currentStep,
+    allSteps: flattenedSteps,
+    highlightKeywords: true,
+  };
+
   // 공통 UI 구조
   return (
-    <div className="flex h-screen bg-white">
-      {/* 사이드바는 항상 표시 */}
-      <JourneySidebar
-        journeyBlock={journeyBlock}
-        currentStep={currentStep}
-        allBlocks={allBlocks}
-        expandedGroups={expandedGroups}
-        setExpandedGroups={toggleGroup}
-        stepContainerRefs={stepContainerRefs}
-        onClickStep={(groupId, stepId) => {
-          const found = flattenedSteps.find(
-            (fs) =>
-              fs.parentId === groupId && fs.properties.stepIdInGroup === stepId,
-          );
-          if (found) setCurrentStepIndex(found.globalIndex);
-        }}
-        onNavigateHome={() => navigate(PATH.HOME)}
-      />
-
-      {/* 메인 컨텐츠 영역 */}
-      <div className="flex flex-1 flex-col bg-white">
-        {/* 헤더 */}
-        <JourneyHeader />
-
-        {/* 본문 영역 */}
-        {currentStep && (
-          <JourneyContent
-            currentStep={currentStep}
-            allSteps={flattenedSteps}
+    <BlockContextProvider value={blockContextValue}>
+      <div className="flex h-screen bg-white">
+        {/* 사이드바는 항상 표시 */}
+        <SidebarContextProvider value={sidebarContextValue}>
+          <JourneySidebar
             journeyBlock={journeyBlock}
+            allBlocks={allBlocks}
+            stepContainerRefs={stepContainerRefs}
+            onNavigateHome={() => navigate(PATH.HOME)}
           />
-        )}
+        </SidebarContextProvider>
 
-        {/* 푸터 */}
-        <JourneyFooter
-          globalIndex={currentStepIndex}
-          setGlobalIndex={setCurrentStepIndex}
-          goPrev={prevStep}
-          goNext={nextStep}
-          totalSteps={flattenedSteps.length}
-        />
+        {/* 메인 컨텐츠 영역 */}
+        <div className="flex flex-1 flex-col bg-white">
+          {/* 헤더 */}
+          <JourneyHeader />
+
+          {/* 본문 영역 */}
+          <ContentContextProvider value={contentContextValue}>
+            <JourneyContent journeyBlock={journeyBlock} />
+          </ContentContextProvider>
+
+          {/* 푸터 */}
+          <JourneyFooter
+            globalIndex={currentStepIndex}
+            setGlobalIndex={setCurrentStepIndex}
+            goPrev={prevStep}
+            goNext={nextStep}
+            totalSteps={flattenedSteps.length}
+          />
+        </div>
       </div>
-    </div>
+    </BlockContextProvider>
   );
 }

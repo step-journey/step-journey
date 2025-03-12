@@ -3,10 +3,12 @@ import {
   getCombinedJourneys,
   loadJourneyWithSteps,
   initializeDatabase,
-} from "@/features/journey/services/journeyService";
+} from "@/features/block/services/blockService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useState } from "react";
-import { Block, BlockType } from "@/features/journey/types";
+import { BlockType } from "@/features/block/types";
+import { useBlockRenderer } from "@/features/block/hooks/useBlockRenderer";
+import { useBlockData } from "@/features/block/hooks/useBlockData";
 
 // 여정 목록을 조회하는 훅
 export function useJourneys() {
@@ -32,6 +34,7 @@ export function useJourney(journeyId: string | undefined) {
     {},
   );
 
+  // 여정 데이터 조회
   const journeyQuery = useQuery({
     queryKey: QUERY_KEYS.journeys.detail(journeyId || ""),
     queryFn: async () => {
@@ -42,6 +45,18 @@ export function useJourney(journeyId: string | undefined) {
     enabled: !!journeyId,
     staleTime: 5 * 60 * 1000, // 5분
   });
+
+  // 블록 데이터 활용
+  const { allBlocks = [] } = journeyQuery.data || {};
+  const blockData = useBlockData(allBlocks);
+
+  // 여정 ID가 있는 경우 블록 렌더러 사용
+  const blockRenderer = useBlockRenderer(
+    journeyId || "",
+    allBlocks,
+    journeyQuery.data?.flattenedSteps || [],
+    currentStepIndex,
+  );
 
   // 스텝 인덱스 변경 함수
   const nextStep = () => {
@@ -63,20 +78,20 @@ export function useJourney(journeyId: string | undefined) {
     }));
   };
 
-  // 스탭 그룹 블록 가져오기
+  // 스텝 그룹 블록 가져오기 (기존 메서드 대신 블록 데이터 훅 활용)
   const getStepGroups = () => {
-    if (!journeyQuery.data?.journeyBlock || !journeyQuery.data.allBlocks)
-      return [];
+    if (!journeyQuery.data?.journeyBlock?.id) return [];
 
-    return journeyQuery.data.journeyBlock.content
-      .map((id) => journeyQuery.data.allBlocks.find((block) => block.id === id))
-      .filter(
-        (block) => block && block.type === BlockType.STEP_GROUP,
-      ) as Block[];
+    return blockData.getChildBlocksByType(
+      journeyQuery.data.journeyBlock.id,
+      BlockType.STEP_GROUP,
+    );
   };
 
   return {
     ...journeyQuery,
+    ...blockRenderer, // 렌더러 결과도 포함하여 내보냄
+    blockData, // 블록 데이터 접근 메서드 제공
     currentStepIndex,
     setCurrentStepIndex,
     nextStep,

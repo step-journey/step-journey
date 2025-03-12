@@ -1,7 +1,7 @@
 import cubicProblemJourneyData from "./cubic-problem-journey.json";
-import { Block, RawJsonBlock, isJourneyBlock } from "@/features/journey/types";
 import cubicProblemImage from "../images/cubic-problem.png";
-import { rawJsonToBlock } from "@/features/journey/utils/blockUtils";
+import { Block, RawJsonBlock, isJourneyBlock } from "@/features/block/types";
+import { rawJsonToBlock } from "@/features/block/utils/blockUtils";
 
 // 정적 블록 데이터 - 블록 기반 데이터 모델
 export const blocks: Block[] = (

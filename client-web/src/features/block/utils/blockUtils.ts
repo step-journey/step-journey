@@ -2,11 +2,11 @@
  * 블록 관계 및 변환을 위한 유틸리티 함수
  */
 
-import { BlockType, RawJsonBlock, Block } from "../types/baseBlock";
-import { JourneyBlock, isJourneyBlock } from "../types/journeyBlock";
-import { StepGroupBlock } from "../types/stepGroupBlock";
-import { FlattenedBlock, StepBlock } from "../types/stepBlock";
-import { blocks } from "@/assets/data"; // 정적 블록 데이터 import 추가
+import { BlockType, RawJsonBlock, Block } from "../types";
+import { JourneyBlock, isJourneyBlock } from "../types";
+import { StepGroupBlock } from "../types";
+import { FlattenedBlock, StepBlock } from "../types";
+import { blocks } from "@/assets/data";
 
 /**
  * 원시 JSON 블록을 타입이 지정된 Block 으로 변환
@@ -90,7 +90,7 @@ export function getChildBlocks(
   allBlocks: Block[],
 ): Block[] {
   return parentBlock.content
-    .map((id) => allBlocks.find((block) => block.id === id))
+    .map((id: string) => allBlocks.find((block) => block.id === id))
     .filter(Boolean) as Block[];
 }
 

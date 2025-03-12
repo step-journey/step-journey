@@ -52,6 +52,7 @@ export interface RawJsonBlock {
     description?: string;
     pinnedProblem?: {
       text: string;
+      media?: Media;
     };
     groupLabel?: string;
     label?: string;
@@ -65,11 +66,3 @@ export interface RawJsonBlock {
   updatedAt: string;
   createdBy: string;
 }
-
-// 아래 부분을 추가해주세요
-import { JourneyBlock } from "./journeyBlock";
-import { StepGroupBlock } from "./stepGroupBlock";
-import { StepBlock } from "./stepBlock";
-
-// 모든 가능한 블록 타입의 유니온 타입 - 여기에 선언하고 내보냅니다
-export type Block = JourneyBlock | StepGroupBlock | StepBlock;

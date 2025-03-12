@@ -7,13 +7,13 @@ import {
   JourneyBlock,
   StepGroupBlock,
   StepBlock,
-} from "@/features/journey/types";
+} from "../types";
 import { blocks as staticBlocks } from "@/assets/data";
 import {
   flattenBlocks,
   getBlockWithChildren,
   getJourneyById,
-} from "@/features/journey/utils/blockUtils";
+} from "../utils/blockUtils";
 
 // 특정 Journey 블록 조회
 export const getJourneyBlock = async (
