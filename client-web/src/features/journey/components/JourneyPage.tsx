@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "@blocknote/core/fonts/inter.css";
-import { StepContainerMap } from "@/features/journey/types/journey";
+import { StepContainerMap } from "@/features/journey/types/block";
 import { handleKeyboardShortcuts } from "../utils/journey.utils";
 
 import { JourneySidebar } from "./JourneySidebar";
@@ -42,8 +42,9 @@ export default function JourneyPage() {
   }, [prevStep, nextStep]);
 
   // 데이터 및 현재 스텝 추출
-  const journey = data?.journey || null;
+  const journeyBlock = data?.journeyBlock || null;
   const flattenedSteps = data?.flattenedSteps || [];
+  const allBlocks = data?.allBlocks || [];
   const currentStep = flattenedSteps[currentStepIndex] || null;
 
   // 로딩 중 UI
@@ -66,7 +67,7 @@ export default function JourneyPage() {
   }
 
   // 데이터가 없는 경우
-  if (!journey) {
+  if (!journeyBlock) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4">
         <p>Journey를 찾을 수 없습니다.</p>
@@ -80,14 +81,16 @@ export default function JourneyPage() {
     <div className="flex h-screen bg-white">
       {/* 사이드바는 항상 표시 */}
       <JourneySidebar
-        journey={journey}
+        journeyBlock={journeyBlock}
         currentStep={currentStep}
+        allBlocks={allBlocks}
         expandedGroups={expandedGroups}
         setExpandedGroups={toggleGroup}
         stepContainerRefs={stepContainerRefs}
         onClickStep={(groupId, stepId) => {
           const found = flattenedSteps.find(
-            (fs) => fs.groupId === groupId && fs.stepIdInGroup === stepId,
+            (fs) =>
+              fs.parentId === groupId && fs.properties.stepIdInGroup === stepId,
           );
           if (found) setCurrentStepIndex(found.globalIndex);
         }}
@@ -104,7 +107,7 @@ export default function JourneyPage() {
           <JourneyContent
             currentStep={currentStep}
             allSteps={flattenedSteps}
-            journey={journey}
+            journeyBlock={journeyBlock}
           />
         )}
 

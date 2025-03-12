@@ -1,33 +1,36 @@
 import "@blocknote/core/fonts/inter.css";
 import {
-  FlattenedStep,
-  Journey,
-  PinnedProblem,
-} from "@/features/journey/types/journey";
+  FlattenedBlock,
+  Block,
+  isJourneyBlock,
+  JourneyBlock,
+} from "@/features/journey/types/block";
 import { mathMarkdownToHtml } from "@/utils/mathMarkdown";
 
 interface Props {
-  currentStep: FlattenedStep;
-  allSteps: FlattenedStep[];
-  journey: Journey;
+  currentStep: FlattenedBlock;
+  allSteps: FlattenedBlock[];
+  journeyBlock: Block;
 }
 
-export function JourneyContent({ currentStep, allSteps, journey }: Props) {
-  // 콘텐츠가 있는지 여부 확인
-  const hasContent = !!currentStep.content;
-
-  // 문제 설명이 있는지 확인
-  const hasPinnedProblem = !!journey.pinnedProblem;
-
-  // pinnedProblem 객체화
-  let pinnedProblem: PinnedProblem | null = null;
-  if (hasPinnedProblem) {
-    if (typeof journey.pinnedProblem === "string") {
-      pinnedProblem = { text: journey.pinnedProblem };
-    } else {
-      pinnedProblem = journey.pinnedProblem as PinnedProblem;
-    }
+export function JourneyContent({ currentStep, allSteps, journeyBlock }: Props) {
+  // 타입 가드로 안전하게 사용
+  if (!isJourneyBlock(journeyBlock)) {
+    return <div>Invalid journey block</div>;
   }
+
+  const typedJourneyBlock = journeyBlock as JourneyBlock;
+
+  // 콘텐츠가 있는지 여부 확인
+  const hasContent = !!currentStep.properties.content?.length;
+
+  // 문제 설명이 있는지 확인 (Journey 블록에만 있음)
+  const hasPinnedProblem = !!typedJourneyBlock.properties.pinnedProblem;
+
+  // pinnedProblem 객체 참조
+  const pinnedProblem = hasPinnedProblem
+    ? typedJourneyBlock.properties.pinnedProblem
+    : null;
 
   // 문제 설명 텍스트
   const problemDescription = pinnedProblem ? pinnedProblem.text : "";
@@ -36,8 +39,8 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
   const highlightedProblemText = () => {
     if (
       !problemDescription ||
-      !currentStep.highlightedKeywordsInProblem ||
-      currentStep.highlightedKeywordsInProblem.length === 0
+      !currentStep.properties.highlightedKeywordsInProblem ||
+      currentStep.properties.highlightedKeywordsInProblem.length === 0
     ) {
       return problemDescription;
     }
@@ -45,15 +48,17 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
     let highlightedText = problemDescription;
 
     // 각 키워드를 강조 표시용 HTML로 교체
-    currentStep.highlightedKeywordsInProblem.forEach((keyword) => {
-      // 정규식에서 특수 문자 이스케이프
-      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(escapedKeyword, "g");
-      highlightedText = highlightedText.replace(
-        regex,
-        `<span class="underline decoration-blue-500 decoration-1">$&</span>`,
-      );
-    });
+    currentStep.properties.highlightedKeywordsInProblem.forEach(
+      (keyword: string) => {
+        // 정규식에서 특수 문자 이스케이프
+        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(escapedKeyword, "g");
+        highlightedText = highlightedText.replace(
+          regex,
+          `<span class="underline decoration-blue-500 decoration-1">$&</span>`,
+        );
+      },
+    );
 
     return highlightedText;
   };
@@ -62,13 +67,13 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
   const accumulatedContent = hasContent
     ? allSteps
         .filter(
-          (step) => step.globalIndex <= currentStep.globalIndex && step.content,
+          (step) =>
+            step.globalIndex <= currentStep.globalIndex &&
+            step.properties.content?.length,
         )
         .map((step) => {
           const isCurrentStep = step.globalIndex === currentStep.globalIndex;
-          const content = Array.isArray(step.content)
-            ? step.content.join("\n")
-            : step.content || "";
+          const content = step.properties.content?.join("\n") || "";
 
           // 현재 단계의 내용을 강조표시
           return {
@@ -118,8 +123,12 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
         <div className={hasPinnedProblem ? "w-2/3" : "w-full"}>
           {/* 제목 영역 */}
           <>
-            <p className="mb-1 text-lg font-semibold">{currentStep.label}</p>
-            <p className="mb-4 text-sm text-gray-500">{currentStep.desc}</p>
+            <p className="mb-1 text-lg font-semibold">
+              {currentStep.properties.label}
+            </p>
+            <p className="mb-4 text-sm text-gray-500">
+              {currentStep.properties.desc}
+            </p>
           </>
 
           <div className="border border-gray-200 bg-white p-4 rounded-xl shadow">

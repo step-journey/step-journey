@@ -1,16 +1,14 @@
 import Dexie, { Table } from "dexie";
-import { Journey, Step } from "@/features/journey/types/journey";
+import { Block } from "@/features/journey/types/block";
 
 class StepJourneyDB extends Dexie {
-  journeys!: Table<Journey>;
-  steps!: Table<Step>;
+  blocks!: Table<Block>;
 
   constructor() {
     super("stepJourneyDB");
 
     this.version(1).stores({
-      journeys: "id",
-      steps: "id, journey_id, [journey_id+order]",
+      blocks: "id, type, parentId",
     });
   }
 }

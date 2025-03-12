@@ -6,24 +6,37 @@ import {
 } from "@tabler/icons-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { FlattenedStep, Journey } from "@/features/journey/types/journey";
-import { flattenJourneySteps } from "@/assets/data";
+import {
+  FlattenedBlock,
+  Block,
+  BlockType,
+  getChildBlocksByType,
+  JourneyBlock,
+  StepGroupBlock,
+  StepBlock,
+  isJourneyBlock,
+  getJourneyTitle,
+  getStepGroupLabel,
+  getStepLabel,
+} from "@/features/journey/types/block";
 import React from "react";
 import { Button } from "@/components/ui/button";
 
 interface Props {
-  journey: Journey;
-  currentStep: FlattenedStep;
+  journeyBlock: Block;
+  currentStep: FlattenedBlock;
+  allBlocks: Block[];
   expandedGroups: Record<string, boolean>;
-  setExpandedGroups: (groupId: string) => void; // 변경: 함수 시그니처 변경
+  setExpandedGroups: (groupId: string) => void;
   stepContainerRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
   onClickStep: (groupId: string, stepIdInGroup: number) => void;
   onNavigateHome?: () => void;
 }
 
 export function JourneySidebar({
-  journey,
+  journeyBlock,
   currentStep,
+  allBlocks,
   expandedGroups,
   setExpandedGroups,
   stepContainerRefs,
@@ -35,13 +48,32 @@ export function JourneySidebar({
     setExpandedGroups(groupId);
   };
 
-  const flattenSteps = flattenJourneySteps(journey);
+  // 타입 가드 확인
+  if (!isJourneyBlock(journeyBlock)) {
+    return (
+      <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
+        <div className="p-4">Not a valid journey block</div>
+      </aside>
+    );
+  }
+
+  // 타입 안전한 접근을 위해 타입 캐스팅
+  const typedJourneyBlock = journeyBlock as JourneyBlock;
+
+  // Journey에서 StepGroup 블록들 가져오기
+  const stepGroupBlocks = getChildBlocksByType<StepGroupBlock>(
+    typedJourneyBlock,
+    allBlocks,
+    BlockType.STEP_GROUP,
+  );
 
   return (
     <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
       {/* 상단: 제목 + 검색창 */}
       <div className="shrink-0 p-4 pb-2">
-        <h1 className="text-base font-bold mb-3">{journey.title}</h1>
+        <h1 className="text-base font-bold mb-3">
+          {getJourneyTitle(typedJourneyBlock)}
+        </h1>
         {/* 검색창 */}
         <div className="relative">
           <IconSearch
@@ -58,9 +90,9 @@ export function JourneySidebar({
 
       {/* 단계 목록 스크롤 영역 */}
       <ScrollArea className="flex-1 py-2 pl-4 pr-1">
-        {journey.stepGroups.map((grp) => {
-          const isExpanded = expandedGroups[grp.groupId] || false;
-          const isCurrentGroup = grp.groupId === currentStep.groupId;
+        {stepGroupBlocks.map((groupBlock) => {
+          const isExpanded = expandedGroups[groupBlock.id] || false;
+          const isCurrentGroup = groupBlock.id === currentStep.parentId;
 
           let groupLabelClass = `
             flex items-center h-8 px-2 gap-2 cursor-pointer
@@ -70,15 +102,22 @@ export function JourneySidebar({
             groupLabelClass += " font-semibold";
           }
 
+          // 그룹의 스텝 블록들 가져오기
+          const stepBlocks = getChildBlocksByType<StepBlock>(
+            groupBlock,
+            allBlocks,
+            BlockType.STEP,
+          );
+
           return (
-            <div key={grp.groupId} className="mb-2">
+            <div key={groupBlock.id} className="mb-2">
               {/* 그룹 라벨 */}
               <div
                 className={groupLabelClass}
-                onClick={() => toggleGroup(grp.groupId)}
+                onClick={() => toggleGroup(groupBlock.id)}
               >
                 <span className="text-sm flex-1 whitespace-nowrap">
-                  {grp.groupLabel}
+                  {getStepGroupLabel(groupBlock)}
                 </span>
                 {isExpanded ? (
                   <IconChevronDown className="h-4 w-4" />
@@ -92,21 +131,15 @@ export function JourneySidebar({
                 <div
                   ref={(el) => {
                     if (stepContainerRefs.current) {
-                      stepContainerRefs.current[grp.groupId] = el;
+                      stepContainerRefs.current[groupBlock.id] = el;
                     }
                   }}
                   className="ml-5 mt-1 max-h-[300px] overflow-auto flex flex-col gap-1"
                 >
-                  {grp.steps.map((st) => {
-                    const foundFs = flattenSteps.find(
-                      (fs) =>
-                        fs.groupId === grp.groupId &&
-                        fs.stepIdInGroup === Number(st.id),
-                    );
-                    if (!foundFs) return null;
-
-                    const isActive =
-                      foundFs.globalIndex === currentStep.globalIndex;
+                  {stepBlocks.map((stepBlock) => {
+                    const isActive = currentStep.id === stepBlock.id;
+                    const stepIdInGroup =
+                      stepBlock.properties.stepIdInGroup || 0;
 
                     const stepClass = [
                       "px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-100",
@@ -115,14 +148,14 @@ export function JourneySidebar({
 
                     return (
                       <div
-                        key={st.id}
-                        id={`step-${foundFs.globalIndex}`}
+                        key={stepBlock.id}
+                        id={`step-${stepBlock.id}`}
                         className={stepClass}
                         onClick={() =>
-                          onClickStep(grp.groupId, foundFs.stepIdInGroup)
+                          onClickStep(groupBlock.id, stepIdInGroup)
                         }
                       >
-                        {st.label}
+                        {getStepLabel(stepBlock)}
                       </div>
                     );
                   })}

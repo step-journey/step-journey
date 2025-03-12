@@ -18,11 +18,16 @@ import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useUser, useLogout } from "@/features/auth/hooks/useAuth";
 import { useJourneys } from "@/features/journey/hooks/useJourneys";
 import { useLoginModalState, useUIStore } from "@/store/uiStore";
+import {
+  getJourneyDescription,
+  getJourneyTitle,
+  isJourneyBlock,
+} from "@/features/journey/types/block";
 
 export default function HomePage() {
   // React Query 훅 사용
   const { data: user, isLoading: isLoadingUser } = useUser();
-  const { data: journeys, isLoading: isLoadingJourneys } = useJourneys();
+  const { data: journeyBlocks, isLoading: isLoadingJourneys } = useJourneys();
   const { mutate: logout } = useLogout();
 
   // UI 상태
@@ -90,7 +95,7 @@ export default function HomePage() {
           </div>
           {isLoadingJourneys ? (
             <div className="text-center py-8">로딩 중...</div>
-          ) : !journeys || journeys.length === 0 ? (
+          ) : !journeyBlocks || journeyBlocks.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">
                 아직 Journey가 없습니다.
@@ -101,35 +106,37 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {journeys.map((journey) => (
-                <Card
-                  key={journey.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleCardClick(journey.id)}
-                >
-                  <CardHeader className="pb-2">
-                    <CardTitle>{journey.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <p className="text-sm text-muted-foreground">
-                      {journey.description || "No description"}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="flex justify-end gap-2 pt-0">
-                    <Button variant="ghost" size="sm" title="Edit">
-                      <IconEdit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      title="Delete"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <IconTrash className="h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+              {journeyBlocks
+                .filter((block) => isJourneyBlock(block))
+                .map((block) => (
+                  <Card
+                    key={block.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => handleCardClick(block.id)}
+                  >
+                    <CardHeader className="pb-2">
+                      <CardTitle>{getJourneyTitle(block)}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <p className="text-sm text-muted-foreground">
+                        {getJourneyDescription(block) || "No description"}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex justify-end gap-2 pt-0">
+                      <Button variant="ghost" size="sm" title="Edit">
+                        <IconEdit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title="Delete"
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <IconTrash className="h-4 w-4" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
             </div>
           )}
         </main>

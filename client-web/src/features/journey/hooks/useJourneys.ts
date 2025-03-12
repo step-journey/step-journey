@@ -6,6 +6,7 @@ import {
 } from "@/features/journey/services/journeyService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useState } from "react";
+import { Block, BlockType } from "../types/block";
 
 // 여정 목록을 조회하는 훅
 export function useJourneys() {
@@ -34,7 +35,8 @@ export function useJourney(journeyId: string | undefined) {
   const journeyQuery = useQuery({
     queryKey: QUERY_KEYS.journeys.detail(journeyId || ""),
     queryFn: async () => {
-      if (!journeyId) return { journey: null, flattenedSteps: [] };
+      if (!journeyId)
+        return { journeyBlock: null, flattenedSteps: [], allBlocks: [] };
       return loadJourneyWithSteps(journeyId);
     },
     enabled: !!journeyId,
@@ -61,6 +63,18 @@ export function useJourney(journeyId: string | undefined) {
     }));
   };
 
+  // 스탭 그룹 블록 가져오기
+  const getStepGroups = () => {
+    if (!journeyQuery.data?.journeyBlock || !journeyQuery.data.allBlocks)
+      return [];
+
+    return journeyQuery.data.journeyBlock.content
+      .map((id) => journeyQuery.data.allBlocks.find((block) => block.id === id))
+      .filter(
+        (block) => block && block.type === BlockType.STEP_GROUP,
+      ) as Block[];
+  };
+
   return {
     ...journeyQuery,
     currentStepIndex,
@@ -69,5 +83,6 @@ export function useJourney(journeyId: string | undefined) {
     prevStep,
     expandedGroups,
     toggleGroup,
+    getStepGroups,
   };
 }

@@ -3,20 +3,25 @@ import { immer } from "zustand/middleware/immer";
 import { devtools } from "zustand/middleware";
 import { toast } from "sonner";
 import * as journeyService from "@/features/journey/services/journeyService";
-import { Journey, FlattenedStep } from "@/features/journey/types/journey";
+import {
+  FlattenedBlock,
+  Block,
+  JourneyBlock,
+} from "@/features/journey/types/block";
 
 // 상태 인터페이스 정의
 interface JourneyState {
   // Journey 목록 관련 상태
-  journeys: Journey[];
+  journeyBlocks: JourneyBlock[];
   isLoadingJourneys: boolean;
   journeysError: string | null;
 
   // 현재 활성화된 Journey 관련 상태
-  currentJourney: Journey | null;
+  currentJourneyBlock: JourneyBlock | null;
   isLoadingCurrentJourney: boolean;
   currentJourneyError: string | null;
-  flattenedSteps: FlattenedStep[];
+  flattenedSteps: FlattenedBlock[];
+  allBlocks: Block[];
   currentStepIndex: number;
   expandedGroups: Record<string, boolean>;
 }
@@ -40,14 +45,15 @@ interface JourneyActions {
 
 // 초기 상태 정의
 const initialState: JourneyState = {
-  journeys: [],
+  journeyBlocks: [],
   isLoadingJourneys: false,
   journeysError: null,
 
-  currentJourney: null,
+  currentJourneyBlock: null,
   isLoadingCurrentJourney: false,
   currentJourneyError: null,
   flattenedSteps: [],
+  allBlocks: [],
   currentStepIndex: 0,
   expandedGroups: {},
 };
@@ -70,10 +76,10 @@ export const useJourneyStore = create<JourneyState & JourneyActions>()(
           await journeyService.initializeDatabase();
 
           // DB와 정적 데이터에서 Journey 목록 로드
-          const combinedJourneys = await journeyService.getCombinedJourneys();
+          const journeyBlocks = await journeyService.getCombinedJourneys();
 
           set((state) => {
-            state.journeys = combinedJourneys;
+            state.journeyBlocks = journeyBlocks;
             state.isLoadingJourneys = false;
           });
         } catch (error) {
@@ -97,10 +103,10 @@ export const useJourneyStore = create<JourneyState & JourneyActions>()(
         });
 
         try {
-          const { journey, flattenedSteps } =
+          const { journeyBlock, flattenedSteps, allBlocks } =
             await journeyService.loadJourneyWithSteps(id);
 
-          if (!journey) {
+          if (!journeyBlock) {
             const errorMessage = "Journey를 찾을 수 없습니다.";
             toast.error(errorMessage);
 
@@ -114,12 +120,16 @@ export const useJourneyStore = create<JourneyState & JourneyActions>()(
           // 첫 번째 그룹 펼치기
           const expandedGroups: Record<string, boolean> = {};
           if (flattenedSteps.length > 0) {
-            expandedGroups[flattenedSteps[0].groupId] = true;
+            const firstStep = flattenedSteps[0];
+            if (firstStep.parentId) {
+              expandedGroups[firstStep.parentId] = true;
+            }
           }
 
           set((state) => {
-            state.currentJourney = journey;
+            state.currentJourneyBlock = journeyBlock;
             state.flattenedSteps = flattenedSteps;
+            state.allBlocks = allBlocks;
             state.currentStepIndex = 0;
             state.expandedGroups = expandedGroups;
             state.isLoadingCurrentJourney = false;
@@ -145,8 +155,8 @@ export const useJourneyStore = create<JourneyState & JourneyActions>()(
 
             // 현재 단계가 속한 그룹을 펼침
             const currentStep = flattenedSteps[index];
-            if (currentStep) {
-              state.expandedGroups[currentStep.groupId] = true;
+            if (currentStep && currentStep.parentId) {
+              state.expandedGroups[currentStep.parentId] = true;
             }
           });
         }
@@ -191,20 +201,22 @@ export const useJourneyStore = create<JourneyState & JourneyActions>()(
 );
 
 // Selector 함수들 - 불필요한 리렌더링 방지
-export const useJourneysList = () => useJourneyStore((state) => state.journeys);
+export const useJourneyBlocks = () =>
+  useJourneyStore((state) => state.journeyBlocks);
 export const useJourneysLoading = () =>
   useJourneyStore((state) => state.isLoadingJourneys);
 export const useJourneysError = () =>
   useJourneyStore((state) => state.journeysError);
 
-export const useCurrentJourney = () =>
-  useJourneyStore((state) => state.currentJourney);
+export const useCurrentJourneyBlock = () =>
+  useJourneyStore((state) => state.currentJourneyBlock);
 export const useCurrentJourneyLoading = () =>
   useJourneyStore((state) => state.isLoadingCurrentJourney);
 export const useCurrentJourneyError = () =>
   useJourneyStore((state) => state.currentJourneyError);
 export const useFlattenedSteps = () =>
   useJourneyStore((state) => state.flattenedSteps);
+export const useAllBlocks = () => useJourneyStore((state) => state.allBlocks);
 export const useCurrentStepIndex = () =>
   useJourneyStore((state) => state.currentStepIndex);
 export const useExpandedGroups = () =>
