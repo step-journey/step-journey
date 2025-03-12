@@ -2,10 +2,10 @@
  * 블록 관계 및 변환을 위한 유틸리티 함수
  */
 
-import { BlockType, RawJsonBlock, Block } from "../types/base";
-import { JourneyBlock, isJourneyBlock } from "../types/journey";
-import { StepGroupBlock } from "../types/stepGroup";
-import { FlattenedBlock, StepBlock } from "../types/step";
+import { BlockType, RawJsonBlock, Block } from "../types/baseBlock";
+import { JourneyBlock, isJourneyBlock } from "../types/journeyBlock";
+import { StepGroupBlock } from "../types/stepGroupBlock";
+import { FlattenedBlock, StepBlock } from "../types/stepBlock";
 import { blocks } from "@/assets/data"; // 정적 블록 데이터 import 추가
 
 /**

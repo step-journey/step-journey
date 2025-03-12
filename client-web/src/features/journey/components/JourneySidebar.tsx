@@ -20,7 +20,7 @@ import {
 } from "@/features/journey/types";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { getChildBlocksByType } from "@/features/journey/utils/block-utils";
+import { getChildBlocksByType } from "@/features/journey/utils/blockUtils";
 
 interface Props {
   journeyBlock: Block;

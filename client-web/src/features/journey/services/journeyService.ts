@@ -13,7 +13,7 @@ import {
   flattenBlocks,
   getBlockWithChildren,
   getJourneyById,
-} from "@/features/journey/utils/block-utils";
+} from "@/features/journey/utils/blockUtils";
 
 // 특정 Journey 블록 조회
 export const getJourneyBlock = async (

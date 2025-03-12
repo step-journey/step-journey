@@ -2,7 +2,7 @@
  * Step 블록 관련 타입 및 유틸리티 함수
  */
 
-import { BaseBlock, BaseBlockProperties, BlockType } from "./base";
+import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
 
 // Step 블록 전용 속성
 export interface StepBlockProperties extends BaseBlockProperties {

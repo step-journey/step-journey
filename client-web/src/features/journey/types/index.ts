@@ -7,13 +7,13 @@
  */
 
 // 기본 타입 및 인터페이스 재내보내기
-export * from "./base";
+export * from "./baseBlock";
 
 // Journey 블록 관련 타입 및 함수 재내보내기
-export * from "./journey";
+export * from "./journeyBlock";
 
 // StepGroup 블록 관련 타입 및 함수 재내보내기
-export * from "./stepGroup";
+export * from "./stepGroupBlock";
 
 // Step 블록 관련 타입 및 함수 재내보내기
-export * from "./step";
+export * from "./stepBlock";
