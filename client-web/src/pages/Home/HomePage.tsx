@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Header from "./Header";
@@ -14,42 +13,22 @@ import { Button } from "@/components/ui/button";
 import PATH from "@/constants/path";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 
-// 분리된 selector 함수 사용
-import { useAuthUser, useAuthStore } from "@/store/authStore";
-import {
-  useJourneysList,
-  useJourneysLoading,
-  useJourneyStore,
-} from "@/store/journeyStore";
+// React Query 훅 사용
+import { useUser, useLogout } from "@/hooks/useAuth";
+import { useJourneys } from "@/hooks/useJourneys";
 import { useLoginModalState, useUIStore } from "@/store/uiStore";
 
 export default function HomePage() {
-  // Zustand 스토어에서 상태와 액션 가져오기 (selector 함수 사용)
-  const user = useAuthUser();
-  const journeys = useJourneysList();
-  const isLoadingJourneys = useJourneysLoading();
-  const isLoginModalOpen = useLoginModalState();
+  // React Query 훅 사용
+  const { data: user, isLoading: isLoadingUser } = useUser();
+  const { data: journeys, isLoading: isLoadingJourneys } = useJourneys();
+  const { mutate: logout } = useLogout();
 
-  // 액션 함수들
-  const { fetchUser } = useAuthStore();
-  const { loadJourneys } = useJourneyStore();
+  // UI 상태
+  const isLoginModalOpen = useLoginModalState();
   const { openLoginModal, closeLoginModal } = useUIStore();
-  const logout = useAuthStore((state) => state.logout);
 
   const navigate = useNavigate();
-
-  // 페이지 로드 시 사용자 정보와 Journey 목록 로드
-  useEffect(() => {
-    const initialize = async () => {
-      // 사용자 정보 로드
-      await fetchUser();
-
-      // Journey 목록 로드
-      await loadJourneys();
-    };
-
-    initialize();
-  }, [fetchUser, loadJourneys]);
 
   // Card 클릭 시 Journey 페이지로 이동
   const handleCardClick = (journeyId: string) => {
@@ -60,9 +39,10 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       {/* 상단 Header: user, onClickLogin, onClickLogout 전달 */}
       <Header
-        user={user}
+        user={user || null}
         onClickLogin={openLoginModal}
-        onClickLogout={logout}
+        onClickLogout={() => logout()}
+        isLoading={isLoadingUser}
       />
 
       {/* 메인 레이아웃 (좌 사이드바 - 중앙 본문 - 우 사이드바) */}
@@ -110,7 +90,7 @@ export default function HomePage() {
 
           {isLoadingJourneys ? (
             <div className="text-center py-8">로딩 중...</div>
-          ) : journeys.length === 0 ? (
+          ) : !journeys || journeys.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">
                 아직 Journey가 없습니다.

@@ -11,52 +11,27 @@ import { JourneyFooter } from "./JourneyFooter";
 import { Button } from "@/components/ui/button";
 import PATH from "@/constants/path";
 
-import { toast } from "sonner";
-import {
-  useCurrentJourney,
-  useCurrentJourneyLoading,
-  useFlattenedSteps,
-  useCurrentStepIndex,
-  useExpandedGroups,
-  useCurrentStep,
-  useJourneyStore,
-} from "@/store/journeyStore";
+// React Query 훅 사용
+import { useJourney } from "@/hooks/useJourneys";
 
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();
   const navigate = useNavigate();
 
-  // Selector 함수를 사용하여 상태 가져오기
-  const currentJourney = useCurrentJourney();
-  const isLoadingCurrentJourney = useCurrentJourneyLoading();
-  const flattenedSteps = useFlattenedSteps();
-  const currentStepIndex = useCurrentStepIndex();
-  const expandedGroups = useExpandedGroups();
-  const currentStep = useCurrentStep();
-
-  // 액션 가져오기
-  const { loadJourney, setCurrentStepIndex, nextStep, prevStep, toggleGroup } =
-    useJourneyStore();
+  // React Query와 관련 상태/액션 사용
+  const {
+    data,
+    isLoading,
+    error,
+    currentStepIndex,
+    setCurrentStepIndex,
+    nextStep,
+    prevStep,
+    expandedGroups,
+    toggleGroup,
+  } = useJourney(journeyId);
 
   const stepContainerRefs = useRef<StepContainerMap>({});
-
-  // journey 로드
-  useEffect(() => {
-    const loadData = async () => {
-      if (!journeyId) return;
-
-      try {
-        // 저널 로드
-        await loadJourney(journeyId);
-      } catch (error) {
-        console.error("Failed to load journey:", error);
-        toast.error("Journey를 불러오는 중 오류가 발생했습니다.");
-        navigate(PATH.HOME);
-      }
-    };
-
-    loadData();
-  }, [journeyId, loadJourney, navigate]);
 
   // 키보드 단축키 등록
   useEffect(() => {
@@ -66,8 +41,13 @@ export default function JourneyPage() {
     return () => window.removeEventListener("keydown", handler);
   }, [prevStep, nextStep]);
 
+  // 데이터 및 현재 스텝 추출
+  const journey = data?.journey || null;
+  const flattenedSteps = data?.flattenedSteps || [];
+  const currentStep = flattenedSteps[currentStepIndex] || null;
+
   // 로딩 중 UI
-  if (isLoadingCurrentJourney) {
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p>Journey 로딩 중...</p>
@@ -75,8 +55,18 @@ export default function JourneyPage() {
     );
   }
 
+  // 에러 UI
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center flex-col gap-4">
+        <p>오류가 발생했습니다.</p>
+        <Button onClick={() => navigate(PATH.HOME)}>홈으로 돌아가기</Button>
+      </div>
+    );
+  }
+
   // 데이터가 없는 경우
-  if (!currentJourney) {
+  if (!journey) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4">
         <p>Journey를 찾을 수 없습니다.</p>
@@ -89,22 +79,20 @@ export default function JourneyPage() {
   return (
     <div className="flex h-screen bg-white">
       {/* 사이드바는 항상 표시 */}
-      {currentJourney && currentStep && (
-        <JourneySidebar
-          journey={currentJourney}
-          currentStep={currentStep}
-          expandedGroups={expandedGroups}
-          setExpandedGroups={toggleGroup}
-          stepContainerRefs={stepContainerRefs}
-          onClickStep={(groupId, stepId) => {
-            const found = flattenedSteps.find(
-              (fs) => fs.groupId === groupId && fs.stepIdInGroup === stepId,
-            );
-            if (found) setCurrentStepIndex(found.globalIndex);
-          }}
-          onNavigateHome={() => navigate(PATH.HOME)}
-        />
-      )}
+      <JourneySidebar
+        journey={journey}
+        currentStep={currentStep}
+        expandedGroups={expandedGroups}
+        setExpandedGroups={toggleGroup}
+        stepContainerRefs={stepContainerRefs}
+        onClickStep={(groupId, stepId) => {
+          const found = flattenedSteps.find(
+            (fs) => fs.groupId === groupId && fs.stepIdInGroup === stepId,
+          );
+          if (found) setCurrentStepIndex(found.globalIndex);
+        }}
+        onNavigateHome={() => navigate(PATH.HOME)}
+      />
 
       {/* 메인 컨텐츠 영역 */}
       <div className="flex flex-1 flex-col bg-white">
@@ -112,24 +100,22 @@ export default function JourneyPage() {
         <JourneyHeader />
 
         {/* 본문 영역 */}
-        {currentJourney && currentStep && (
+        {currentStep && (
           <JourneyContent
             currentStep={currentStep}
             allSteps={flattenedSteps}
-            journey={currentJourney}
+            journey={journey}
           />
         )}
 
         {/* 푸터 */}
-        {currentJourney && currentStep && (
-          <JourneyFooter
-            globalIndex={currentStepIndex}
-            setGlobalIndex={setCurrentStepIndex}
-            goPrev={prevStep}
-            goNext={nextStep}
-            totalSteps={flattenedSteps.length}
-          />
-        )}
+        <JourneyFooter
+          globalIndex={currentStepIndex}
+          setGlobalIndex={setCurrentStepIndex}
+          goPrev={prevStep}
+          goNext={nextStep}
+          totalSteps={flattenedSteps.length}
+        />
       </div>
     </div>
   );
