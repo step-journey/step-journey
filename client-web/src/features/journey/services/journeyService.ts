@@ -49,29 +49,6 @@ export const loadJourneyWithSteps = async (
     return { journey: null, flattenedSteps: [] };
   }
 
-  // 그룹 데이터 확인 및 기본값 설정
-  if (
-    !journey.groups ||
-    !Array.isArray(journey.groups) ||
-    journey.groups.length === 0
-  ) {
-    journey.groups = [
-      {
-        groupId: "default-group",
-        groupLabel: "기본 그룹",
-        mapDescription: "이 그룹은 기본적으로 생성되었습니다.",
-        steps: [
-          {
-            id: "1",
-            label: "기본 단계",
-            desc: "내용을 추가하려면 편집 버튼을 클릭하세요.",
-            content: ["여기에 내용을 추가하세요."],
-          },
-        ],
-      },
-    ];
-  }
-
   // 단계 평탄화
   const flattenedSteps = flattenJourneySteps(journey);
 

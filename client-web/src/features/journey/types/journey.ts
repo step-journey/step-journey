@@ -14,15 +14,15 @@ export interface PinnedProblem {
 
 // 기본 타임스탬프 필드
 interface TimeStampFields {
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 삭제 관련 필드
 interface DeletableFields {
-  is_deleted: boolean;
-  deleted_at?: string;
-  deleted_by?: UUID;
+  isDeleted: boolean;
+  deletedAt?: string;
+  deletedBy?: UUID;
 }
 
 // Journey
@@ -30,19 +30,19 @@ export interface Journey extends TimeStampFields {
   id: UUID;
   title: string;
   description: string;
-  step_order: UUID[];
-  groups: GroupData[];
+  stepOrder: UUID[];
+  stepGroups: GroupData[];
   pinnedProblem?: PinnedProblem | string;
 }
 
 // Step
 export interface Step extends TimeStampFields {
   id: UUID;
-  journey_id: UUID;
+  journeyId: UUID;
   title: string;
   description?: string;
   content: string[]; // 항상 배열로 저장
-  created_by: UUID;
+  createdBy: UUID;
 
   // UI 필드
   label?: string;
@@ -53,7 +53,6 @@ export interface Step extends TimeStampFields {
 export interface GroupData {
   groupId: string;
   groupLabel: string;
-  mapDescription: string;
   steps: Step[];
 }
 

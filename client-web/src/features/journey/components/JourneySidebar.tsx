@@ -58,7 +58,7 @@ export function JourneySidebar({
 
       {/* 단계 목록 스크롤 영역 */}
       <ScrollArea className="flex-1 py-2 pl-4 pr-1">
-        {journey.groups.map((grp) => {
+        {journey.stepGroups.map((grp) => {
           const isExpanded = expandedGroups[grp.groupId] || false;
           const isCurrentGroup = grp.groupId === currentStep.groupId;
 
