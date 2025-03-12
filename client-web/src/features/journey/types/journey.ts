@@ -50,17 +50,6 @@ export interface Step extends TimeStampFields {
   highlightedKeywordsInProblem?: string[];
 }
 
-// Block
-export interface Block extends TimeStampFields, DeletableFields {
-  id: UUID;
-  parent_id: UUID | null;
-  content: UUID[];
-  created_by: UUID;
-  updated_by: UUID;
-  type: string;
-  properties: Record<string, any>;
-}
-
 export interface GroupData {
   groupId: string;
   groupLabel: string;
