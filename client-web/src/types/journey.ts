@@ -1,28 +1,64 @@
-export interface Media {
+type UUID = string;
+
+interface Media {
   type: "image" | "gif" | "video"; // 미디어 타입
   url: string; // 파일 경로
   alt?: string; // 대체 텍스트
   caption?: string; // 캡션 텍스트
 }
 
-// 디버그 변수 타입 정의
-export interface DebugVariable {
-  name: string;
-  value: string | number | boolean | null;
-  type: string;
-  children?: DebugVariable[];
-  expanded?: boolean;
+export interface PinnedProblem {
+  text: string;
+  media?: Media;
 }
 
-export interface Step {
-  id: number;
-  label: string;
-  desc: string;
-  media?: Media; // 미디어 정보 추가
-  example?: string; // 예시 코드나 텍스트
-  debugVariables?: DebugVariable[]; // 디버그 변수 추가
-  content?: string | string[];
-  highlightedKeywordsInProblem?: string[]; // 문제와의 연관성을 표시하기 위한 키워드들
+// 기본 타임스탬프 필드
+interface TimeStampFields {
+  created_at: string;
+  updated_at: string;
+}
+
+// 삭제 관련 필드
+interface DeletableFields {
+  is_deleted: boolean;
+  deleted_at?: string;
+  deleted_by?: UUID;
+}
+
+// Journey
+export interface Journey extends TimeStampFields {
+  id: UUID;
+  title: string;
+  description: string;
+  step_order: UUID[];
+  groups: GroupData[];
+  pinnedProblem?: PinnedProblem | string;
+}
+
+// Step
+export interface Step extends TimeStampFields {
+  id: UUID;
+  journey_id: UUID;
+  title: string;
+  description?: string;
+  content: string[]; // 항상 배열로 저장
+  created_by: UUID;
+
+  // UI 필드
+  label?: string;
+  desc?: string;
+  highlightedKeywordsInProblem?: string[];
+}
+
+// Block
+export interface Block extends TimeStampFields, DeletableFields {
+  id: UUID;
+  parent_id: UUID | null;
+  content: UUID[];
+  created_by: UUID;
+  updated_by: UUID;
+  type: string;
+  properties: Record<string, any>;
 }
 
 export interface GroupData {
@@ -32,26 +68,12 @@ export interface GroupData {
   steps: Step[];
 }
 
+// FlattenedStep (UI 전용, 통합 Step 모델 확장)
 export interface FlattenedStep extends Step {
   groupId: string;
   globalIndex: number;
   stepIdInGroup: number;
 }
 
-export interface PinnedProblem {
-  text: string;
-  media?: Media;
-}
-
-export interface Journey {
-  id: string;
-  title: string;
-  description: string;
-  groups: GroupData[];
-  pinnedProblem?: PinnedProblem | string;
-}
-
+// 사이드바 DOM 관리 (UI 전용)
 export type StepContainerMap = Record<string, HTMLDivElement | null>;
-
-// 에디터 모드 타입
-export type EditorMode = "view" | "edit";

@@ -1,13 +1,15 @@
 import cubicProblem from "./cubic-problem.json";
-import { FlattenedStep, Journey } from "@/types/journey";
+import { FlattenedStep, Journey, Step } from "@/types/journey";
 import cubicProblemImage from "./cubic-problem.png";
 
-// 실제 데이터
 export const journeys: Journey[] = [
   {
     id: "cubic-problem", // 새 항목 추가
-    title: "삼차함수 B - A 문제 풀이",
-    description: "미적분/정적분을 이용하여 넓이 차이를 구하는 문제",
+    title: cubicProblem.title,
+    description: cubicProblem.description,
+    step_order: [], // 필수 속성 추가
+    created_at: new Date().toISOString(), // 필수 속성 추가
+    updated_at: new Date().toISOString(), // 필수 속성 추가
     pinnedProblem: {
       text: cubicProblem.pinnedProblem as string,
       media: {
@@ -17,7 +19,16 @@ export const journeys: Journey[] = [
         caption: "",
       },
     },
-    groups: cubicProblem.groups,
+    groups: cubicProblem.groups.map((group) => ({
+      ...group,
+      steps: group.steps.map(
+        (step) =>
+          ({
+            ...step,
+            content: step.content || [], // content가 undefined면 빈 배열로 설정
+          }) as Step,
+      ),
+    })),
   },
 ];
 
@@ -31,13 +42,26 @@ export const flattenJourneySteps = (journey: Journey): FlattenedStep[] => {
   const result: FlattenedStep[] = [];
   let globalIndex = 0;
 
+  // groups가 정의되어 있지 않거나 배열이 아닌 경우 빈 배열 반환
+  if (!journey.groups || !Array.isArray(journey.groups)) {
+    console.warn("Journey has no valid groups array");
+    return result;
+  }
+
   journey.groups.forEach((group) => {
+    // steps가 정의되어 있지 않거나 배열이 아닌 경우 건너뛰기
+    if (!group.steps || !Array.isArray(group.steps)) {
+      console.warn(`Group ${group.groupId} has no valid steps array`);
+      return;
+    }
+
     group.steps.forEach((step) => {
       result.push({
         ...step,
         groupId: group.groupId,
         globalIndex,
-        stepIdInGroup: step.id,
+        stepIdInGroup: Number(step.id),
+        content: step.content || [], // content가 undefined면 빈 배열로 설정
       });
       globalIndex++;
     });

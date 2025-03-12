@@ -1,3 +1,11 @@
+import { useEffect, useState, useRef } from "react";
+import "@blocknote/core/fonts/inter.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
+import { Block as BlockNoteBlock } from "@blocknote/core";
+import { useCreateBlockNote } from "@blocknote/react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { FlattenedStep, Journey, PinnedProblem } from "@/types/journey";
 import { mathMarkdownToHtml } from "@/utils/mathMarkdown";
@@ -6,9 +14,89 @@ interface Props {
   currentStep: FlattenedStep;
   allSteps: FlattenedStep[];
   journey: Journey;
+  editable?: boolean;
+  onTitleChange?: (title: string) => void;
+  onDescriptionChange?: (description: string) => void;
+  onJourneyContentChange?: (blocks: BlockNoteBlock[]) => void;
 }
 
-export function JourneyContent({ currentStep, allSteps, journey }: Props) {
+export function JourneyContent({
+  currentStep,
+  allSteps,
+  journey,
+  editable = false,
+  onTitleChange,
+  onDescriptionChange,
+  onJourneyContentChange,
+}: Props) {
+  // 편집 모드 관련 상태
+  const [title, setTitle] = useState<string>(journey.title);
+  const [description, setDescription] = useState<string>(
+    journey.description || "",
+  );
+
+  // 디바운스 타이머 ref
+  const titleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const descriptionTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 에디터 설정 - 간단한 초기 콘텐츠 설정
+  const editor = useCreateBlockNote({
+    initialContent: [
+      {
+        type: "paragraph",
+        content: editable ? "여기에 내용을 입력하세요..." : "",
+      },
+    ],
+  });
+
+  // 제목 변경 핸들러 (디바운스 적용)
+  const handleTitleChange = (newTitle: string) => {
+    setTitle(newTitle);
+
+    // 디바운스 처리 (500ms)
+    if (titleTimerRef.current) {
+      clearTimeout(titleTimerRef.current);
+    }
+
+    titleTimerRef.current = setTimeout(() => {
+      if (onTitleChange) {
+        onTitleChange(newTitle);
+      }
+    }, 500);
+  };
+
+  // 설명 변경 핸들러 (디바운스 적용)
+  const handleDescriptionChange = (newDescription: string) => {
+    setDescription(newDescription);
+
+    // 디바운스 처리 (500ms)
+    if (descriptionTimerRef.current) {
+      clearTimeout(descriptionTimerRef.current);
+    }
+
+    descriptionTimerRef.current = setTimeout(() => {
+      if (onDescriptionChange) {
+        onDescriptionChange(newDescription);
+      }
+    }, 500);
+  };
+
+  // 에디터 변경 핸들러
+  const handleEditorChange = () => {
+    if (onJourneyContentChange) {
+      onJourneyContentChange(editor.document);
+    }
+  };
+
+  // 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (titleTimerRef.current) clearTimeout(titleTimerRef.current);
+      if (descriptionTimerRef.current)
+        clearTimeout(descriptionTimerRef.current);
+    };
+  }, []);
+
   // 콘텐츠가 있는지 여부 확인
   const hasContent = !!currentStep.content;
 
@@ -83,7 +171,13 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
         {hasPinnedProblem && pinnedProblem && (
           <div className="w-1/3 shrink-0">
             <Card className="border border-gray-200 bg-white p-4 h-full overflow-auto">
-              <div className="text-lg font-semibold mb-4">문제</div>
+              <div className="text-lg font-semibold mb-4">
+                {editable ? (
+                  <span className="text-blue-500">문제 (편집 불가)</span>
+                ) : (
+                  "문제"
+                )}
+              </div>
               <div
                 className="whitespace-pre-wrap text-sm leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: highlightedProblemText() }}
@@ -112,35 +206,69 @@ export function JourneyContent({ currentStep, allSteps, journey }: Props) {
 
         {/* 우측: 현재 단계의 내용이 표시되는 영역 */}
         <div className={hasPinnedProblem ? "w-2/3" : "w-full"}>
-          <p className="mb-1 text-lg font-semibold">{currentStep.label}</p>
-          <p className="mb-4 text-sm text-gray-500">{currentStep.desc}</p>
+          {/* 제목 영역 */}
+          {editable ? (
+            <div className="mb-4">
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                className="text-lg font-semibold mb-2"
+                placeholder="Journey 제목"
+              />
+              <Textarea
+                value={description}
+                onChange={(e) => handleDescriptionChange(e.target.value)}
+                className="mb-4 text-sm text-gray-500"
+                placeholder="Journey 설명"
+              />
+            </div>
+          ) : (
+            <>
+              <p className="mb-1 text-lg font-semibold">{currentStep.label}</p>
+              <p className="mb-4 text-sm text-gray-500">{currentStep.desc}</p>
+            </>
+          )}
 
           <Card className="border border-gray-200 bg-white p-4">
-            <div className="math-content">
-              {/* 누적된 내용 표시 */}
-              {accumulatedContent.map((item, index) => (
-                <div
-                  key={item.step.globalIndex}
-                  className={`${index > 0 ? "mt-3 pt-2" : ""} relative`}
-                >
-                  <div className="flex">
-                    {/* 현재 step 내용에는 세로선 추가 */}
-                    <div className="relative flex-shrink-0 w-3">
-                      {item.isCurrentStep && (
-                        <div className="absolute left-0 top-0 h-full w-0.5 bg-blue-500"></div>
-                      )}
-                    </div>
+            {editable ? (
+              // 편집 모드: BlockNote 에디터 표시
+              <div className="rounded-md border-0 overflow-hidden">
+                <BlockNoteView
+                  editor={editor}
+                  theme={"light"}
+                  editable={true}
+                  onChange={handleEditorChange}
+                />
+              </div>
+            ) : (
+              // 보기 모드: 정적 콘텐츠 표시
+              <div className="math-content">
+                {/* 누적된 내용 표시 */}
+                {accumulatedContent.map((item, index) => (
+                  <div
+                    key={item.step.globalIndex}
+                    className={`${index > 0 ? "mt-3 pt-2" : ""} relative`}
+                  >
+                    <div className="flex">
+                      {/* 현재 step 내용에는 세로선 추가 */}
+                      <div className="relative flex-shrink-0 w-3">
+                        {item.isCurrentStep && (
+                          <div className="absolute left-0 top-0 h-full w-0.5 bg-blue-500"></div>
+                        )}
+                      </div>
 
-                    {/* 내용 */}
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: `<p>${mathMarkdownToHtml(item.content)}</p>`,
-                      }}
-                    />
+                      {/* 내용 */}
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: `<p>${mathMarkdownToHtml(item.content)}</p>`,
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </div>

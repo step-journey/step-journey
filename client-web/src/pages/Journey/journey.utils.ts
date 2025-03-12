@@ -3,18 +3,12 @@ import { FlattenedStep } from "@/types/journey";
 
 export function handleKeyboardShortcuts(
   e: KeyboardEvent,
-  setIsMapOpen: (cb: (prev: boolean) => boolean) => void,
   goPrev: () => void,
   goNext: () => void,
 ) {
   const tagName = (e.target as HTMLElement).tagName.toLowerCase();
   if (["input", "textarea", "select"].includes(tagName)) return;
 
-  if (e.code === "KeyM") {
-    e.preventDefault();
-    setIsMapOpen((prev) => !prev);
-    return;
-  }
   if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
     e.preventDefault();
     goPrev();

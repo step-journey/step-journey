@@ -78,7 +78,6 @@ find . \
   ! -path "*/dist/*" \
   ! -path "*/.idea/*" \
   ! -path "*/fonts/*" \
-  ! -path "*/src/data/*" \
   ! -path "*/script/*" \
   ! -name "package-lock.json" \
   | sort \
