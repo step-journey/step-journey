@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { IconUserCircle } from "@tabler/icons-react";
+import { User } from "@/store/authStore";
 
 /**
  * 헤더 컴포넌트
@@ -7,10 +8,7 @@ import { IconUserCircle } from "@tabler/icons-react";
  * - user가 있으면 "아이콘 + 유저이름 + 로그아웃" 버튼을 보여준다.
  */
 interface HeaderProps {
-  user: {
-    name: string;
-    email: string;
-  } | null;
+  user: User | null;
   onClickLogin: () => void;
   onClickLogout: () => void;
 }

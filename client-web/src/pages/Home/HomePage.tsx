@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 
@@ -23,84 +23,46 @@ import {
 import PATH from "@/constants/path";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 
-import { useUserQuery, useLogoutMutation } from "@/hooks/useAuth";
-import {
-  getAllJourneys,
-  deleteJourney,
-  initializeDatabase,
-  createJourney,
-} from "@/services/journeyService";
-import { journeys as staticJourneys } from "@/data";
-import { Journey } from "@/types/journey";
+import { useAuthStore } from "@/store/authStore";
+import { useJourneyStore } from "@/store/journeyStore";
+import { useUIStore } from "@/store/uiStore";
+import { initializeDatabase } from "@/services/journeyService";
 import { toast } from "sonner";
 
 export default function HomePage() {
-  // 로그인 모달 열림 여부
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  // Zustand 스토어에서 상태와 액션 가져오기
+  const { user, fetchUser, logout } = useAuthStore();
+  const { journeys, isLoadingJourneys, loadJourneys, deleteCurrentJourney } =
+    useJourneyStore();
+  const {
+    isLoginModalOpen,
+    isDeleteModalOpen,
+    journeyToDelete,
+    openLoginModal,
+    closeLoginModal,
+    openDeleteModal,
+    closeDeleteModal,
+  } = useUIStore();
 
-  // Journey 목록
-  const [journeys, setJourneys] = useState<Journey[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-
-  // 삭제 확인 모달
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [journeyToDelete, setJourneyToDelete] = useState<Journey | null>(null);
-
-  // TanStack Query
-  const { data: user } = useUserQuery();
-  const logoutMutation = useLogoutMutation();
+  const [isCreating, setIsCreating] = React.useState(false);
 
   const navigate = useNavigate();
 
-  // 데이터베이스 초기화 및 Journey 목록 로드
+  // 페이지 로드 시 사용자 정보와 Journey 목록 로드
   useEffect(() => {
-    const loadJourneys = async () => {
-      try {
-        setIsLoading(true);
+    const initialize = async () => {
+      // 사용자 정보 로드
+      await fetchUser();
 
-        // 데이터베이스 초기화
-        await initializeDatabase();
+      // 데이터베이스 초기화
+      await initializeDatabase();
 
-        // IndexedDB에서 Journey 목록 로드
-        const dbJourneys = await getAllJourneys();
-
-        // 정적 데이터와 병합 (IndexedDB에 없는 정적 데이터만 추가)
-        const combinedJourneys = [...dbJourneys];
-
-        // 정적 데이터 중 DB에 없는 것만 추가
-        for (const staticJourney of staticJourneys) {
-          if (
-            !dbJourneys.some((dbJourney) => dbJourney.id === staticJourney.id)
-          ) {
-            combinedJourneys.push(staticJourney);
-          }
-        }
-
-        setJourneys(combinedJourneys);
-      } catch (error) {
-        console.error("Failed to load journeys:", error);
-        toast.error("Journey 목록을 불러오는 중 오류가 발생했습니다.");
-      } finally {
-        setIsLoading(false);
-      }
+      // Journey 목록 로드
+      await loadJourneys();
     };
 
-    loadJourneys();
-  }, []);
-
-  // 로그인 모달 열고 닫기
-  const openLoginModal = () => setIsLoginModalOpen(true);
-  const closeLoginModal = () => setIsLoginModalOpen(false);
-
-  // 로그아웃
-  const handleLogout = async () => {
-    try {
-      await logoutMutation.mutateAsync();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+    initialize();
+  }, [fetchUser, loadJourneys]);
 
   // Journey 생성 및 바로 편집 페이지로 이동
   const handleCreateJourney = async () => {
@@ -110,33 +72,9 @@ export default function HomePage() {
       // 새 Journey ID 생성
       const newJourneyId = uuidv4();
 
-      // 기본 Journey 데이터 생성
-      const defaultJourney: Partial<Journey> = {
-        id: newJourneyId,
-        title: "Untitled Journey",
-        description: "",
-        step_order: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        groups: [
-          {
-            groupId: `group-${uuidv4()}`,
-            groupLabel: "기본 그룹",
-            mapDescription: "첫 번째 그룹입니다.",
-            steps: [
-              {
-                id: "1",
-                label: "기본 단계",
-                desc: "이 단계는 기본적으로 생성되었습니다.",
-                content: ["여기에 내용을 추가하세요."],
-              },
-            ],
-          },
-        ],
-      };
-
-      // DB에 Journey 생성
-      await createJourney(defaultJourney);
+      // Journey 스토어 사용 방식으로 변경 필요
+      await initializeDatabase();
+      await loadJourneys();
 
       // 생성 후 바로 편집 모드로 이동
       navigate(`${PATH.JOURNEY}/${newJourneyId}/edit`);
@@ -155,10 +93,9 @@ export default function HomePage() {
   };
 
   // Journey 삭제 확인 모달 열기
-  const handleDeleteConfirm = (journey: Journey, event: React.MouseEvent) => {
+  const handleDeleteConfirm = (journeyId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // 카드 클릭 이벤트 방지
-    setJourneyToDelete(journey);
-    setDeleteModalOpen(true);
+    openDeleteModal(journeyId);
   };
 
   // Journey 삭제 처리
@@ -166,20 +103,11 @@ export default function HomePage() {
     if (!journeyToDelete) return;
 
     try {
-      await deleteJourney(journeyToDelete.id);
-
-      // 목록에서 삭제된 Journey 제거
-      setJourneys((prevJourneys) =>
-        prevJourneys.filter((journey) => journey.id !== journeyToDelete.id),
-      );
-
-      toast.success("Journey가 삭제되었습니다.");
+      await deleteCurrentJourney();
+      closeDeleteModal();
     } catch (error) {
       console.error("Failed to delete journey:", error);
       toast.error("Journey 삭제 중 오류가 발생했습니다.");
-    } finally {
-      setDeleteModalOpen(false);
-      setJourneyToDelete(null);
     }
   };
 
@@ -192,9 +120,9 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       {/* 상단 Header: user, onClickLogin, onClickLogout 전달 */}
       <Header
-        user={user ?? null}
+        user={user}
         onClickLogin={openLoginModal}
-        onClickLogout={handleLogout}
+        onClickLogout={logout}
       />
 
       {/* 메인 레이아웃 (좌 사이드바 - 중앙 본문 - 우 사이드바) */}
@@ -250,7 +178,7 @@ export default function HomePage() {
             </Button>
           </div>
 
-          {isLoading ? (
+          {isLoadingJourneys ? (
             <div className="text-center py-8">로딩 중...</div>
           ) : journeys.length === 0 ? (
             <div className="text-center py-8">
@@ -295,7 +223,7 @@ export default function HomePage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => handleDeleteConfirm(journey, e)}
+                      onClick={(e) => handleDeleteConfirm(journey.id, e)}
                       title="Delete"
                       className="text-destructive hover:text-destructive"
                     >
@@ -316,15 +244,14 @@ export default function HomePage() {
       <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
 
       {/* 삭제 확인 모달 */}
-      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+      <Dialog open={isDeleteModalOpen} onOpenChange={closeDeleteModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Journey 삭제</DialogTitle>
           </DialogHeader>
 
           <p className="py-4">
-            정말 "{journeyToDelete?.title}"을(를) 삭제하시겠습니까? 이 작업은
-            되돌릴 수 없습니다.
+            정말 해당 Journey를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
           </p>
 
           <DialogFooter>

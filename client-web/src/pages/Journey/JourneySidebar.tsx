@@ -15,9 +15,7 @@ interface Props {
   journey: Journey;
   currentStep: FlattenedStep;
   expandedGroups: Record<string, boolean>;
-  setExpandedGroups: React.Dispatch<
-    React.SetStateAction<Record<string, boolean>>
-  >;
+  setExpandedGroups: (groupId: string) => void; // 변경: 함수 시그니처 변경
   stepContainerRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
   onClickStep: (groupId: string, stepIdInGroup: number) => void;
   onNavigateHome?: () => void;
@@ -32,12 +30,9 @@ export function JourneySidebar({
   onClickStep,
   onNavigateHome,
 }: Props) {
-  // 그룹 라벨 클릭 => 펼치기/접기
+  // 그룹 라벨 클릭 => 펼치기/접기 - Zustand 액션으로 변경
   const toggleGroup = (groupId: string) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [groupId]: !prev[groupId],
-    }));
+    setExpandedGroups(groupId);
   };
 
   const flattenSteps = flattenJourneySteps(journey);
@@ -106,7 +101,7 @@ export function JourneySidebar({
                     const foundFs = flattenSteps.find(
                       (fs) =>
                         fs.groupId === grp.groupId &&
-                        fs.stepIdInGroup === st.id,
+                        fs.stepIdInGroup === Number(st.id),
                     );
                     if (!foundFs) return null;
 
@@ -123,7 +118,9 @@ export function JourneySidebar({
                         key={st.id}
                         id={`step-${foundFs.globalIndex}`}
                         className={stepClass}
-                        onClick={() => onClickStep(grp.groupId, st.id)}
+                        onClick={() =>
+                          onClickStep(grp.groupId, foundFs.stepIdInGroup)
+                        }
                       >
                         {st.label}
                       </div>

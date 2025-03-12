@@ -1,4 +1,3 @@
-/* client-web/src/pages/Home/LoginModal.tsx */
 import {
   Dialog,
   DialogContent,
