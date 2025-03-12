@@ -30,9 +30,8 @@ export interface Journey extends TimeStampFields {
   id: UUID;
   title: string;
   description: string;
-  stepOrder: UUID[];
-  stepGroups: GroupData[];
   pinnedProblem?: PinnedProblem | string;
+  stepGroups: StepGroup[];
 }
 
 // Step
@@ -50,17 +49,17 @@ export interface Step extends TimeStampFields {
   highlightedKeywordsInProblem?: string[];
 }
 
-export interface GroupData {
-  groupId: string;
-  groupLabel: string;
-  steps: Step[];
-}
-
 // FlattenedStep (UI 전용, 통합 Step 모델 확장)
 export interface FlattenedStep extends Step {
   groupId: string;
   globalIndex: number;
   stepIdInGroup: number;
+}
+
+export interface StepGroup {
+  groupId: string;
+  groupLabel: string;
+  steps: Step[];
 }
 
 // 사이드바 DOM 관리 (UI 전용)

@@ -3,7 +3,7 @@ import {
   FlattenedStep,
   Journey,
   Step,
-  GroupData,
+  StepGroup,
 } from "@/features/journey/types/journey";
 import cubicProblemImage from "../images/cubic-problem.png";
 
@@ -12,7 +12,6 @@ export const journeys: Journey[] = [
     id: cubicProblem.id,
     title: cubicProblem.title,
     description: cubicProblem.description,
-    stepOrder: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     pinnedProblem: {
@@ -46,7 +45,7 @@ export const journeys: Journey[] = [
         };
         return transformedStep as unknown as Step;
       }),
-    })) as GroupData[],
+    })) as StepGroup[],
   },
 ];
 
