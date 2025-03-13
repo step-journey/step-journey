@@ -151,8 +151,7 @@ export function JourneySidebar({
       content: [] as string[],
       createdBy: "user",
       properties: {
-        label: "새 스텝",
-        desc: "설명을 입력하세요",
+        title: "새 스텝",
         content: ["내용을 입력하세요"],
         stepIdInGroup: stepIdInGroup,
       },

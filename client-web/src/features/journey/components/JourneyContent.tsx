@@ -37,9 +37,6 @@ export function JourneyContent({ journeyBlock }: Props) {
                 <p className="mb-1 text-lg font-semibold">
                   {currentStep.properties.title}
                 </p>
-                <p className="mb-4 text-sm text-gray-500">
-                  {currentStep.properties.desc}
-                </p>
               </>
 
               <div className="border border-gray-200 bg-white p-4 rounded-xl shadow">

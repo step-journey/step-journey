@@ -52,7 +52,6 @@ export const StepContentRenderer: React.FC<StepContentRendererProps> = ({
   const renderStepHeader = () => (
     <>
       <p className="mb-1 text-lg font-semibold">{block.properties.title}</p>
-      <p className="mb-4 text-sm text-gray-500">{block.properties.desc}</p>
     </>
   );
 

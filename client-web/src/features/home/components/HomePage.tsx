@@ -114,7 +114,6 @@ export default function HomePage() {
         createdBy: "user",
         properties: {
           title: "시작하기",
-          desc: "첫 번째 단계입니다.",
           content: ["여기에 내용을 작성해보세요!"],
           stepIdInGroup: 1,
         },
