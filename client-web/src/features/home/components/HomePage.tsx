@@ -1,4 +1,3 @@
-// src/features/home/components/HomePage.tsx
 import { useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import Header from "./Header";
@@ -101,7 +100,7 @@ export default function HomePage() {
         content: [] as string[],
         createdBy: "user",
         properties: {
-          groupLabel: "기본 그룹",
+          title: "기본 그룹",
         },
       };
 

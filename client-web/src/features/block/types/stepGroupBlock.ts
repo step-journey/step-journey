@@ -5,9 +5,7 @@
 import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
 
 // StepGroup 블록 전용 속성
-export interface StepGroupBlockProperties extends BaseBlockProperties {
-  groupLabel?: string;
-}
+export type StepGroupBlockProperties = BaseBlockProperties;
 
 // StepGroup 블록 - 관련 단계들을 그룹화
 export interface StepGroupBlock extends BaseBlock {
@@ -29,6 +27,6 @@ export function isStepGroupBlock(block: any): block is StepGroupBlock {
  * @param block StepGroup 블록
  * @returns 대체 값이 있는 레이블 문자열
  */
-export function getStepGroupLabel(block: StepGroupBlock): string {
-  return block.properties.groupLabel || "제목 없는 그룹";
+export function getStepGroupTitle(block: StepGroupBlock): string {
+  return block.properties.title || "제목 없는 그룹";
 }

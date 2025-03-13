@@ -96,7 +96,7 @@ export function JourneySidebar({
       content: [] as string[],
       createdBy: "user",
       properties: {
-        groupLabel: "새 그룹",
+        title: "새 그룹",
       },
     };
 
@@ -177,9 +177,9 @@ export function JourneySidebar({
   };
 
   // 블록의 속성에 안전하게 접근하는 함수
-  const getGroupLabel = (block: Block): string => {
+  const getStepGroupTitle = (block: Block): string => {
     if (block.type === BlockType.STEP_GROUP) {
-      return (block.properties as any).groupLabel || "Untitled Group";
+      return (block.properties as any).title || "Untitled Group";
     }
     return "Untitled Group";
   };
@@ -206,7 +206,7 @@ export function JourneySidebar({
           ...(renameTarget.type === "journey"
             ? { title: newName }
             : renameTarget.type === "group"
-              ? { groupLabel: newName }
+              ? { title: newName }
               : { label: newName }),
         },
       };
@@ -361,7 +361,7 @@ export function JourneySidebar({
                       openRenameDialog(
                         groupBlock.id,
                         "group",
-                        getGroupLabel(groupBlock),
+                        getStepGroupTitle(groupBlock),
                       )
                     }
                   >

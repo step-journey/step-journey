@@ -2,7 +2,7 @@ import React from "react";
 import {
   StepGroupBlock,
   isStepGroupBlock,
-  getStepGroupLabel,
+  getStepGroupTitle,
   BlockType,
   StepBlock,
 } from "../../../types";
@@ -44,12 +44,12 @@ export const StepGroupSidebarRenderer: React.FC<
   );
 
   // 그룹 라벨 스타일
-  let groupLabelClass = `
+  let stepGroupTitleClass = `
     flex items-center h-8 px-2 gap-2 cursor-pointer
     rounded hover:bg-gray-100
   `;
   if (isCurrentGroup) {
-    groupLabelClass += " font-semibold";
+    stepGroupTitleClass += " font-semibold";
   }
 
   // 그룹에 속한 스텝 블록들 찾기
@@ -60,9 +60,12 @@ export const StepGroupSidebarRenderer: React.FC<
   return (
     <div className="mb-2">
       {/* 그룹 라벨 */}
-      <div className={groupLabelClass} onClick={() => toggleGroup(block.id)}>
+      <div
+        className={stepGroupTitleClass}
+        onClick={() => toggleGroup(block.id)}
+      >
         <span className="text-sm flex-1 whitespace-nowrap">
-          {getStepGroupLabel(block)}
+          {getStepGroupTitle(block)}
         </span>
         {isExpanded ? (
           <IconChevronDown className="h-4 w-4" />
