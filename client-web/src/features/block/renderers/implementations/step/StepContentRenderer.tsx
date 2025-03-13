@@ -51,7 +51,7 @@ export const StepContentRenderer: React.FC<StepContentRendererProps> = ({
   // 단계 제목과 설명
   const renderStepHeader = () => (
     <>
-      <p className="mb-1 text-lg font-semibold">{block.properties.label}</p>
+      <p className="mb-1 text-lg font-semibold">{block.properties.title}</p>
       <p className="mb-4 text-sm text-gray-500">{block.properties.desc}</p>
     </>
   );

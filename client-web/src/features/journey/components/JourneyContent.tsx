@@ -35,7 +35,7 @@ export function JourneyContent({ journeyBlock }: Props) {
               {/* 제목 영역 */}
               <>
                 <p className="mb-1 text-lg font-semibold">
-                  {currentStep.properties.label}
+                  {currentStep.properties.title}
                 </p>
                 <p className="mb-4 text-sm text-gray-500">
                   {currentStep.properties.desc}

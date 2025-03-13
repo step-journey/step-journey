@@ -12,7 +12,6 @@ export interface BlockNoteContent {
 
 // Step 블록 전용 속성
 export interface StepBlockProperties extends BaseBlockProperties {
-  label?: string; // 단계 레이블
   desc?: string; // 단계 설명
   content?: string[]; // 단계의 실제 내용 (텍스트 기반)
   editorContent?: BlockNoteContent; // BlockNote 에디터 컨텐츠 (블록 기반)
@@ -43,12 +42,11 @@ export function isStepBlock(block: any): block is StepBlock {
 }
 
 /**
- * Step 블록의 레이블 가져오기
+ * Step 블록의 타이틀 가져오기
  * @param block Step 블록
- * @returns 대체 값이 있는 레이블 문자열
  */
-export function getStepLabel(block: StepBlock): string {
-  return block.properties.label || "제목 없는 단계";
+export function getStepTitle(block: StepBlock): string {
+  return block.properties.title || "제목 없는 단계";
 }
 
 /**

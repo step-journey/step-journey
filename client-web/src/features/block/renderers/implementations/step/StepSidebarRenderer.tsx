@@ -1,5 +1,5 @@
 import React from "react";
-import { StepBlock, isStepBlock, getStepLabel } from "../../../types";
+import { StepBlock, isStepBlock, getStepTitle } from "../../../types";
 import {
   useCurrentStepId,
   useHandleStepClick,
@@ -91,7 +91,7 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
       className={stepClass}
       onClick={() => handleStepClick(parentId, stepIdInGroup)}
     >
-      <span>{getStepLabel(block)}</span>
+      <span>{getStepTitle(block)}</span>
 
       {isEditMode && (
         <div className="flex gap-1">
