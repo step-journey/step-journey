@@ -6,6 +6,7 @@ import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
 
 // Journey 블록 전용 속성
 export interface JourneyBlockProperties extends BaseBlockProperties {
+  title?: string;
   description?: string;
 }
 

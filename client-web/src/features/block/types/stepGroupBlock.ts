@@ -5,7 +5,9 @@
 import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
 
 // StepGroup 블록 전용 속성
-export type StepGroupBlockProperties = BaseBlockProperties;
+export interface StepGroupBlockProperties extends BaseBlockProperties {
+  title?: string;
+}
 
 // StepGroup 블록 - 관련 단계들을 그룹화
 export interface StepGroupBlock extends BaseBlock {

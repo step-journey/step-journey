@@ -18,10 +18,8 @@ export enum BlockType {
   STEP = "step",
 }
 
-// 모든 블록 타입에 공통적인 기본 속성
-export interface BaseBlockProperties {
-  title?: string;
-}
+// 모든 블록 타입에 공통적인 기본 속성 (아직 없음)
+export type BaseBlockProperties = object;
 
 // 공통 필드를 가진 기본 블록 인터페이스
 export interface BaseBlock extends TimeStampFields {

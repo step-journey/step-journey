@@ -12,6 +12,7 @@ export interface BlockNoteContent {
 
 // Step 블록 전용 속성
 export interface StepBlockProperties extends BaseBlockProperties {
+  title?: string;
   content?: string[]; // 단계의 실제 내용 (텍스트 기반)
   editorContent?: BlockNoteContent; // BlockNote 에디터 컨텐츠 (블록 기반)
   stepIdInGroup?: number; // 그룹 내 순서
