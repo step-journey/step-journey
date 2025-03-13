@@ -1,14 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import { useState } from "react";
 import Header from "./Header";
 import LoginModal from "@/features/auth/components/LoginModal";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import PATH from "@/constants/path";
-import { IconPlus, IconEdit, IconTrash, IconCopy } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 
 // React Query 훅 사용
 import { useUser, useLogout } from "@/features/auth/hooks/useAuth";
@@ -33,12 +27,12 @@ import {
   isJourneyBlock,
   Block,
   BlockType,
+  BlockNoteContent,
 } from "@/features/block/types";
 import { v4 as uuidv4 } from "uuid";
 import {
   createBlock,
   deleteBlock,
-  duplicateJourney,
 } from "@/features/block/services/blockService";
 import { toast } from "sonner";
 
@@ -105,7 +99,35 @@ export default function HomePage() {
       };
 
       // 4. 기본 스텝 생성 - 타입 명시
-      const stepId = uuidv4();
+      const currentTime = Date.now();
+      const stepId = `step-${currentTime}-${uuidv4()}`;
+      const initialText = "여기에 내용을 작성해보세요!";
+      const blockId = uuidv4();
+
+      // BlockNote 에디터 형식에 맞는 초기 editorContent 생성
+      const initialEditorContent: BlockNoteContent = {
+        version: "1.0",
+        blocks: [
+          {
+            id: blockId,
+            type: "paragraph",
+            props: {
+              textColor: "default",
+              backgroundColor: "default",
+              textAlignment: "left",
+            },
+            content: [
+              {
+                type: "text",
+                text: initialText,
+                styles: {},
+              },
+            ],
+            children: [],
+          },
+        ],
+      };
+
       const newStep: Partial<Block> = {
         id: stepId,
         type: BlockType.STEP, // 문자열이 아닌 열거형 사용
@@ -114,8 +136,9 @@ export default function HomePage() {
         createdBy: "user",
         properties: {
           title: "시작하기",
-          content: ["여기에 내용을 작성해보세요!"],
+          content: [initialText],
           stepIdInGroup: 1,
+          editorContent: initialEditorContent, // 명시적으로 초기화
         },
       };
 
@@ -181,28 +204,6 @@ export default function HomePage() {
 
     setIsDeleteDialogOpen(false);
     setDeleteTargetId(null);
-  };
-
-  // 여정 복제
-  const handleDuplicateJourney = async (
-    journeyId: string,
-    e: React.MouseEvent,
-  ) => {
-    e.stopPropagation();
-
-    try {
-      const newJourneyId = await duplicateJourney(journeyId);
-      if (newJourneyId) {
-        // 리스트 새로고침
-        await refetch();
-        toast.success("여정이 복제되었습니다.");
-      } else {
-        toast.error("여정 복제에 실패했습니다.");
-      }
-    } catch (error) {
-      console.error("Failed to duplicate journey:", error);
-      toast.error("여정 복제에 실패했습니다.");
-    }
   };
 
   return (
@@ -272,6 +273,11 @@ export default function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {journeyBlocks
                 .filter((block) => isJourneyBlock(block))
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
+                )
                 .map((block) => (
                   <Card
                     key={block.id}
@@ -286,32 +292,6 @@ export default function HomePage() {
                         {getJourneyDescription(block) || "No description"}
                       </p>
                     </CardContent>
-                    <CardFooter className="flex justify-end gap-2 pt-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        title="복제"
-                        onClick={(e) => handleDuplicateJourney(block.id, e)}
-                      >
-                        <IconCopy className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" title="Edit">
-                        <IconEdit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        title="Delete"
-                        className="text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteTargetId(block.id);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                      >
-                        <IconTrash className="h-4 w-4" />
-                      </Button>
-                    </CardFooter>
                   </Card>
                 ))}
             </div>

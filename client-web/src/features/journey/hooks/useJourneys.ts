@@ -5,7 +5,7 @@ import {
   initializeDatabase,
 } from "@/features/block/services/blockService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BlockType } from "@/features/block/types";
 import { useBlockRenderer } from "@/features/block/hooks/useBlockRenderer";
 import { useBlockData } from "@/features/block/hooks/useBlockData";
@@ -34,6 +34,11 @@ export function useJourney(journeyId: string | undefined) {
     {},
   );
 
+  // journeyId가 변경될 때 스텝 인덱스 초기화
+  useEffect(() => {
+    setCurrentStepIndex(0);
+  }, [journeyId]);
+
   // 여정 데이터 조회
   const journeyQuery = useQuery({
     queryKey: QUERY_KEYS.journeys.detail(journeyId || ""),
@@ -44,6 +49,7 @@ export function useJourney(journeyId: string | undefined) {
     },
     enabled: !!journeyId,
     staleTime: 5 * 60 * 1000, // 5분
+    refetchOnWindowFocus: false, // 윈도우 포커스 시 자동 리페치 비활성화
   });
 
   // 블록 데이터 활용

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@/styles/text-editor.css";
@@ -22,27 +22,35 @@ export function BlockEditor({
   );
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  // BlockNote는 아주 특정한 형식의 initialContent를 요구합니다
-  // 정확한 형식으로 초기 콘텐츠를 설정합니다
-  const initialContent = block.properties.editorContent?.blocks || [
-    {
-      id: "initial-block",
-      type: "paragraph",
-      props: {
-        textColor: "default",
-        backgroundColor: "default",
-        textAlignment: "left",
-      },
-      content: [
-        {
-          type: "text",
-          text: block.properties.content?.[0] || "내용을 입력하세요...",
-          styles: {},
+  // BlockNote에 필요한 초기 콘텐츠를 useMemo로 최적화
+  const initialContent = useMemo(() => {
+    // editorContent가 있으면 그 블록을 사용
+    if (block.properties.editorContent?.blocks) {
+      return block.properties.editorContent.blocks;
+    }
+
+    // 없으면 content 배열에서 텍스트를 가져와 기본 블록 생성
+    const defaultText = block.properties.content?.[0] || "내용을 입력하세요...";
+    return [
+      {
+        id: "initial-block",
+        type: "paragraph",
+        props: {
+          textColor: "default",
+          backgroundColor: "default",
+          textAlignment: "left",
         },
-      ],
-      children: [],
-    },
-  ];
+        content: [
+          {
+            type: "text",
+            text: defaultText,
+            styles: {},
+          },
+        ],
+        children: [],
+      },
+    ];
+  }, [block.id, block.properties.editorContent, block.properties.content]);
 
   // 에디터 인스턴스 생성
   const editor = useCreateBlockNote({
@@ -68,6 +76,13 @@ export function BlockEditor({
       })
       .filter(Boolean);
   };
+
+  // 초기 마운트 시 에디터 컨텐츠 설정
+  useEffect(() => {
+    if (block.properties.editorContent) {
+      setSavedContent(block.properties.editorContent);
+    }
+  }, [block.id, block.properties.editorContent]);
 
   // 자동 저장 타이머
   useEffect(() => {

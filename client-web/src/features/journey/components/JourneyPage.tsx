@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "@blocknote/core/fonts/inter.css";
 import { Block, StepContainerMap } from "@/features/block/types";
-import { handleKeyboardShortcuts } from "@/features/block/utils/keyboardUtils";
 
 import { JourneySidebar } from "./JourneySidebar";
 import { JourneyHeader } from "./JourneyHeader";
@@ -18,12 +17,11 @@ import { useJourney } from "../hooks/useJourneys";
 import { useBlockStore } from "@/features/block/store/blockStore";
 import { useContentStore } from "@/features/block/store/contentStore";
 import { useSidebarStore } from "@/features/block/store/sidebarStore";
-import { useIsEditMode } from "@/features/block/store/editorStore";
+import { handleKeyboardShortcuts } from "@/features/block/utils/keyboardUtils";
 
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();
   const navigate = useNavigate();
-  const isEditMode = useIsEditMode();
 
   // Zustand 스토어에서 필요한 상태와 액션 가져오기
   const {
@@ -44,13 +42,25 @@ export default function JourneyPage() {
 
   // 키보드 단축키 등록 (편집 모드가 아닐 때만)
   useEffect(() => {
-    if (isEditMode) return;
-
     const handler = (e: KeyboardEvent) =>
       handleKeyboardShortcuts(e, zustandPrevStep, zustandNextStep);
     window.addEventListener("keydown", handler, { passive: false });
     return () => window.removeEventListener("keydown", handler);
-  }, [zustandPrevStep, zustandNextStep, isEditMode]);
+  }, [zustandPrevStep, zustandNextStep]);
+
+  // journeyId가 변경될 때 상태를 초기화
+  useEffect(() => {
+    if (journeyId) {
+      // 상태 초기화 - 새로운 journeyId로 이동할 때 상태를 리셋
+      setCurrentStepIndex(0);
+      updateContentState({
+        currentStep: null,
+        allSteps: [],
+        highlightKeywords: true,
+      });
+      setCurrentStepId(undefined);
+    }
+  }, [journeyId, setCurrentStepIndex, updateContentState, setCurrentStepId]);
 
   // 데이터가 로드되면 Zustand 스토어 상태 업데이트
   useEffect(() => {
@@ -92,12 +102,14 @@ export default function JourneyPage() {
     }
   }, [data?.flattenedSteps, setStepClickHandler, setCurrentStepIndex]);
 
-  // 편집 모드 변경 시 데이터 다시 불러오기
+  // 정기적으로 데이터 다시 불러오기
   useEffect(() => {
-    if (!isEditMode) {
+    const interval = setInterval(() => {
       refetch();
-    }
-  }, [isEditMode, refetch]);
+    }, 30000); // 30초마다 새로고침
+
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   // 데이터 및 현재 스텝 추출
   const journeyBlock = data?.journeyBlock || null;
@@ -122,7 +134,6 @@ export default function JourneyPage() {
         allBlocks={allBlocks}
         stepContainerRefs={stepContainerRefs}
         onNavigateHome={() => navigate(PATH.HOME)}
-        onRefetch={refetch}
       />
 
       {/* 메인 컨텐츠 영역 */}
@@ -130,19 +141,17 @@ export default function JourneyPage() {
         {/* 헤더 */}
         <JourneyHeader />
 
-        {/* 본문 영역 */}
+        {/* 본문 영역 - 항상 WYSIWYG 편집기 표시 */}
         <JourneyContent journeyBlock={journeyBlock as Block} />
 
-        {/* 푸터 - 편집 모드가 아닐 때만 표시 */}
-        {!isEditMode && (
-          <JourneyFooter
-            globalIndex={currentStepIndex}
-            setGlobalIndex={setCurrentStepIndex}
-            goPrev={zustandPrevStep}
-            goNext={zustandNextStep}
-            totalSteps={flattenedSteps.length}
-          />
-        )}
+        {/* 푸터 - 항상 표시 */}
+        <JourneyFooter
+          globalIndex={currentStepIndex}
+          setGlobalIndex={setCurrentStepIndex}
+          goPrev={zustandPrevStep}
+          goNext={zustandNextStep}
+          totalSteps={flattenedSteps.length}
+        />
       </div>
     </div>
   );
