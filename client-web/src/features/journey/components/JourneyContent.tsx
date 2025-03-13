@@ -1,18 +1,24 @@
 import "@blocknote/core/fonts/inter.css";
 import { Block, JourneyBlock, isJourneyBlock } from "@/features/block/types";
-import {
-  BlockRenderer,
-  RenderingArea,
-  useContentContext,
-} from "@/features/block/renderers";
+import { BlockRenderer, RenderingArea } from "@/features/block/renderers";
 import { getAccumulatedContent } from "@/features/block/utils/renderUtils";
+import {
+  useCurrentStep,
+  useAllSteps,
+} from "@/features/block/store/contentStore";
 
 interface Props {
   journeyBlock: Block;
 }
 
+/**
+ * Journey 콘텐츠 영역 컴포넌트
+ *
+ * 문제와 단계별 내용을 표시합니다.
+ */
 export function JourneyContent({ journeyBlock }: Props) {
-  const { currentStep, allSteps } = useContentContext();
+  const currentStep = useCurrentStep();
+  const allSteps = useAllSteps();
 
   // 타입 가드로 안전하게 사용
   if (!isJourneyBlock(journeyBlock)) {

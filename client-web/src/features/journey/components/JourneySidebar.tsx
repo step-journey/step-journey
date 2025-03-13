@@ -19,6 +19,11 @@ interface Props {
   onNavigateHome?: () => void;
 }
 
+/**
+ * Journey 사이드바 컴포넌트
+ *
+ * 여정 제목, 검색창, 스텝 그룹과 스텝 목록을 표시합니다.
+ */
 export function JourneySidebar({
   journeyBlock,
   allBlocks,

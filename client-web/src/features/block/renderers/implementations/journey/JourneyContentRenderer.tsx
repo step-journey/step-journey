@@ -1,6 +1,6 @@
 import React from "react";
 import { JourneyBlock, isJourneyBlock } from "../../../types";
-import { useContentContext } from "@/features/block/renderers";
+import { useCurrentStep } from "@/features/block/store/contentStore";
 
 interface JourneyContentRendererProps {
   block: JourneyBlock;
@@ -14,7 +14,7 @@ interface JourneyContentRendererProps {
 export const JourneyContentRenderer: React.FC<JourneyContentRendererProps> = ({
   block,
 }) => {
-  const { currentStep } = useContentContext();
+  const currentStep = useCurrentStep();
 
   // 타입 가드
   if (!isJourneyBlock(block)) {

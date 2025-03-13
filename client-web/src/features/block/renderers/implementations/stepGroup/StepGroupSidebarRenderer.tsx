@@ -6,8 +6,12 @@ import {
   BlockType,
   StepBlock,
 } from "../../../types";
-import { useBlockContext } from "@/features/block/renderers";
-import { useSidebarContext } from "@/features/block/renderers";
+import { useAllBlocks } from "@/features/block/store/blockStore";
+import {
+  useCurrentStepId,
+  useExpandedGroups,
+  useToggleGroup,
+} from "@/features/block/store/sidebarStore";
 import { BlockRenderer, RenderingArea } from "../../BlockRenderer";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 
@@ -21,15 +25,20 @@ interface StepGroupSidebarRendererProps {
 export const StepGroupSidebarRenderer: React.FC<
   StepGroupSidebarRendererProps
 > = ({ block }) => {
-  const { allBlocks } = useBlockContext();
-  const { expandedGroups, toggleGroup, currentStepId } = useSidebarContext();
+  const allBlocks = useAllBlocks();
+  const expandedGroups = useExpandedGroups();
+  const toggleGroup = useToggleGroup();
+  const currentStepId = useCurrentStepId();
 
   // 타입 가드
   if (!isStepGroupBlock(block)) {
     return <div>Invalid step group block</div>;
   }
 
+  // 현재 그룹이 펼쳐져 있는지 확인
   const isExpanded = expandedGroups[block.id] || false;
+
+  // 현재 선택된 스텝이 이 그룹에 속하는지 확인
   const isCurrentGroup = allBlocks.some(
     (b) => b.parentId === block.id && b.id === currentStepId,
   );

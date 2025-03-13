@@ -1,6 +1,6 @@
 import React from "react";
 import { StepBlock, isStepBlock, getStepContent } from "../../../types";
-import { useContentContext } from "@/features/block/renderers";
+import { useCurrentStep } from "@/features/block/store/contentStore";
 
 interface StepContentRendererProps {
   block: StepBlock;
@@ -12,7 +12,7 @@ interface StepContentRendererProps {
 export const StepContentRenderer: React.FC<StepContentRendererProps> = ({
   block,
 }) => {
-  const { currentStep } = useContentContext();
+  const currentStep = useCurrentStep();
 
   // 타입 가드
   if (!isStepBlock(block)) {
@@ -23,7 +23,7 @@ export const StepContentRenderer: React.FC<StepContentRendererProps> = ({
   const content = getStepContent(block).join("\n");
   const isCurrentStep = currentStep?.id === block.id;
 
-  // 특정 단계만 렌더링 (StepContentRenderer는 일반적으로 직접 사용되지 않고,
+  // 특정 단계만 렌더링 (StepContentRenderer 는 일반적으로 직접 사용되지 않고,
   // JourneyContent 컴포넌트에서 모든 단계를 누적해서 렌더링할 때 사용됨)
   const renderSingleStep = () => (
     <div className="relative">

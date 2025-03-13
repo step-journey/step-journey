@@ -1,6 +1,9 @@
 import React from "react";
 import { StepBlock, isStepBlock, getStepLabel } from "../../../types";
-import { useSidebarContext } from "../../contexts/SidebarContext";
+import {
+  useCurrentStepId,
+  useHandleStepClick,
+} from "@/features/block/store/sidebarStore";
 
 interface StepSidebarRendererProps {
   block: StepBlock;
@@ -12,17 +15,20 @@ interface StepSidebarRendererProps {
 export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
   block,
 }) => {
-  const { onClickStep, currentStepId } = useSidebarContext();
+  const currentStepId = useCurrentStepId();
+  const handleStepClick = useHandleStepClick();
 
   // 타입 가드
   if (!isStepBlock(block)) {
     return <div>Invalid step block</div>;
   }
 
+  // 현재 선택된 스텝인지 확인
   const isActive = currentStepId === block.id;
   const stepIdInGroup = block.properties.stepIdInGroup || 0;
   const parentId = block.parentId || "";
 
+  // 스타일 클래스 구성
   const stepClass = [
     "px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-100",
     isActive ? "bg-gray-100 font-medium text-blue-600" : "",
@@ -32,7 +38,7 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
     <div
       id={`step-${block.id}`}
       className={stepClass}
-      onClick={() => onClickStep(parentId, stepIdInGroup)}
+      onClick={() => handleStepClick(parentId, stepIdInGroup)}
     >
       {getStepLabel(block)}
     </div>
