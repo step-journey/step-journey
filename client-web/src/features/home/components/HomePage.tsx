@@ -1,214 +1,25 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { IconPlus } from "@tabler/icons-react";
 import Header from "./Header";
 import LoginModal from "@/features/auth/components/LoginModal";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import PATH from "@/constants/path";
-import { IconPlus } from "@tabler/icons-react";
-
-// React Query 훅 사용
+import { JourneyList } from "@/features/journey/components/JourneyList";
+import { CreateJourneyModal } from "@/features/journey/components/CreateJourneyModal";
 import { useUser, useLogout } from "@/features/auth/hooks/useAuth";
-import { useJourneys } from "@/features/journey/hooks/useJourneys";
 import { useLoginModalState, useUIStore } from "@/store/uiStore";
-import {
-  getJourneyDescription,
-  getJourneyTitle,
-  isJourneyBlock,
-  Block,
-  BlockType,
-  BlockNoteContent,
-} from "@/features/block/types";
-import { v4 as uuidv4 } from "uuid";
-import {
-  createBlock,
-  deleteBlock,
-} from "@/features/block/services/blockService";
-import { toast } from "sonner";
 
 export default function HomePage() {
-  // React Query 훅 사용
   const { data: user, isLoading: isLoadingUser } = useUser();
-  const {
-    data: journeyBlocks,
-    isLoading: isLoadingJourneys,
-    refetch,
-  } = useJourneys();
   const { mutate: logout } = useLogout();
 
-  // UI 상태
   const isLoginModalOpen = useLoginModalState();
   const { openLoginModal, closeLoginModal } = useUIStore();
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [newJourneyTitle, setNewJourneyTitle] = useState("");
-  const [newJourneyDesc, setNewJourneyDesc] = useState("");
-
-  const navigate = useNavigate();
-
-  // Card 클릭 시 Journey 페이지로 이동
-  const handleCardClick = (journeyId: string) => {
-    navigate(`${PATH.JOURNEY}/${journeyId}`);
-  };
-
-  // 새 여정 생성
-  const handleCreateJourney = async () => {
-    if (!newJourneyTitle.trim()) {
-      toast.error("제목을 입력해주세요.");
-      return;
-    }
-
-    try {
-      // 1. 여정 ID 생성
-      const journeyId = uuidv4();
-
-      // 2. 기본 여정 생성 - 타입 명시
-      const newJourney: Partial<Block> = {
-        id: journeyId,
-        type: BlockType.JOURNEY, // 문자열이 아닌 열거형 사용
-        content: [] as string[],
-        createdBy: "user",
-        properties: {
-          title: newJourneyTitle,
-          description: newJourneyDesc,
-        },
-      };
-
-      // 3. 기본 그룹 생성 - 타입 명시
-      const groupId = uuidv4();
-      const newGroup: Partial<Block> = {
-        id: groupId,
-        type: BlockType.STEP_GROUP, // 문자열이 아닌 열거형 사용
-        parentId: journeyId,
-        content: [] as string[],
-        createdBy: "user",
-        properties: {
-          title: "기본 그룹",
-        },
-      };
-
-      // 4. 기본 스텝 생성 - 타입 명시
-      const currentTime = Date.now();
-      const stepId = `step-${currentTime}-${uuidv4()}`;
-      const initialText = "여기에 내용을 작성해보세요!";
-      const blockId = uuidv4();
-
-      // BlockNote 에디터 형식에 맞는 초기 editorContent 생성
-      const initialEditorContent: BlockNoteContent = {
-        version: "1.0",
-        blocks: [
-          {
-            id: blockId,
-            type: "paragraph",
-            props: {
-              textColor: "default",
-              backgroundColor: "default",
-              textAlignment: "left",
-            },
-            content: [
-              {
-                type: "text",
-                text: initialText,
-                styles: {},
-              },
-            ],
-            children: [],
-          },
-        ],
-      };
-
-      const newStep: Partial<Block> = {
-        id: stepId,
-        type: BlockType.STEP, // 문자열이 아닌 열거형 사용
-        parentId: groupId,
-        content: [] as string[],
-        createdBy: "user",
-        properties: {
-          title: "시작하기",
-          content: [initialText],
-          stepIdInGroup: 1,
-          editorContent: initialEditorContent, // 명시적으로 초기화
-        },
-      };
-
-      // 5. 여정에 그룹 추가, 그룹에 스텝 추가
-      newJourney.content = [groupId];
-      newGroup.content = [stepId];
-
-      // 6. DB에 저장
-      await createBlock(newJourney);
-      await createBlock(newGroup);
-      await createBlock(newStep);
-
-      // 상태 초기화 및 다이얼로그 닫기
-      setNewJourneyTitle("");
-      setNewJourneyDesc("");
-      setIsCreateDialogOpen(false);
-
-      // 리스트 새로고침
-      await refetch();
-
-      // 생성한 여정으로 이동
-      navigate(`${PATH.JOURNEY}/${journeyId}`);
-
-      toast.success("새 여정이 생성되었습니다.");
-    } catch (error) {
-      console.error("Failed to create journey:", error);
-      toast.error("여정 생성에 실패했습니다.");
-    }
-  };
-
-  // 여정 삭제
-  const handleDeleteJourney = async () => {
-    if (!deleteTargetId) return;
-
-    try {
-      // 관련된 그룹과 스텝을 모두 찾아서 삭제해야 함
-      if (journeyBlocks) {
-        const journeyBlock = journeyBlocks.find(
-          (block) => block.id === deleteTargetId,
-        );
-        if (journeyBlock) {
-          // 그룹 ID들 가져오기
-          const groupIds = journeyBlock.content || [];
-
-          // 각 그룹에 속한 스텝 삭제
-          for (const groupId of groupIds) {
-            await deleteBlock(groupId);
-          }
-
-          // 여정 블록 삭제
-          await deleteBlock(deleteTargetId);
-
-          // 리스트 새로고침
-          await refetch();
-
-          toast.success("여정이 삭제되었습니다.");
-        }
-      }
-    } catch (error) {
-      console.error("Failed to delete journey:", error);
-      toast.error("여정 삭제에 실패했습니다.");
-    }
-
-    setIsDeleteDialogOpen(false);
-    setDeleteTargetId(null);
-  };
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* 상단 Header: user, onClickLogin, onClickLogout 전달 */}
+      {/* 상단 Header */}
       <Header
         user={user || null}
         onClickLogin={openLoginModal}
@@ -216,7 +27,7 @@ export default function HomePage() {
         isLoading={isLoadingUser}
       />
 
-      {/* 메인 레이아웃 (좌 사이드바 - 중앙 본문 - 우 사이드바) */}
+      {/* 메인 레이아웃 */}
       <div className="flex flex-1 bg-background text-foreground">
         {/* 좌측 사이드바 */}
         <aside className="hidden md:flex flex-col w-60 border-r border-border p-4">
@@ -258,44 +69,9 @@ export default function HomePage() {
               New Journey
             </Button>
           </div>
-          {isLoadingJourneys ? (
-            <div className="text-center py-8">로딩 중...</div>
-          ) : !journeyBlocks || journeyBlocks.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">
-                아직 Journey가 없습니다.
-              </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <IconPlus className="mr-1" />첫 번째 Journey 만들기
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {journeyBlocks
-                .filter((block) => isJourneyBlock(block))
-                .sort(
-                  (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime(),
-                )
-                .map((block) => (
-                  <Card
-                    key={block.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleCardClick(block.id)}
-                  >
-                    <CardHeader className="pb-2">
-                      <CardTitle>{getJourneyTitle(block)}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <p className="text-sm text-muted-foreground">
-                        {getJourneyDescription(block) || "No description"}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
-          )}
+
+          {/* Journey 리스트 */}
+          <JourneyList onCreateClick={() => setIsCreateDialogOpen(true)} />
         </main>
 
         {/* 우측 사이드바 */}
@@ -305,79 +81,11 @@ export default function HomePage() {
       {/* 로그인 모달 */}
       <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
 
-      {/* 새 여정 생성 다이얼로그 */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>새 Journey 만들기</DialogTitle>
-          </DialogHeader>
-
-          <div className="py-4 space-y-3">
-            <div>
-              <label
-                htmlFor="journey-title"
-                className="text-sm font-medium block mb-1"
-              >
-                제목
-              </label>
-              <Input
-                id="journey-title"
-                value={newJourneyTitle}
-                onChange={(e) => setNewJourneyTitle(e.target.value)}
-                placeholder="여정 제목"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="journey-desc"
-                className="text-sm font-medium block mb-1"
-              >
-                설명
-              </label>
-              <Textarea
-                id="journey-desc"
-                value={newJourneyDesc}
-                onChange={(e) => setNewJourneyDesc(e.target.value)}
-                placeholder="여정에 대한 설명을 입력하세요"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">취소</Button>
-            </DialogClose>
-            <Button onClick={handleCreateJourney}>생성</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 여정 삭제 확인 다이얼로그 */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>여정 삭제</DialogTitle>
-          </DialogHeader>
-
-          <div className="py-4">
-            <p>
-              정말 이 여정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없으며, 모든
-              그룹과 스텝 데이터가 함께 삭제됩니다.
-            </p>
-          </div>
-
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">취소</Button>
-            </DialogClose>
-            <Button variant="destructive" onClick={handleDeleteJourney}>
-              삭제
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* 여정 생성 다이얼로그 */}
+      <CreateJourneyModal
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
     </div>
   );
 }

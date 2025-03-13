@@ -9,7 +9,6 @@ import {
   StepContainerMap,
 } from "@/features/block/types";
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { BlockRenderer, RenderingArea } from "@/features/block/renderers";
 
 interface Props {
@@ -81,16 +80,18 @@ export function JourneySidebar({
       </ScrollArea>
 
       {/* 최하단 홈 아이콘 - 스크롤 영역 밖에 배치하여 항상 보이도록 함 */}
-      <div className="p-2 mt-auto flex justify-end">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-full text-gray-500 hover:text-gray-800"
+      <div className="p-4 mt-auto flex justify-center">
+        <div
+          className="cursor-pointer rounded-full p-3 hover:bg-gray-100 transition-colors"
           onClick={onNavigateHome}
           title="홈으로 돌아가기"
         >
-          <IconHome size={18} />
-        </Button>
+          <IconHome
+            size={24}
+            className="text-gray-600 hover:text-gray-900"
+            stroke={1.5}
+          />
+        </div>
       </div>
     </aside>
   );
