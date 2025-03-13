@@ -8,12 +8,7 @@ import {
   StepGroupBlock,
   StepBlock,
 } from "../types";
-import { blocks as staticBlocks } from "@/assets/data";
-import {
-  flattenBlocks,
-  getBlockWithChildren,
-  getJourneyById,
-} from "../utils/blockUtils";
+import { flattenBlocks } from "../utils/blockUtils";
 
 // 특정 Journey 블록 조회
 export const getJourneyBlock = async (
@@ -67,25 +62,10 @@ export const getAllJourneyBlocks = async (): Promise<JourneyBlock[]> => {
   return blocks.filter(isJourneyBlock) as JourneyBlock[];
 };
 
-// 정적 데이터와 DB 데이터 병합
+// DB에서 여정 조회
 export const getCombinedJourneys = async (): Promise<JourneyBlock[]> => {
   const dbJourneys = await getAllJourneyBlocks();
-
-  // 정적 데이터에서 Journey 블록 가져오기
-  const staticJourneyBlocks = staticBlocks
-    .filter((block) => block.type === BlockType.JOURNEY)
-    .filter(isJourneyBlock) as JourneyBlock[];
-
-  const combinedJourneys = [...dbJourneys];
-
-  // 정적 데이터 중 DB에 없는 것만 추가
-  for (const staticJourney of staticJourneyBlocks) {
-    if (!dbJourneys.some((dbJourney) => dbJourney.id === staticJourney.id)) {
-      combinedJourneys.push(staticJourney);
-    }
-  }
-
-  return combinedJourneys;
+  return dbJourneys;
 };
 
 // Journey와 그 단계들 로드
@@ -96,47 +76,15 @@ export const loadJourneyWithSteps = async (
   flattenedSteps: FlattenedBlock[];
   allBlocks: Block[];
 }> => {
-  // 1. DB에서 Journey와 관련 블록 조회
+  // DB에서 Journey와 관련 블록 조회
   const dbBlocks = await getJourneyWithRelatedBlocks(id);
   let journeyBlock = dbBlocks.find(
     (block) => block.id === id && isJourneyBlock(block),
   ) as JourneyBlock | undefined;
 
-  // 2. DB에 없으면 정적 데이터에서 조회
+  // DB에 없는 경우
   if (!journeyBlock) {
-    journeyBlock = staticBlocks.find(
-      (block) => block.id === id && isJourneyBlock(block),
-    ) as JourneyBlock | undefined;
-
-    if (!journeyBlock) {
-      // 3. 기존 방식으로도 확인
-      const legacyJourney = getJourneyById(id);
-
-      if (!legacyJourney) {
-        return { journeyBlock: null, flattenedSteps: [], allBlocks: [] };
-      }
-
-      // 관련 블록 찾기
-      const allBlocks = getBlockWithChildren(legacyJourney.id);
-      const flattenedSteps = flattenBlocks(legacyJourney, allBlocks);
-      return { journeyBlock: legacyJourney, flattenedSteps, allBlocks };
-    }
-
-    // 정적 데이터에서 관련 블록 찾기
-    const relatedBlocks = staticBlocks.filter(
-      (block) =>
-        block.id === id ||
-        block.parentId === id ||
-        staticBlocks.some(
-          (groupBlock) =>
-            groupBlock.type === BlockType.STEP_GROUP &&
-            groupBlock.parentId === id &&
-            block.parentId === groupBlock.id,
-        ),
-    );
-
-    const flattenedSteps = flattenBlocks(journeyBlock, relatedBlocks);
-    return { journeyBlock, flattenedSteps, allBlocks: relatedBlocks };
+    return { journeyBlock: null, flattenedSteps: [], allBlocks: [] };
   }
 
   // DB에서 찾은 경우
@@ -144,21 +92,18 @@ export const loadJourneyWithSteps = async (
   return { journeyBlock, flattenedSteps, allBlocks: dbBlocks };
 };
 
-// 데이터베이스 초기화
+// 데이터베이스 초기화 - 더 이상 정적 데이터를 사용하지 않음
 export const initializeDatabase = async (): Promise<void> => {
+  // 이미 데이터가 있는지 확인
   const count = await dbClient.blocks.count();
-
-  // 이미 데이터가 있으면 초기화 스킵
   if (count > 0) {
     return;
   }
 
-  // 정적 블록 데이터를 DB에 넣기
-  await dbClient.blocks.bulkAdd(staticBlocks);
-  console.log("Database initialized with blocks data");
+  console.log("Database initialized");
 };
 
-// 블록 생성 - 타입 수정
+// 블록 생성
 export const createBlock = async (
   partialBlock: Partial<Block>,
 ): Promise<string> => {

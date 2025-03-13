@@ -41,28 +41,3 @@ export interface BaseBlock extends TimeStampFields {
   content: UUID[];
   createdBy: UUID;
 }
-
-// 블록의 원시 JSON 표현
-export interface RawJsonBlock {
-  id: string;
-  type: string; // 문자열 값으로서의 "journey", "step_group", "step"
-  parentId?: string;
-  properties: {
-    title?: string;
-    description?: string;
-    pinnedProblem?: {
-      text: string;
-      media?: Media;
-    };
-    groupLabel?: string;
-    label?: string;
-    desc?: string;
-    content?: string[];
-    stepIdInGroup?: number;
-    highlightedKeywordsInProblem?: string[];
-  };
-  content: string[];
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-}
