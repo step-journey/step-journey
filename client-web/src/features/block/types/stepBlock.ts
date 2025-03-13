@@ -17,7 +17,6 @@ export interface StepBlockProperties extends BaseBlockProperties {
   content?: string[]; // 단계의 실제 내용 (텍스트 기반)
   editorContent?: BlockNoteContent; // BlockNote 에디터 컨텐츠 (블록 기반)
   stepIdInGroup?: number; // 그룹 내 순서
-  highlightedKeywordsInProblem?: string[]; // 문제에서 강조할 키워드
 }
 
 // Step 블록 - 개별 콘텐츠 단위
@@ -59,15 +58,4 @@ export function getStepLabel(block: StepBlock): string {
  */
 export function getStepContent(block: StepBlock): string[] {
   return block.properties.content || [];
-}
-
-/**
- * Step 블록의 에디터 컨텐츠 가져오기
- * @param block Step 블록
- * @returns 에디터 컨텐츠 (없으면 undefined)
- */
-export function getStepEditorContent(
-  block: StepBlock,
-): BlockNoteContent | undefined {
-  return block.properties.editorContent;
 }

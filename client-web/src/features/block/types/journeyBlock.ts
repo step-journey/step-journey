@@ -2,14 +2,11 @@
  * Journey 블록 관련 타입 및 유틸리티 함수
  */
 
-import { BaseBlock, BaseBlockProperties, BlockType, Media } from "./baseBlock";
+import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
 
 // Journey 블록 전용 속성
 export interface JourneyBlockProperties extends BaseBlockProperties {
-  pinnedProblem?: {
-    text: string;
-    media?: Media;
-  };
+  description?: string;
 }
 
 // Journey 블록 - 최상위 컨테이너
@@ -43,13 +40,4 @@ export function getJourneyTitle(block: JourneyBlock): string {
  */
 export function getJourneyDescription(block: JourneyBlock): string {
   return block.properties.description || "";
-}
-
-/**
- * Journey 블록의 고정된 문제 가져오기
- * @param block Journey 블록
- * @returns 고정된 문제 객체 또는 undefined
- */
-export function getJourneyProblem(block: JourneyBlock) {
-  return block.properties.pinnedProblem;
 }

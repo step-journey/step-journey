@@ -36,41 +36,6 @@ export function getAccumulatedContent(
 }
 
 /**
- * Journey 블록의 pinnedProblem에서 강조 표시된 문제 텍스트를 생성하는 함수
- *
- * @param problemText 문제 텍스트
- * @param highlightedKeywords 강조할 키워드 목록
- * @returns 강조된 HTML 문자열
- */
-export function getHighlightedProblemText(
-  problemText: string,
-  highlightedKeywords?: string[],
-): string {
-  if (
-    !problemText ||
-    !highlightedKeywords ||
-    highlightedKeywords.length === 0
-  ) {
-    return problemText;
-  }
-
-  let highlightedText = problemText;
-
-  // 각 키워드를 강조 표시용 HTML로 교체
-  highlightedKeywords.forEach((keyword) => {
-    // 정규식에서 특수 문자 이스케이프
-    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(escapedKeyword, "g");
-    highlightedText = highlightedText.replace(
-      regex,
-      `<span class="underline decoration-blue-500 decoration-1">$&</span>`,
-    );
-  });
-
-  return highlightedText;
-}
-
-/**
  * 블록 ID에 해당하는 블록을 찾는 함수
  *
  * @param blockId 찾을 블록 ID

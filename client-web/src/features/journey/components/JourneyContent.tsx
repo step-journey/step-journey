@@ -1,10 +1,4 @@
-import {
-  Block,
-  JourneyBlock,
-  isJourneyBlock,
-  isStepBlock,
-} from "@/features/block/types";
-import { BlockRenderer, RenderingArea } from "@/features/block/renderers";
+import { Block, isJourneyBlock, isStepBlock } from "@/features/block/types";
 import { getAccumulatedContent } from "@/features/block/utils/renderUtils";
 import {
   useCurrentStep,
@@ -27,30 +21,15 @@ export function JourneyContent({ journeyBlock }: Props) {
     return <div>Invalid journey block</div>;
   }
 
-  const typedJourneyBlock = journeyBlock as JourneyBlock;
-
-  // 문제 설명이 있는지 확인 (Journey 블록에만 있음)
-  const hasPinnedProblem = !!typedJourneyBlock.properties.pinnedProblem;
-
   // 현재 단계의 내용 누적 계산
   const accumulatedContent = getAccumulatedContent(currentStep, allSteps);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-6">
-      {/* 좌우 2열 레이아웃 (강제) */}
-      <div className="flex flex-row gap-6 h-full">
-        {/* 좌측: 문제가 항상 표시되는 영역 */}
-        {hasPinnedProblem && (
-          <div className="w-1/3 shrink-0">
-            <BlockRenderer
-              block={typedJourneyBlock}
-              area={RenderingArea.CONTENT}
-            />
-          </div>
-        )}
-
-        {/* 우측: 현재 단계의 내용이 표시되는 영역 */}
-        <div className={hasPinnedProblem ? "w-2/3" : "w-full"}>
+      {/* Single column layout now that pinnedProblem is removed */}
+      <div className="h-full">
+        {/* 현재 단계의 내용이 표시되는 영역 */}
+        <div className="w-full">
           {currentStep && (
             <>
               {/* 제목 영역 */}
