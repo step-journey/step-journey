@@ -1,39 +1,4 @@
-import { Block, BlockType, FlattenedBlock } from "../types";
-
-/**
- * 현재 단계까지의 모든 내용을 누적하여 표시할 accumulatedContent 객체를 만드는 함수
- *
- * @param currentStep 현재 단계
- * @param allSteps 모든 단계 목록
- * @returns 현재 단계까지의 모든 내용이 누적된 객체 배열
- */
-export function getAccumulatedContent(
-  currentStep: FlattenedBlock | null,
-  allSteps: FlattenedBlock[],
-) {
-  if (!currentStep) return [];
-
-  const hasContent = !!currentStep.properties.content?.length;
-
-  if (!hasContent) return [];
-
-  return allSteps
-    .filter(
-      (step) =>
-        step.globalIndex <= currentStep.globalIndex &&
-        step.properties.content?.length,
-    )
-    .map((step) => {
-      const isCurrentStep = step.globalIndex === currentStep.globalIndex;
-      const content = step.properties.content?.join("\n") || "";
-
-      return {
-        step,
-        content,
-        isCurrentStep,
-      };
-    });
-}
+import { Block, BlockType } from "../types";
 
 /**
  * 블록 ID에 해당하는 블록을 찾는 함수
