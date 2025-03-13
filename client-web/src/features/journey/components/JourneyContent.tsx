@@ -1,24 +1,26 @@
-import "@blocknote/core/fonts/inter.css";
-import { Block, JourneyBlock, isJourneyBlock } from "@/features/block/types";
+import {
+  Block,
+  JourneyBlock,
+  isJourneyBlock,
+  isStepBlock,
+} from "@/features/block/types";
 import { BlockRenderer, RenderingArea } from "@/features/block/renderers";
 import { getAccumulatedContent } from "@/features/block/utils/renderUtils";
 import {
   useCurrentStep,
   useAllSteps,
 } from "@/features/block/store/contentStore";
+import { BlockEditor } from "@/features/block/components/BlockEditor";
+import { useIsEditMode } from "@/features/block/store/editorStore";
 
 interface Props {
   journeyBlock: Block;
 }
 
-/**
- * Journey 콘텐츠 영역 컴포넌트
- *
- * 문제와 단계별 내용을 표시합니다.
- */
 export function JourneyContent({ journeyBlock }: Props) {
   const currentStep = useCurrentStep();
   const allSteps = useAllSteps();
+  const isEditMode = useIsEditMode();
 
   // 타입 가드로 안전하게 사용
   if (!isJourneyBlock(journeyBlock)) {
@@ -62,31 +64,36 @@ export function JourneyContent({ journeyBlock }: Props) {
               </>
 
               <div className="border border-gray-200 bg-white p-4 rounded-xl shadow">
-                <div className="math-content">
-                  {/* 누적된 내용 표시 */}
-                  {accumulatedContent.map((item, index) => (
-                    <div
-                      key={item.step.globalIndex}
-                      className={`${index > 0 ? "mt-3 pt-2" : ""} relative`}
-                    >
-                      <div className="flex">
-                        {/* 현재 step 내용에는 세로선 추가 */}
-                        <div className="relative flex-shrink-0 w-3">
-                          {item.isCurrentStep && (
-                            <div className="absolute left-0 top-0 h-full w-0.5 bg-blue-500"></div>
-                          )}
-                        </div>
+                {/* 에디트 모드일 때는 BlockEditor 컴포넌트 사용 */}
+                {isEditMode && isStepBlock(currentStep) ? (
+                  <BlockEditor block={currentStep} />
+                ) : (
+                  // 일반 모드: 누적된 내용 표시
+                  <div className="math-content">
+                    {accumulatedContent.map((item, index) => (
+                      <div
+                        key={item.step.globalIndex}
+                        className={`${index > 0 ? "mt-3 pt-2" : ""} relative`}
+                      >
+                        <div className="flex">
+                          {/* 현재 step 내용에는 세로선 추가 */}
+                          <div className="relative flex-shrink-0 w-3">
+                            {item.isCurrentStep && (
+                              <div className="absolute left-0 top-0 h-full w-0.5 bg-blue-500"></div>
+                            )}
+                          </div>
 
-                        {/* 내용 */}
-                        <div
-                          dangerouslySetInnerHTML={{
-                            __html: `<p>${item.content}</p>`,
-                          }}
-                        />
+                          {/* 내용 */}
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: `<p>${item.content}</p>`,
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}

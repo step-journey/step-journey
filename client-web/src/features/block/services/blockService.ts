@@ -157,3 +157,117 @@ export const initializeDatabase = async (): Promise<void> => {
   await dbClient.blocks.bulkAdd(staticBlocks);
   console.log("Database initialized with blocks data");
 };
+
+// 블록 생성 - 타입 수정
+export const createBlock = async (
+  partialBlock: Partial<Block>,
+): Promise<string> => {
+  const id = partialBlock.id || crypto.randomUUID();
+  const now = new Date().toISOString();
+
+  // 타입 안전한 블록 생성
+  const newBlock: Block = {
+    ...(partialBlock as any), // 기존 속성 유지
+    id,
+    createdAt: now,
+    updatedAt: now,
+    // 기본 속성이 없는 경우 빈 값 추가
+    content: partialBlock.content || [],
+    properties: partialBlock.properties || {},
+    type: partialBlock.type || BlockType.STEP, // 기본 타입 설정
+  };
+
+  await dbClient.blocks.put(newBlock);
+  return id;
+};
+
+// 블록 업데이트
+export const updateBlock = async (block: Block): Promise<void> => {
+  const existing = await dbClient.blocks.get(block.id);
+  if (!existing) {
+    throw new Error(`Block with id ${block.id} not found`);
+  }
+
+  const updatedBlock = {
+    ...block,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await dbClient.blocks.put(updatedBlock);
+};
+
+// 블록 삭제
+export const deleteBlock = async (id: string): Promise<void> => {
+  await dbClient.blocks.delete(id);
+};
+
+// 블록 순서 변경
+export const reorderBlocks = async (
+  parentId: string,
+  orderedIds: string[],
+): Promise<void> => {
+  const parentBlock = await dbClient.blocks.get(parentId);
+  if (!parentBlock) {
+    throw new Error(`Parent block with id ${parentId} not found`);
+  }
+
+  // 부모 블록 content 필드 업데이트
+  const updatedParent = {
+    ...parentBlock,
+    content: orderedIds,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await dbClient.blocks.put(updatedParent);
+};
+
+// 여정 복제
+export const duplicateJourney = async (
+  journeyId: string,
+): Promise<string | null> => {
+  try {
+    // 여정과 관련 블록 가져오기
+    const blocks = await getJourneyWithRelatedBlocks(journeyId);
+    if (blocks.length === 0) return null;
+
+    // ID 매핑 (기존 ID -> 새 ID)
+    const idMap: Record<string, string> = {};
+
+    // 새 ID 생성 및 매핑
+    blocks.forEach((block) => {
+      idMap[block.id] = crypto.randomUUID();
+    });
+
+    // 복제된 블록 생성 및 저장
+    for (const block of blocks) {
+      const newId = idMap[block.id];
+      const newParentId = block.parentId ? idMap[block.parentId] : undefined;
+      const newContent = block.content.map((id) => idMap[id] || id);
+
+      const newBlock = {
+        ...block,
+        id: newId,
+        parentId: newParentId,
+        content: newContent,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: "user", // 또는 현재 사용자 ID
+      };
+
+      // Journey 블록인 경우 제목 변경
+      if (block.type === BlockType.JOURNEY) {
+        newBlock.properties = {
+          ...block.properties,
+          title: `${block.properties.title || "Untitled"} (복사본)`,
+        };
+      }
+
+      await dbClient.blocks.put(newBlock);
+    }
+
+    return idMap[journeyId];
+  } catch (error) {
+    console.error("Failed to duplicate journey:", error);
+    return null;
+  }
+};

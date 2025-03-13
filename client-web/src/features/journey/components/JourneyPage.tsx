@@ -18,10 +18,12 @@ import { useJourney } from "../hooks/useJourneys";
 import { useBlockStore } from "@/features/block/store/blockStore";
 import { useContentStore } from "@/features/block/store/contentStore";
 import { useSidebarStore } from "@/features/block/store/sidebarStore";
+import { useIsEditMode } from "@/features/block/store/editorStore";
 
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();
   const navigate = useNavigate();
+  const isEditMode = useIsEditMode();
 
   // Zustand 스토어에서 필요한 상태와 액션 가져오기
   const {
@@ -36,17 +38,19 @@ export default function JourneyPage() {
   const { setCurrentStepId, setStepClickHandler } = useSidebarStore();
 
   // React Query와 관련 상태/액션 사용
-  const { data } = useJourney(journeyId);
+  const { data, refetch } = useJourney(journeyId);
 
   const stepContainerRefs = useRef<StepContainerMap>({});
 
-  // 키보드 단축키 등록
+  // 키보드 단축키 등록 (편집 모드가 아닐 때만)
   useEffect(() => {
+    if (isEditMode) return;
+
     const handler = (e: KeyboardEvent) =>
       handleKeyboardShortcuts(e, zustandPrevStep, zustandNextStep);
     window.addEventListener("keydown", handler, { passive: false });
     return () => window.removeEventListener("keydown", handler);
-  }, [zustandPrevStep, zustandNextStep]);
+  }, [zustandPrevStep, zustandNextStep, isEditMode]);
 
   // 데이터가 로드되면 Zustand 스토어 상태 업데이트
   useEffect(() => {
@@ -88,6 +92,13 @@ export default function JourneyPage() {
     }
   }, [data?.flattenedSteps, setStepClickHandler, setCurrentStepIndex]);
 
+  // 편집 모드 변경 시 데이터 다시 불러오기
+  useEffect(() => {
+    if (!isEditMode) {
+      refetch();
+    }
+  }, [isEditMode, refetch]);
+
   // 데이터 및 현재 스텝 추출
   const journeyBlock = data?.journeyBlock || null;
   const flattenedSteps = data?.flattenedSteps || [];
@@ -111,6 +122,7 @@ export default function JourneyPage() {
         allBlocks={allBlocks}
         stepContainerRefs={stepContainerRefs}
         onNavigateHome={() => navigate(PATH.HOME)}
+        onRefetch={refetch}
       />
 
       {/* 메인 컨텐츠 영역 */}
@@ -121,14 +133,16 @@ export default function JourneyPage() {
         {/* 본문 영역 */}
         <JourneyContent journeyBlock={journeyBlock as Block} />
 
-        {/* 푸터 - Zustand 의 액션 사용 */}
-        <JourneyFooter
-          globalIndex={currentStepIndex}
-          setGlobalIndex={setCurrentStepIndex}
-          goPrev={zustandPrevStep}
-          goNext={zustandNextStep}
-          totalSteps={flattenedSteps.length}
-        />
+        {/* 푸터 - 편집 모드가 아닐 때만 표시 */}
+        {!isEditMode && (
+          <JourneyFooter
+            globalIndex={currentStepIndex}
+            setGlobalIndex={setCurrentStepIndex}
+            goPrev={zustandPrevStep}
+            goNext={zustandNextStep}
+            totalSteps={flattenedSteps.length}
+          />
+        )}
       </div>
     </div>
   );

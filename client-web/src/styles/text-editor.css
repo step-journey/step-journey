@@ -1,0 +1,19 @@
+.editor-container {
+    min-height: 200px;
+    width: 100%;
+}
+
+/* BlockNote 에디터 스타일 커스터마이징 */
+.bn-container {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    min-height: 200px;
+}
+
+.bn-editor {
+    padding: 1rem;
+}
+
+.bn-container .public-DraftEditor-content {
+    min-height: 150px;
+}

@@ -168,10 +168,16 @@ export function getBlockTitle(block: Block): string {
     return block.properties.title || "제목 없는 Journey";
   } else if (block.type === BlockType.STEP_GROUP) {
     return (
-      block.properties.title || block.properties.groupLabel || "제목 없는 그룹"
+      block.properties.title ||
+      (block.properties as any).groupLabel ||
+      "제목 없는 그룹"
     );
   } else if (block.type === BlockType.STEP) {
-    return block.properties.title || block.properties.label || "제목 없는 단계";
+    return (
+      block.properties.title ||
+      (block.properties as any).label ||
+      "제목 없는 단계"
+    );
   }
 
   return "제목 없는 블록";
@@ -215,3 +221,28 @@ export const getBlockWithChildren = (id: string): Block[] => {
   addChildren(id);
   return result;
 };
+
+/**
+ * 특정 블록이 StepGroupBlock인지 확인하는 타입 가드
+ * @param block 확인할 블록
+ * @returns 블록이 StepGroupBlock이면 true 반환
+ */
+export function isStepGroupBlock(block: any): block is StepGroupBlock {
+  return block && block.type === BlockType.STEP_GROUP;
+}
+
+/**
+ * 블록의 속성에 안전하게 접근하는 함수
+ * @param block 속성을 가져올 블록
+ * @param propertyName 가져올 속성 이름
+ * @param defaultValue 속성이 없을 경우의 기본값
+ * @returns 속성 값 또는 기본값
+ */
+export function getBlockProperty<T>(
+  block: Block,
+  propertyName: string,
+  defaultValue: T,
+): T {
+  if (!block.properties) return defaultValue;
+  return (block.properties as any)[propertyName] ?? defaultValue;
+}
