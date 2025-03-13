@@ -35,6 +35,16 @@ rm -f "$OUTPUT_FILE"
 #echo "- React 클라이언트에서 아이콘은 \`\"@tabler/icons-react\"\` 혹은 'lucide-react' 에서 적절한 것을 가져다가 사용해야함" >> "$OUTPUT_FILE"
 #echo "" >> "$OUTPUT_FILE"
 
+# 상태 관리 방법:
+#echo "# StepJourney React 프로젝트 상태 관리 방법:" >> "$OUTPUT_FILE"
+#echo "### 데이터의 출처와 목적에 따른 결정:" >> "$OUTPUT_FILE"
+#echo "- 서버 데이터: React Query" >> "$OUTPUT_FILE"
+#echo "- 클라이언트 전용 상태: Zustand" >> "$OUTPUT_FILE"
+#echo "### 상태의 범위에 따른 결정:" >> "$OUTPUT_FILE"
+#echo "- 앱 전체: Zustand (루트 스토어)" >> "$OUTPUT_FILE"
+#echo "- 기능/페이지 범위: Zustand (도메인별 스토어)" >> "$OUTPUT_FILE"
+#echo "- 컴포넌트 범위: useState" >> "$OUTPUT_FILE"
+#echo "" >> "$OUTPUT_FILE"
 
 # 프로젝트 파일 구조 설명:
 #echo "# StepJourney React 프로젝트 파일 구조:" >> "$OUTPUT_FILE"
