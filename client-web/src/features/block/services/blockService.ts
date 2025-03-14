@@ -5,8 +5,8 @@ import {
   FlattenedBlock,
   isJourneyBlock,
   JourneyBlock,
-  StepGroupBlock,
   StepBlock,
+  StepGroupBlock,
 } from "../types";
 import { flattenBlocks } from "../utils/blockUtils";
 
@@ -60,12 +60,6 @@ export const getAllJourneyBlocks = async (): Promise<JourneyBlock[]> => {
     .toArray();
 
   return blocks.filter(isJourneyBlock) as JourneyBlock[];
-};
-
-// DB에서 여정 조회
-export const getCombinedJourneys = async (): Promise<JourneyBlock[]> => {
-  const dbJourneys = await getAllJourneyBlocks();
-  return dbJourneys;
 };
 
 // Journey와 그 단계들 로드

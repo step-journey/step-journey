@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  getCombinedJourneys,
+  getAllJourneyBlocks,
   loadJourneyWithSteps,
   initializeDatabase,
 } from "@/features/block/services/blockService";
@@ -21,7 +21,7 @@ export function useJourneys() {
         await initializeDatabase();
         setInitialized(true);
       }
-      return getCombinedJourneys();
+      return getAllJourneyBlocks();
     },
     staleTime: 5 * 60 * 1000, // 5분
   });
