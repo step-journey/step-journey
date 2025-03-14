@@ -11,7 +11,6 @@ export type BlockNoteBlock = Block;
 // Step 블록 전용 속성
 export interface StepBlockProperties extends BaseBlockProperties {
   title?: string;
-  blockNoteBlocks?: BlockNoteBlock[];
   stepIdInGroup?: number; // 그룹 내 순서
 }
 

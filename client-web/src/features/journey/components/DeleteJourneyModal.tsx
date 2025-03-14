@@ -8,27 +8,24 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useJourneyActions } from "../hooks/useJourneyActions";
-import { Block } from "@/features/block/types";
 
 interface DeleteJourneyModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   journeyId: string | null;
-  journeyBlocks: Block[] | undefined;
 }
 
 export function DeleteJourneyModal({
   isOpen,
   onOpenChange,
   journeyId,
-  journeyBlocks,
 }: DeleteJourneyModalProps) {
   const { deleteJourney, isDeleting } = useJourneyActions();
 
   const handleDeleteJourney = async () => {
-    if (!journeyId || !journeyBlocks) return;
+    if (!journeyId) return;
 
-    const success = await deleteJourney(journeyId, journeyBlocks);
+    const success = await deleteJourney(journeyId);
     if (success) {
       onOpenChange(false);
     }

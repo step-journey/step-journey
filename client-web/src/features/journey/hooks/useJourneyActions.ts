@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PATH from "@/constants/path";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { Block, BlockType, BlockNoteBlock } from "@/features/block/types";
+import { Block, BlockType } from "@/features/block/types";
 import {
   createBlock,
-  deleteBlock,
+  deleteBlockTree,
 } from "@/features/block/services/blockService";
+import { createDefaultParagraphBlock } from "@/features/block/utils/blockUtils";
+import { generateBlockId } from "@/features/block/utils/blockUtils";
 
 export function useJourneyActions() {
   const navigate = useNavigate();
@@ -29,17 +30,15 @@ export function useJourneyActions() {
 
     try {
       // 1. ID 생성
-      const currentTime = Date.now();
-      const journeyId = `${currentTime}-journey-${uuidv4()}`;
-      const groupId = `${currentTime}-group-${uuidv4()}`;
-      const stepId = `${currentTime}-step-${uuidv4()}`;
-      const blockNoteContentId = `${currentTime}-blockNote-${uuidv4()}`;
+      const journeyId = generateBlockId();
+      const groupId = generateBlockId();
+      const stepId = generateBlockId();
 
       // 2. 기본 여정 생성
       const newJourney: Partial<Block> = {
         id: journeyId,
         type: BlockType.JOURNEY,
-        childrenIds: [] as string[],
+        childrenIds: [],
         createdBy: "user",
         properties: {
           title,
@@ -52,7 +51,7 @@ export function useJourneyActions() {
         id: groupId,
         type: BlockType.STEP_GROUP,
         parentId: journeyId,
-        childrenIds: [] as string[],
+        childrenIds: [],
         createdBy: "user",
         properties: {
           title: "기본 그룹",
@@ -60,50 +59,31 @@ export function useJourneyActions() {
       };
 
       // 4. 기본 스텝 생성
-      const initialText = "여기에 내용을 작성해보세요!";
-
-      // BlockNote 에디터 형식에 맞는 초기 editorContent 생성
-      const initialEditorContent: BlockNoteBlock[] = [
-        {
-          id: blockNoteContentId,
-          type: "paragraph",
-          props: {
-            textColor: "default",
-            backgroundColor: "default",
-            textAlignment: "left",
-          },
-          content: [
-            {
-              type: "text",
-              text: initialText,
-              styles: {},
-            },
-          ],
-          children: [],
-        },
-      ];
-
       const newStep: Partial<Block> = {
         id: stepId,
         type: BlockType.STEP,
         parentId: groupId,
-        childrenIds: [] as string[],
+        childrenIds: [],
         createdBy: "user",
         properties: {
           title: "시작하기",
           stepIdInGroup: 1,
-          blockNoteBlocks: initialEditorContent,
         },
       };
 
-      // 5. 여정에 그룹 추가, 그룹에 스텝 추가
+      // 5. 기본 문단 블록 생성
+      const defaultParagraphBlock = createDefaultParagraphBlock(stepId);
+
+      // 6. 관계 설정
       newJourney.childrenIds = [groupId];
       newGroup.childrenIds = [stepId];
+      newStep.childrenIds = [defaultParagraphBlock.id];
 
-      // 6. DB에 저장
+      // 7. DB에 저장
       await createBlock(newJourney);
       await createBlock(newGroup);
       await createBlock(newStep);
+      await createBlock(defaultParagraphBlock);
 
       // 리스트 새로고침
       await queryClient.invalidateQueries({
@@ -123,38 +103,22 @@ export function useJourneyActions() {
   };
 
   // Journey 삭제 함수
-  const deleteJourney = async (journeyId: string, journeyBlocks: Block[]) => {
+  const deleteJourney = async (journeyId: string) => {
     if (!journeyId) return false;
 
     setIsDeleting(true);
 
     try {
-      const journeyBlock = journeyBlocks.find(
-        (block) => block.id === journeyId,
-      );
+      // 여정을 트리째로 삭제 (자식들도 모두 삭제)
+      await deleteBlockTree(journeyId);
 
-      if (journeyBlock) {
-        // 그룹 ID들 가져오기
-        const groupIds = journeyBlock.childrenIds || [];
+      // 리스트 새로고침
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.journeys.all,
+      });
 
-        // 각 그룹에 속한 스텝 삭제
-        for (const groupId of groupIds) {
-          await deleteBlock(groupId);
-        }
-
-        // 여정 블록 삭제
-        await deleteBlock(journeyId);
-
-        // 리스트 새로고침
-        await queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.journeys.all,
-        });
-
-        toast.success("여정이 삭제되었습니다.");
-        return true;
-      }
-
-      return false;
+      toast.success("여정이 삭제되었습니다.");
+      return true;
     } catch (error) {
       console.error("Failed to delete journey:", error);
       toast.error("여정 삭제에 실패했습니다.");

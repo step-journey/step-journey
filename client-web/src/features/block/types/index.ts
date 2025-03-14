@@ -16,9 +16,17 @@ export * from "./stepGroupBlock";
 // Step 블록 관련 타입 및 함수 재내보내기
 export * from "./stepBlock";
 
+// BlockNote 콘텐츠 블록 타입 재내보내기
+export * from "./contentBlocks";
+
 // 모든 가능한 블록 타입의 유니온 타입
 import { JourneyBlock } from "./journeyBlock";
 import { StepGroupBlock } from "./stepGroupBlock";
 import { StepBlock } from "./stepBlock";
+import { ContentBlockUnion } from "./contentBlocks";
 
-export type Block = JourneyBlock | StepGroupBlock | StepBlock;
+export type Block =
+  | JourneyBlock
+  | StepGroupBlock
+  | StepBlock
+  | ContentBlockUnion;

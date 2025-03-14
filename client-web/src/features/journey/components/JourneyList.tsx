@@ -70,7 +70,6 @@ export function JourneyList({ onCreateClick }: JourneyListProps) {
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         journeyId={deleteTargetId}
-        journeyBlocks={journeyBlocks}
       />
     </>
   );

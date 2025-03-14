@@ -1,10 +1,19 @@
 /**
  * 블록 관계 및 변환을 위한 유틸리티 함수
  */
-import { BlockType, Block, BlockNoteBlock, StepBlock } from "../types";
+import { BlockType, Block, StepBlock } from "../types";
 import { isJourneyBlock } from "../types";
 import { StepGroupBlock } from "../types";
 import { FlattenedBlock } from "../types";
+import { v4 as uuidv4 } from "uuid";
+
+/**
+ * 블록 ID 생성 함수
+ * @returns 생성된 고유 ID
+ */
+export function generateBlockId(): string {
+  return uuidv4();
+}
 
 /**
  * 부모 블록의 모든 자식 블록 가져오기
@@ -86,56 +95,62 @@ export function flattenBlocks(
 }
 
 /**
- * Step 블록에서 BlockNote 블록들을 가져오는 함수
- * @param block Step 블록
- * @returns BlockNote 블록 배열 (없는 경우 빈 배열)
+ * 기본 문단 블록 생성
+ *
+ * @param parentId 부모 블록 ID
+ * @returns 기본 문단 블록 객체
  */
-export function getBlockNoteBlocks(block: StepBlock): BlockNoteBlock[] {
-  return block.properties.blockNoteBlocks || [];
-}
+export function createDefaultParagraphBlock(parentId: string): Block {
+  const id = generateBlockId();
+  const now = new Date().toISOString();
 
-/**
- * Step 블록에 BlockNote 블록들을 설정하는 함수
- * @param block 원본 Step 블록
- * @param blocks 설정할 BlockNote 블록 배열
- * @returns 업데이트된 새 Step 블록
- */
-export function setBlockNoteBlocks(
-  block: StepBlock,
-  blocks: BlockNoteBlock[],
-): StepBlock {
   return {
-    ...block,
+    id,
+    type: BlockType.PARAGRAPH,
+    parentId,
+    childrenIds: [],
+    createdBy: "user",
+    createdAt: now,
+    updatedAt: now,
     properties: {
-      ...block.properties,
-      blockNoteBlocks: blocks,
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
     },
+    content: [
+      {
+        type: "text",
+        text: "내용을 입력하세요...",
+        styles: {},
+      },
+    ],
   };
 }
 
 /**
- * 기본 BlockNote 블록 배열을 생성하는 함수
- * @returns 기본 구성의 BlockNote 블록 배열
+ * BlockNote 타입을 내부 BlockType으로 변환
  */
-export function createDefaultBlockNoteBlocks(): BlockNoteBlock[] {
-  const defaultText = "내용을 입력하세요...";
-  return [
-    {
-      id: crypto.randomUUID(),
-      type: "paragraph",
-      props: {
-        textColor: "default",
-        backgroundColor: "default",
-        textAlignment: "left",
-      },
-      content: [
-        {
-          type: "text",
-          text: defaultText,
-          styles: {},
-        },
-      ],
-      children: [],
-    },
-  ] as BlockNoteBlock[];
+export function convertBlockNoteTypeToBlockType(
+  blockNoteType: string,
+): BlockType {
+  switch (blockNoteType) {
+    case "paragraph":
+      return BlockType.PARAGRAPH;
+    case "heading":
+      return BlockType.HEADING;
+    case "bulletListItem":
+      return BlockType.BULLET_LIST_ITEM;
+    case "numberedListItem":
+      return BlockType.NUMBERED_LIST_ITEM;
+    case "checkListItem":
+      return BlockType.CHECK_LIST_ITEM;
+    case "codeBlock":
+      return BlockType.CODE_BLOCK;
+    case "table":
+      return BlockType.TABLE;
+    case "image":
+      return BlockType.IMAGE;
+    default:
+      return BlockType.PARAGRAPH; // 기본값
+  }
 }

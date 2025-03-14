@@ -16,6 +16,15 @@ export enum BlockType {
   JOURNEY = "journey",
   STEP_GROUP = "step_group",
   STEP = "step",
+  // BlockNote 블록 타입들
+  PARAGRAPH = "paragraph",
+  HEADING = "heading",
+  BULLET_LIST_ITEM = "bulletListItem",
+  NUMBERED_LIST_ITEM = "numberedListItem",
+  CHECK_LIST_ITEM = "checkListItem",
+  CODE_BLOCK = "codeBlock",
+  TABLE = "table",
+  IMAGE = "image",
 }
 
 // 모든 블록 타입에 공통적인 기본 속성 (아직 없음)

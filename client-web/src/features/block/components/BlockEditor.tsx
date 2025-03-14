@@ -2,18 +2,17 @@ import { useEffect, useState, useMemo } from "react";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@/styles/text-editor.css";
-import { StepBlock, BlockNoteBlock } from "@/features/block/types";
-import { updateBlock } from "@/features/block/services/blockService";
-import { toast } from "sonner";
+import { StepBlock } from "@/features/block/types";
 import {
-  createDefaultBlockNoteBlocks,
-  getBlockNoteBlocks,
-  setBlockNoteBlocks,
-} from "@/features/block/utils/blockUtils";
+  saveBlockNoteContent,
+  getBlockNoteContent,
+} from "@/features/block/services/blockService";
+import { useAllBlocks } from "@/features/block/store/blockStore";
+import { toast } from "sonner";
 
 interface BlockEditorProps {
   block: StepBlock;
-  onSave?: (content: BlockNoteBlock[]) => void;
+  onSave?: () => void;
   readOnly?: boolean;
 }
 
@@ -22,29 +21,18 @@ export function BlockEditor({
   onSave,
   readOnly = false,
 }: BlockEditorProps) {
-  const [savedContent, setSavedContent] = useState<BlockNoteBlock[] | null>(
-    null,
-  );
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const allBlocks = useAllBlocks();
 
   // BlockNote에 필요한 초기 콘텐츠를 useMemo로 최적화
   const initialContent = useMemo(() => {
-    const blocks = getBlockNoteBlocks(block);
-    return blocks.length > 0 ? blocks : createDefaultBlockNoteBlocks();
-  }, [block]);
+    return getBlockNoteContent(block, allBlocks);
+  }, [block, allBlocks]);
 
   // 에디터 인스턴스 생성
   const editor = useCreateBlockNote({
     initialContent,
   });
-
-  // 초기 마운트 시 에디터 컨텐츠 설정
-  useEffect(() => {
-    const blocks = getBlockNoteBlocks(block);
-    if (blocks.length > 0) {
-      setSavedContent(blocks);
-    }
-  }, [block]);
 
   // 자동 저장 타이머
   useEffect(() => {
@@ -55,19 +43,14 @@ export function BlockEditor({
         // BlockNote 에디터의 현재 최상위 블록들 가져오기
         const topLevelBlocks = editor.document;
 
-        // 내용이 변경된 경우에만 저장
-        if (JSON.stringify(topLevelBlocks) !== JSON.stringify(savedContent)) {
-          setSavedContent(topLevelBlocks);
-          setLastSaved(new Date());
+        // 중요: 여기서는 에디터 내용이 변경됐는지 체크하지 않고 매번 저장
+        // 저장 로직
+        await saveBlockNoteContent(block, topLevelBlocks);
+        setLastSaved(new Date());
 
-          // 블록 업데이트
-          if (onSave) {
-            onSave(topLevelBlocks);
-          }
-
-          // IndexedDB에 직접 저장
-          const updatedBlock = setBlockNoteBlocks(block, topLevelBlocks);
-          await updateBlock(updatedBlock);
+        // 사용자 콜백 호출
+        if (onSave) {
+          onSave();
         }
       } catch (error) {
         console.error("Failed to save editor content:", error);
@@ -76,7 +59,7 @@ export function BlockEditor({
     }, 2000); // 2초마다 저장
 
     return () => clearInterval(saveInterval);
-  }, [editor, block, savedContent, onSave, readOnly]);
+  }, [editor, block, onSave, readOnly]);
 
   return (
     <div className="editor-container">

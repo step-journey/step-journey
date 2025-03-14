@@ -6,9 +6,14 @@ import {
   isJourneyBlock,
   JourneyBlock,
   StepBlock,
-  StepGroupBlock,
+  BlockNoteBlock,
 } from "../types";
 import { flattenBlocks } from "../utils/blockUtils";
+import {
+  prepareBlocksForSaving,
+  getBlockNoteBlocksFromStep,
+} from "../utils/blockNoteConverter";
+import { generateBlockId } from "@/features/block/utils/blockUtils";
 
 // 특정 Journey 블록 조회
 export const getJourneyBlock = async (
@@ -26,31 +31,38 @@ export const getJourneyWithRelatedBlocks = async (
   const journeyBlock = await getJourneyBlock(journeyId);
   if (!journeyBlock) return [];
 
-  // Journey 블록의 모든 자식 블록(StepGroup)과 손자 블록(Step) 가져오기
-  const relatedBlocks: Block[] = [journeyBlock];
+  // Journey 블록 가져오기
+  const allBlocks: Block[] = [journeyBlock];
 
-  // StepGroup 블록 가져오기
-  const stepGroupBlocks = (await dbClient.blocks
-    .where("parentId")
-    .equals(journeyId)
-    .and((item) => item.type === BlockType.STEP_GROUP)
-    .toArray()) as StepGroupBlock[];
+  // Journey 블록의 하위 블록 트리 순회하기
+  await fetchChildrenRecursively(journeyId, allBlocks);
 
-  relatedBlocks.push(...stepGroupBlocks);
-
-  // 각 StepGroup의 Step 블록 가져오기
-  for (const groupBlock of stepGroupBlocks) {
-    const stepBlocks = (await dbClient.blocks
-      .where("parentId")
-      .equals(groupBlock.id)
-      .and((item) => item.type === BlockType.STEP)
-      .toArray()) as StepBlock[];
-
-    relatedBlocks.push(...stepBlocks);
-  }
-
-  return relatedBlocks;
+  return allBlocks;
 };
+
+/**
+ * 재귀적으로 모든 자식 블록 가져오기
+ */
+async function fetchChildrenRecursively(
+  blockId: string,
+  results: Block[],
+): Promise<void> {
+  // 해당 블록의 모든 자식 블록 가져오기
+  const children = await dbClient.blocks
+    .where("parentId")
+    .equals(blockId)
+    .toArray();
+
+  // 결과에 자식들 추가
+  results.push(...children);
+
+  // 각 자식에 대해 재귀적으로 자식의 자식 가져오기
+  for (const child of children) {
+    if (child.childrenIds && child.childrenIds.length > 0) {
+      await fetchChildrenRecursively(child.id, results);
+    }
+  }
+}
 
 // 모든 Journey 블록 조회
 export const getAllJourneyBlocks = async (): Promise<JourneyBlock[]> => {
@@ -101,7 +113,8 @@ export const initializeDatabase = async (): Promise<void> => {
 export const createBlock = async (
   partialBlock: Partial<Block>,
 ): Promise<string> => {
-  const id = partialBlock.id || crypto.randomUUID();
+  // ID가 없으면 블록 타입에 맞는 ID 생성
+  const id = partialBlock.id || generateBlockId();
   const now = new Date().toISOString();
 
   // 타입 안전한 블록 생성
@@ -135,7 +148,97 @@ export const updateBlock = async (block: Block): Promise<void> => {
   await dbClient.blocks.put(updatedBlock);
 };
 
+// 여러 블록 업데이트
+export const updateBlocks = async (blocks: Block[]): Promise<void> => {
+  const now = new Date().toISOString();
+
+  // 모든 블록에 업데이트 시간 설정
+  const updatedBlocks = blocks.map((block) => ({
+    ...block,
+    updatedAt: now,
+  }));
+
+  // 트랜잭션으로 모든 블록 업데이트
+  await dbClient.transaction("rw", dbClient.blocks, async () => {
+    for (const block of updatedBlocks) {
+      await dbClient.blocks.put(block);
+    }
+  });
+};
+
 // 블록 삭제
 export const deleteBlock = async (id: string): Promise<void> => {
   await dbClient.blocks.delete(id);
 };
+
+// 재귀적으로 블록과 모든 자식 블록 삭제
+export const deleteBlockTree = async (id: string): Promise<void> => {
+  const block = await dbClient.blocks.get(id);
+  if (!block) return;
+
+  // 모든 자식 블록을 재귀적으로 삭제
+  for (const childId of block.childrenIds) {
+    await deleteBlockTree(childId);
+  }
+
+  // 현재 블록 삭제
+  await deleteBlock(id);
+};
+
+/**
+ * BlockNote 에디터의 콘텐츠를 커스텀 블록으로 변환하여 저장
+ * @param stepBlock 스텝 블록
+ * @param blockNoteBlocks BlockNote 에디터의 블록 배열
+ */
+export async function saveBlockNoteContent(
+  stepBlock: StepBlock,
+  blockNoteBlocks: BlockNoteBlock[],
+): Promise<void> {
+  // 기존 자식 블록들 삭제 (트리 단위로 삭제)
+  for (const childId of stepBlock.childrenIds) {
+    await deleteBlockTree(childId);
+  }
+
+  // BlockNote 콘텐츠를 커스텀 블록으로 변환
+  const customBlocks = await prepareBlocksForSaving(
+    blockNoteBlocks,
+    stepBlock.id,
+    stepBlock.createdBy,
+  );
+
+  // 최상위 블록 ID 추출하여 스텝 블록의 자식으로 설정
+  const topLevelBlockIds = customBlocks
+    .filter((block) => block.parentId === stepBlock.id)
+    .map((block) => block.id);
+
+  // 스텝 블록 업데이트
+  const updatedStepBlock: StepBlock = {
+    ...stepBlock,
+    childrenIds: topLevelBlockIds,
+    updatedAt: new Date().toISOString(),
+  };
+
+  // 트랜잭션으로 모든 변경사항 한번에 저장
+  await dbClient.transaction("rw", dbClient.blocks, async () => {
+    // 1. 스텝 블록 업데이트
+    await dbClient.blocks.put(updatedStepBlock);
+
+    // 2. 모든 콘텐츠 블록 저장
+    for (const block of customBlocks) {
+      await dbClient.blocks.put(block);
+    }
+  });
+}
+
+/**
+ * 스텝 블록에서 BlockNote 에디터를 위한 콘텐츠 가져오기
+ * @param stepBlock 스텝 블록
+ * @param allBlocks 모든 블록 목록
+ */
+export function getBlockNoteContent(
+  stepBlock: StepBlock,
+  allBlocks: Block[],
+): BlockNoteBlock[] {
+  // 스텝이 속한 전체 블록 목록에서 BlockNote 구조 구성
+  return getBlockNoteBlocksFromStep(stepBlock, allBlocks);
+}
