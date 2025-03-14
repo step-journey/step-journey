@@ -1,10 +1,10 @@
 /**
  * 블록 관계 및 변환을 위한 유틸리티 함수
  */
-import { BlockType, Block } from "../types";
+import { BlockType, Block, BlockNoteBlock, StepBlock } from "../types";
 import { isJourneyBlock } from "../types";
 import { StepGroupBlock } from "../types";
-import { FlattenedBlock, StepBlock } from "../types";
+import { FlattenedBlock } from "../types";
 
 /**
  * 부모 블록의 모든 자식 블록 가져오기
@@ -83,4 +83,59 @@ export function flattenBlocks(
   });
 
   return result;
+}
+
+/**
+ * Step 블록에서 BlockNote 블록들을 가져오는 함수
+ * @param block Step 블록
+ * @returns BlockNote 블록 배열 (없는 경우 빈 배열)
+ */
+export function getBlockNoteBlocks(block: StepBlock): BlockNoteBlock[] {
+  return block.properties.blockNoteBlocks || [];
+}
+
+/**
+ * Step 블록에 BlockNote 블록들을 설정하는 함수
+ * @param block 원본 Step 블록
+ * @param blocks 설정할 BlockNote 블록 배열
+ * @returns 업데이트된 새 Step 블록
+ */
+export function setBlockNoteBlocks(
+  block: StepBlock,
+  blocks: BlockNoteBlock[],
+): StepBlock {
+  return {
+    ...block,
+    properties: {
+      ...block.properties,
+      blockNoteBlocks: blocks,
+    },
+  };
+}
+
+/**
+ * 기본 BlockNote 블록 배열을 생성하는 함수
+ * @returns 기본 구성의 BlockNote 블록 배열
+ */
+export function createDefaultBlockNoteBlocks(): BlockNoteBlock[] {
+  const defaultText = "내용을 입력하세요...";
+  return [
+    {
+      id: crypto.randomUUID(),
+      type: "paragraph",
+      props: {
+        textColor: "default",
+        backgroundColor: "default",
+        textAlignment: "left",
+      },
+      content: [
+        {
+          type: "text",
+          text: defaultText,
+          styles: {},
+        },
+      ],
+      children: [],
+    },
+  ] as BlockNoteBlock[];
 }

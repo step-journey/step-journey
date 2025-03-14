@@ -3,16 +3,15 @@
  */
 
 import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
+import { Block } from "@blocknote/core";
 
-// BlockNote 에디터 컨텐츠 타입
-export interface BlockNoteContent {
-  blocks: any[]; // BlockNote의 JSON 형식 (serialized)
-}
+// BlockNote 에디터 컨텐츠 타입 - BlockNote 라이브러리의 실제 타입 사용
+export type BlockNoteBlock = Block;
 
 // Step 블록 전용 속성
 export interface StepBlockProperties extends BaseBlockProperties {
   title?: string;
-  editorContent?: BlockNoteContent; // BlockNote 에디터 컨텐츠 (블록 기반)
+  blockNoteBlocks?: BlockNoteBlock[];
   stepIdInGroup?: number; // 그룹 내 순서
 }
 

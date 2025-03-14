@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PATH from "@/constants/path";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { Block, BlockType, BlockNoteContent } from "@/features/block/types";
+import { Block, BlockType, BlockNoteBlock } from "@/features/block/types";
 import {
   createBlock,
   deleteBlock,
@@ -63,27 +63,25 @@ export function useJourneyActions() {
       const initialText = "여기에 내용을 작성해보세요!";
 
       // BlockNote 에디터 형식에 맞는 초기 editorContent 생성
-      const initialEditorContent: BlockNoteContent = {
-        blocks: [
-          {
-            id: blockNoteContentId,
-            type: "paragraph",
-            props: {
-              textColor: "default",
-              backgroundColor: "default",
-              textAlignment: "left",
-            },
-            content: [
-              {
-                type: "text",
-                text: initialText,
-                styles: {},
-              },
-            ],
-            children: [],
+      const initialEditorContent: BlockNoteBlock[] = [
+        {
+          id: blockNoteContentId,
+          type: "paragraph",
+          props: {
+            textColor: "default",
+            backgroundColor: "default",
+            textAlignment: "left",
           },
-        ],
-      };
+          content: [
+            {
+              type: "text",
+              text: initialText,
+              styles: {},
+            },
+          ],
+          children: [],
+        },
+      ];
 
       const newStep: Partial<Block> = {
         id: stepId,
@@ -94,7 +92,7 @@ export function useJourneyActions() {
         properties: {
           title: "시작하기",
           stepIdInGroup: 1,
-          editorContent: initialEditorContent,
+          blockNoteBlocks: initialEditorContent,
         },
       };
 

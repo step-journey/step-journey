@@ -2,13 +2,18 @@ import { useEffect, useState, useMemo } from "react";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@/styles/text-editor.css";
-import { StepBlock, BlockNoteContent } from "@/features/block/types";
+import { StepBlock, BlockNoteBlock } from "@/features/block/types";
 import { updateBlock } from "@/features/block/services/blockService";
 import { toast } from "sonner";
+import {
+  createDefaultBlockNoteBlocks,
+  getBlockNoteBlocks,
+  setBlockNoteBlocks,
+} from "@/features/block/utils/blockUtils";
 
 interface BlockEditorProps {
   block: StepBlock;
-  onSave?: (content: BlockNoteContent) => void;
+  onSave?: (content: BlockNoteBlock[]) => void;
   readOnly?: boolean;
 }
 
@@ -17,40 +22,16 @@ export function BlockEditor({
   onSave,
   readOnly = false,
 }: BlockEditorProps) {
-  const [savedContent, setSavedContent] = useState<BlockNoteContent | null>(
+  const [savedContent, setSavedContent] = useState<BlockNoteBlock[] | null>(
     null,
   );
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // BlockNote에 필요한 초기 콘텐츠를 useMemo로 최적화
   const initialContent = useMemo(() => {
-    // editorContent 있으면 그 블록을 사용
-    if (block.properties.editorContent?.blocks) {
-      return block.properties.editorContent.blocks;
-    }
-
-    // 없으면 기본 블록 생성
-    const defaultText = "내용을 입력하세요...";
-    return [
-      {
-        id: "initial-block",
-        type: "paragraph",
-        props: {
-          textColor: "default",
-          backgroundColor: "default",
-          textAlignment: "left",
-        },
-        content: [
-          {
-            type: "text",
-            text: defaultText,
-            styles: {},
-          },
-        ],
-        children: [],
-      },
-    ];
-  }, [block.id, block.properties.editorContent]);
+    const blocks = getBlockNoteBlocks(block);
+    return blocks.length > 0 ? blocks : createDefaultBlockNoteBlocks();
+  }, [block]);
 
   // 에디터 인스턴스 생성
   const editor = useCreateBlockNote({
@@ -59,10 +40,11 @@ export function BlockEditor({
 
   // 초기 마운트 시 에디터 컨텐츠 설정
   useEffect(() => {
-    if (block.properties.editorContent) {
-      setSavedContent(block.properties.editorContent);
+    const blocks = getBlockNoteBlocks(block);
+    if (blocks.length > 0) {
+      setSavedContent(blocks);
     }
-  }, [block.id, block.properties.editorContent]);
+  }, [block]);
 
   // 자동 저장 타이머
   useEffect(() => {
@@ -70,29 +52,21 @@ export function BlockEditor({
 
     const saveInterval = setInterval(async () => {
       try {
-        // 문서의 현재 블록 가져오기
-        const blocks = editor.document;
-        const content = { blocks, version: "1.0" };
+        // BlockNote 에디터의 현재 최상위 블록들 가져오기
+        const topLevelBlocks = editor.document;
 
         // 내용이 변경된 경우에만 저장
-        if (JSON.stringify(content) !== JSON.stringify(savedContent)) {
-          setSavedContent(content);
+        if (JSON.stringify(topLevelBlocks) !== JSON.stringify(savedContent)) {
+          setSavedContent(topLevelBlocks);
           setLastSaved(new Date());
 
           // 블록 업데이트
           if (onSave) {
-            onSave(content);
+            onSave(topLevelBlocks);
           }
 
           // IndexedDB에 직접 저장
-          const updatedBlock = {
-            ...block,
-            properties: {
-              ...block.properties,
-              editorContent: content,
-              // 텍스트 콘텐츠도 함께 업데이트
-            },
-          };
+          const updatedBlock = setBlockNoteBlocks(block, topLevelBlocks);
           await updateBlock(updatedBlock);
         }
       } catch (error) {
