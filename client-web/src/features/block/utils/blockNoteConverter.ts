@@ -2,7 +2,14 @@
  * BlockNote 블록과 StepJourney 커스텀 블록 간 변환을 위한 유틸리티 함수
  */
 
-import { Block as BlockNoteBlock } from "@blocknote/core";
+import {
+  Block as BlockNoteBlock,
+  DefaultInlineContentSchema,
+  DefaultStyleSchema,
+  StyledText,
+  TableCell,
+  TableContent,
+} from "@blocknote/core";
 import {
   Block,
   BlockType,
@@ -14,10 +21,6 @@ import {
   CodeBlock,
   TableBlock,
   ImageBlock,
-  InlineContent,
-  TextContent,
-  TableCell,
-  TableContent,
 } from "../types";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
 
@@ -26,12 +29,12 @@ import { generateBlockId } from "@/features/block/utils/blockUtils";
  */
 export function convertBlockNoteInlineToCustomInline(
   content: any[],
-): InlineContent[] {
+): StyledText<DefaultStyleSchema>[] {
   if (!content || !Array.isArray(content)) return [];
 
   return content.map((item) => {
     if (item.type === "text") {
-      const textContent: TextContent = {
+      const textContent: StyledText<DefaultStyleSchema> = {
         type: "text",
         text: item.text || "",
         styles: {
@@ -53,7 +56,7 @@ export function convertBlockNoteInlineToCustomInline(
  * StepJourney 인라인 콘텐츠를 BlockNote 인라인 콘텐츠로 변환
  */
 export function convertCustomInlineToBlockNoteInline(
-  content: InlineContent[],
+  content: StyledText<DefaultStyleSchema>[],
 ): any[] {
   if (!content || !Array.isArray(content)) return [];
 
@@ -79,7 +82,9 @@ export function convertCustomInlineToBlockNoteInline(
 /**
  * BlockNote 테이블 셀을 StepJourney 테이블 셀로 변환
  */
-export function convertBlockNoteTableCellToCustom(cell: any): TableCell {
+export function convertBlockNoteTableCellToCustom(
+  cell: any,
+): TableCell<DefaultInlineContentSchema, DefaultStyleSchema> {
   return {
     type: "tableCell",
     content: convertBlockNoteInlineToCustomInline(cell.content || []),
@@ -96,7 +101,9 @@ export function convertBlockNoteTableCellToCustom(cell: any): TableCell {
 /**
  * StepJourney 테이블 셀을 BlockNote 테이블 셀로 변환
  */
-export function convertCustomTableCellToBlockNote(cell: TableCell): any {
+export function convertCustomTableCellToBlockNote(
+  cell: TableCell<DefaultInlineContentSchema, DefaultStyleSchema>,
+): any {
   return {
     type: "tableCell",
     content: convertCustomInlineToBlockNoteInline(cell.content || []),
@@ -115,7 +122,7 @@ export function convertCustomTableCellToBlockNote(cell: TableCell): any {
  */
 export function convertBlockNoteTableContentToCustom(
   tableContent: any,
-): TableContent {
+): TableContent<DefaultInlineContentSchema, DefaultStyleSchema> {
   return {
     type: "tableContent",
     columnWidths: tableContent.columnWidths || [],
@@ -131,7 +138,7 @@ export function convertBlockNoteTableContentToCustom(
  * StepJourney 테이블 콘텐츠를 BlockNote 테이블 콘텐츠로 변환
  */
 export function convertCustomTableContentToBlockNote(
-  tableContent: TableContent,
+  tableContent: TableContent<DefaultInlineContentSchema, DefaultStyleSchema>,
 ): any {
   return {
     type: "tableContent",
@@ -220,7 +227,7 @@ export function convertBlockNoteToCustomBlock(
     case "bulletListItem": {
       const bulletListBlock: BulletListItemBlock = {
         ...baseBlock,
-        type: BlockType.BULLET_LIST_ITEM,
+        type: BlockType.BULLET_LIST,
         properties: {
           textColor: blockNoteBlock.props?.textColor || "default",
           backgroundColor: blockNoteBlock.props?.backgroundColor || "default",
@@ -244,7 +251,7 @@ export function convertBlockNoteToCustomBlock(
     case "numberedListItem": {
       const numberedListBlock: NumberedListItemBlock = {
         ...baseBlock,
-        type: BlockType.NUMBERED_LIST_ITEM,
+        type: BlockType.NUMBERED_LIST,
         properties: {
           // 필수 속성인 start 추가 (컴파일 에러 해결)
           start: blockNoteBlock.props?.start,
@@ -270,7 +277,7 @@ export function convertBlockNoteToCustomBlock(
     case "checkListItem": {
       const checkListBlock: CheckListItemBlock = {
         ...baseBlock,
-        type: BlockType.CHECK_LIST_ITEM,
+        type: BlockType.CHECK_LIST,
         properties: {
           checked: !!blockNoteBlock.props?.checked,
           textColor: blockNoteBlock.props?.textColor || "default",
@@ -440,7 +447,7 @@ export function convertCustomToBlockNoteBlock(
       } as BlockNoteBlock;
     }
 
-    case BlockType.BULLET_LIST_ITEM: {
+    case BlockType.BULLET_LIST: {
       const bulletListBlock = customBlock as BulletListItemBlock;
       return {
         ...baseBlockNote,
@@ -458,7 +465,7 @@ export function convertCustomToBlockNoteBlock(
       } as BlockNoteBlock;
     }
 
-    case BlockType.NUMBERED_LIST_ITEM: {
+    case BlockType.NUMBERED_LIST: {
       const numberedListBlock = customBlock as NumberedListItemBlock;
       return {
         ...baseBlockNote,
@@ -478,7 +485,7 @@ export function convertCustomToBlockNoteBlock(
       } as BlockNoteBlock;
     }
 
-    case BlockType.CHECK_LIST_ITEM: {
+    case BlockType.CHECK_LIST: {
       const checkListBlock = customBlock as CheckListItemBlock;
       return {
         ...baseBlockNote,

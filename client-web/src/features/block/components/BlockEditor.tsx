@@ -3,12 +3,10 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@/styles/text-editor.css";
 import { StepBlock } from "@/features/block/types";
-import {
-  saveBlockNoteContent,
-  getBlockNoteContent,
-} from "@/features/block/services/blockService";
+import { saveBlockNoteContent } from "@/features/block/services/blockService";
 import { useAllBlocks } from "@/features/block/store/blockStore";
 import { toast } from "sonner";
+import { getBlockNoteBlocksFromStep } from "@/features/block/utils/blockNoteConverter";
 
 interface BlockEditorProps {
   block: StepBlock;
@@ -26,7 +24,7 @@ export function BlockEditor({
 
   // BlockNote에 필요한 초기 콘텐츠를 useMemo로 최적화
   const initialContent = useMemo(() => {
-    return getBlockNoteContent(block, allBlocks);
+    return getBlockNoteBlocksFromStep(block, allBlocks);
   }, [block, allBlocks]);
 
   // 에디터 인스턴스 생성

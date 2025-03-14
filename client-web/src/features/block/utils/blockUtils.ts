@@ -139,11 +139,11 @@ export function convertBlockNoteTypeToBlockType(
     case "heading":
       return BlockType.HEADING;
     case "bulletListItem":
-      return BlockType.BULLET_LIST_ITEM;
+      return BlockType.BULLET_LIST;
     case "numberedListItem":
-      return BlockType.NUMBERED_LIST_ITEM;
+      return BlockType.NUMBERED_LIST;
     case "checkListItem":
-      return BlockType.CHECK_LIST_ITEM;
+      return BlockType.CHECK_LIST;
     case "codeBlock":
       return BlockType.CODE_BLOCK;
     case "table":

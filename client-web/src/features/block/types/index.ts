@@ -1,32 +1,51 @@
+import { JourneyBlock } from "./journeyBlock";
+import { StepGroupBlock } from "./stepGroupBlock";
+import { StepBlock } from "./stepBlock";
+import { ParagraphBlock } from "./paragraphBlock";
+import { HeadingBlock } from "./headingBlock";
+import { BulletListItemBlock } from "./bulletListItemBlock";
+import { NumberedListItemBlock } from "./numberedListItemBlock";
+import { CheckListItemBlock } from "./checkListItemBlock";
+import { CodeBlock } from "./codeBlock";
+import { TableBlock } from "./tableBlock";
+import { ImageBlock } from "./imageBlock";
+
 /**
- * 블록 데이터 모델 타입 정의
+ * 블록 타입 시스템의 중앙 진입점 (Barrel Pattern)
  *
- * 모든 블록 관련 타입들을 재내보내기
+ * 이 파일은 모든 블록 관련 타입을 하나의 모듈로 통합하여 외부에 노출함
+ * 이를 통해 앱 전반에서 @/features/block/types 경로로 블록 타입 접근 가능
  */
 
 // 기본 타입 및 인터페이스 재내보내기
 export * from "./baseBlock";
 
-// Journey 블록 관련 타입 및 함수 재내보내기
+// BlockNote 기반 블록의 기본 타입 재내보내기
+export * from "./blockNoteBaseTypes";
+
+// 개별 블록 타입 재내보내기
 export * from "./journeyBlock";
-
-// StepGroup 블록 관련 타입 및 함수 재내보내기
 export * from "./stepGroupBlock";
-
-// Step 블록 관련 타입 및 함수 재내보내기
 export * from "./stepBlock";
-
-// BlockNote 콘텐츠 블록 타입 재내보내기
-export * from "./contentBlocks";
+export * from "./paragraphBlock";
+export * from "./headingBlock";
+export * from "./bulletListItemBlock";
+export * from "./numberedListItemBlock";
+export * from "./checkListItemBlock";
+export * from "./codeBlock";
+export * from "./tableBlock";
+export * from "./imageBlock";
 
 // 모든 가능한 블록 타입의 유니온 타입
-import { JourneyBlock } from "./journeyBlock";
-import { StepGroupBlock } from "./stepGroupBlock";
-import { StepBlock } from "./stepBlock";
-import { ContentBlockUnion } from "./contentBlocks";
-
 export type Block =
   | JourneyBlock
   | StepGroupBlock
   | StepBlock
-  | ContentBlockUnion;
+  | ParagraphBlock
+  | HeadingBlock
+  | BulletListItemBlock
+  | NumberedListItemBlock
+  | CheckListItemBlock
+  | CodeBlock
+  | TableBlock
+  | ImageBlock;

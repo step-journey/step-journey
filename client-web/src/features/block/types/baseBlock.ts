@@ -14,15 +14,15 @@ export interface TimeStampFields {
 // 사용 가능한 블록 타입 열거형
 export enum BlockType {
   JOURNEY = "journey",
-  STEP_GROUP = "step_group",
+  STEP_GROUP = "stepGroup",
   STEP = "step",
   // BlockNote 블록 타입들
   PARAGRAPH = "paragraph",
   HEADING = "heading",
-  BULLET_LIST_ITEM = "bulletListItem",
-  NUMBERED_LIST_ITEM = "numberedListItem",
-  CHECK_LIST_ITEM = "checkListItem",
-  CODE_BLOCK = "codeBlock",
+  BULLET_LIST = "bulletList",
+  NUMBERED_LIST = "numberedList",
+  CHECK_LIST = "checkList",
+  CODE_BLOCK = "code",
   TABLE = "table",
   IMAGE = "image",
 }

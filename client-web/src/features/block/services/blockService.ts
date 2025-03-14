@@ -6,13 +6,10 @@ import {
   isJourneyBlock,
   JourneyBlock,
   StepBlock,
-  BlockNoteBlock,
 } from "../types";
+import { Block as BlockNoteBlock } from "@blocknote/core";
 import { flattenBlocks } from "../utils/blockUtils";
-import {
-  prepareBlocksForSaving,
-  getBlockNoteBlocksFromStep,
-} from "../utils/blockNoteConverter";
+import { prepareBlocksForSaving } from "../utils/blockNoteConverter";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
 
 // 특정 Journey 블록 조회
@@ -228,17 +225,4 @@ export async function saveBlockNoteContent(
       await dbClient.blocks.put(block);
     }
   });
-}
-
-/**
- * 스텝 블록에서 BlockNote 에디터를 위한 콘텐츠 가져오기
- * @param stepBlock 스텝 블록
- * @param allBlocks 모든 블록 목록
- */
-export function getBlockNoteContent(
-  stepBlock: StepBlock,
-  allBlocks: Block[],
-): BlockNoteBlock[] {
-  // 스텝이 속한 전체 블록 목록에서 BlockNote 구조 구성
-  return getBlockNoteBlocksFromStep(stepBlock, allBlocks);
 }

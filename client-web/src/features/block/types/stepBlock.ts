@@ -3,10 +3,6 @@
  */
 
 import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
-import { Block } from "@blocknote/core";
-
-// BlockNote 에디터 컨텐츠 타입 - BlockNote 라이브러리의 실제 타입 사용
-export type BlockNoteBlock = Block;
 
 // Step 블록 전용 속성
 export interface StepBlockProperties extends BaseBlockProperties {
