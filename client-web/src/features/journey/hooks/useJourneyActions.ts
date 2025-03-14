@@ -28,8 +28,12 @@ export function useJourneyActions() {
     setIsCreating(true);
 
     try {
-      // 1. 여정 ID 생성
-      const journeyId = uuidv4();
+      // 1. ID 생성
+      const currentTime = Date.now();
+      const journeyId = `${currentTime}-journey-${uuidv4()}`;
+      const groupId = `${currentTime}-group-${uuidv4()}`;
+      const stepId = `${currentTime}-step-${uuidv4()}`;
+      const blockNoteContentId = `${currentTime}-blockNote-${uuidv4()}`;
 
       // 2. 기본 여정 생성
       const newJourney: Partial<Block> = {
@@ -43,8 +47,7 @@ export function useJourneyActions() {
         },
       };
 
-      // 3. 기본 그룹 생성
-      const groupId = uuidv4();
+      // 3. 기본 Step Group 생성
       const newGroup: Partial<Block> = {
         id: groupId,
         type: BlockType.STEP_GROUP,
@@ -57,17 +60,14 @@ export function useJourneyActions() {
       };
 
       // 4. 기본 스텝 생성
-      const currentTime = Date.now();
-      const stepId = `step-${currentTime}-${uuidv4()}`;
       const initialText = "여기에 내용을 작성해보세요!";
-      const blockId = uuidv4();
 
       // BlockNote 에디터 형식에 맞는 초기 editorContent 생성
       const initialEditorContent: BlockNoteContent = {
         version: "1.0",
         blocks: [
           {
-            id: blockId,
+            id: blockNoteContentId,
             type: "paragraph",
             props: {
               textColor: "default",
