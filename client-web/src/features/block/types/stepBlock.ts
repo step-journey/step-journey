@@ -13,7 +13,6 @@ export interface BlockNoteContent {
 // Step 블록 전용 속성
 export interface StepBlockProperties extends BaseBlockProperties {
   title?: string;
-  content?: string[]; // 단계의 실제 내용 (텍스트 기반)
   editorContent?: BlockNoteContent; // BlockNote 에디터 컨텐츠 (블록 기반)
   stepIdInGroup?: number; // 그룹 내 순서
 }
@@ -47,13 +46,4 @@ export function isStepBlock(block: any): block is StepBlock {
  */
 export function getStepTitle(block: StepBlock): string {
   return block.properties.title || "제목 없는 단계";
-}
-
-/**
- * Step 블록의 내용 가져오기
- * @param block Step 블록
- * @returns 내용 배열(설정되지 않은 경우 빈 배열)
- */
-export function getStepContent(block: StepBlock): string[] {
-  return block.properties.content || [];
 }

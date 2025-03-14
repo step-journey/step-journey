@@ -94,7 +94,6 @@ export function useJourneyActions() {
         createdBy: "user",
         properties: {
           title: "시작하기",
-          content: [initialText],
           stepIdInGroup: 1,
           editorContent: initialEditorContent,
         },

@@ -29,8 +29,8 @@ export function BlockEditor({
       return block.properties.editorContent.blocks;
     }
 
-    // 없으면 content 배열에서 텍스트를 가져와 기본 블록 생성
-    const defaultText = block.properties.content?.[0] || "내용을 입력하세요...";
+    // 없으면 기본 블록 생성
+    const defaultText = "내용을 입력하세요...";
     return [
       {
         id: "initial-block",
@@ -50,32 +50,12 @@ export function BlockEditor({
         children: [],
       },
     ];
-  }, [block.id, block.properties.editorContent, block.properties.content]);
+  }, [block.id, block.properties.editorContent]);
 
   // 에디터 인스턴스 생성
   const editor = useCreateBlockNote({
     initialContent,
   });
-
-  // BlockNote 문서에서 텍스트 내용을 추출하는 함수
-  const extractTextFromBlocks = (blocks: any[]) => {
-    return blocks
-      .map((block) => {
-        // 인라인 콘텐츠 배열인 경우 (일반적인 텍스트 블록)
-        if (Array.isArray(block.content)) {
-          return block.content
-            .map((item: any) => (item.type === "text" ? item.text || "" : ""))
-            .join("");
-        }
-        // 테이블 콘텐츠인 경우
-        else if (block.content && block.content.type === "tableContent") {
-          return ""; // 테이블은 간단히 빈 문자열로 표현하거나 필요에 따라 처리
-        }
-        // 콘텐츠가 없는 경우
-        return "";
-      })
-      .filter(Boolean);
-  };
 
   // 초기 마운트 시 에디터 컨텐츠 설정
   useEffect(() => {
@@ -104,9 +84,6 @@ export function BlockEditor({
             onSave(content);
           }
 
-          // 텍스트 내용 추출
-          const textContent = extractTextFromBlocks(blocks);
-
           // IndexedDB에 직접 저장
           const updatedBlock = {
             ...block,
@@ -114,7 +91,6 @@ export function BlockEditor({
               ...block.properties,
               editorContent: content,
               // 텍스트 콘텐츠도 함께 업데이트
-              content: textContent,
             },
           };
           await updateBlock(updatedBlock);
