@@ -24,7 +24,7 @@ export function BlockEditor({
 
   // BlockNote에 필요한 초기 콘텐츠를 useMemo로 최적화
   const initialContent = useMemo(() => {
-    // editorContent가 있으면 그 블록을 사용
+    // editorContent 있으면 그 블록을 사용
     if (block.properties.editorContent?.blocks) {
       return block.properties.editorContent.blocks;
     }

@@ -7,7 +7,6 @@ import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
 // BlockNote 에디터 컨텐츠 타입
 export interface BlockNoteContent {
   blocks: any[]; // BlockNote의 JSON 형식 (serialized)
-  version: string;
 }
 
 // Step 블록 전용 속성

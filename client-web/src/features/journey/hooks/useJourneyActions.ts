@@ -64,7 +64,6 @@ export function useJourneyActions() {
 
       // BlockNote 에디터 형식에 맞는 초기 editorContent 생성
       const initialEditorContent: BlockNoteContent = {
-        version: "1.0",
         blocks: [
           {
             id: blockNoteContentId,
