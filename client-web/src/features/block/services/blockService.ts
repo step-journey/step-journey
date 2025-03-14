@@ -111,7 +111,7 @@ export const createBlock = async (
     createdAt: now,
     updatedAt: now,
     // 기본 속성이 없는 경우 빈 값 추가
-    children: partialBlock.children || [],
+    childrenIds: partialBlock.childrenIds || [],
     properties: partialBlock.properties || {},
     type: partialBlock.type || BlockType.STEP, // 기본 타입 설정
   };

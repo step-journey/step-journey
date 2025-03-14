@@ -53,7 +53,7 @@ export const StepGroupSidebarRenderer: React.FC<
   }
 
   // 그룹에 속한 스텝 블록들 찾기
-  const stepBlocks = block.children
+  const stepBlocks = block.childrenIds
     .map((id) => allBlocks.find((b) => b.id === id))
     .filter((b) => b?.type === BlockType.STEP) as StepBlock[];
 

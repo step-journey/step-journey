@@ -36,7 +36,7 @@ export function JourneySidebar({
   const typedJourneyBlock = journeyBlock as JourneyBlock;
 
   // 여정에 포함된 스텝 그룹 블록들 가져오기
-  const stepGroupBlocks = typedJourneyBlock.children
+  const stepGroupBlocks = typedJourneyBlock.childrenIds
     .map((id: string) => allBlocks.find((block) => block.id === id))
     .filter(
       (block: Block | undefined) =>

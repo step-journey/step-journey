@@ -39,7 +39,7 @@ export function useJourneyActions() {
       const newJourney: Partial<Block> = {
         id: journeyId,
         type: BlockType.JOURNEY,
-        children: [] as string[],
+        childrenIds: [] as string[],
         createdBy: "user",
         properties: {
           title,
@@ -52,7 +52,7 @@ export function useJourneyActions() {
         id: groupId,
         type: BlockType.STEP_GROUP,
         parentId: journeyId,
-        children: [] as string[],
+        childrenIds: [] as string[],
         createdBy: "user",
         properties: {
           title: "기본 그룹",
@@ -90,7 +90,7 @@ export function useJourneyActions() {
         id: stepId,
         type: BlockType.STEP,
         parentId: groupId,
-        children: [] as string[],
+        childrenIds: [] as string[],
         createdBy: "user",
         properties: {
           title: "시작하기",
@@ -101,8 +101,8 @@ export function useJourneyActions() {
       };
 
       // 5. 여정에 그룹 추가, 그룹에 스텝 추가
-      newJourney.children = [groupId];
-      newGroup.children = [stepId];
+      newJourney.childrenIds = [groupId];
+      newGroup.childrenIds = [stepId];
 
       // 6. DB에 저장
       await createBlock(newJourney);
@@ -139,7 +139,7 @@ export function useJourneyActions() {
 
       if (journeyBlock) {
         // 그룹 ID들 가져오기
-        const groupIds = journeyBlock.children || [];
+        const groupIds = journeyBlock.childrenIds || [];
 
         // 각 그룹에 속한 스텝 삭제
         for (const groupId of groupIds) {
