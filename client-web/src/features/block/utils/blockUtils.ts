@@ -16,7 +16,7 @@ export function getChildBlocks(
   parentBlock: Block,
   allBlocks: Block[],
 ): Block[] {
-  return parentBlock.content
+  return parentBlock.children
     .map((id: string) => allBlocks.find((block) => block.id === id))
     .filter(Boolean) as Block[];
 }

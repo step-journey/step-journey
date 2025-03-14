@@ -26,6 +26,6 @@ export interface BaseBlock extends TimeStampFields {
   id: UUID;
   type: BlockType;
   parentId?: UUID;
-  content: UUID[];
+  children: UUID[];
   createdBy: UUID;
 }
