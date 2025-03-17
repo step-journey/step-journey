@@ -131,36 +131,38 @@ export const createBlock = async (
 };
 
 // 블록 업데이트
-export const updateBlock = async (block: Block): Promise<void> => {
-  const existing = await dbClient.blocks.get(block.id);
+export const updateBlock = async (
+  partialBlock: Partial<Block> & { id: string },
+): Promise<void> => {
+  // 1. 현재 블록을 먼저 조회하여 존재하는지 확인
+  const existing = await dbClient.blocks.get(partialBlock.id);
   if (!existing) {
-    throw new Error(`Block with id ${block.id} not found`);
+    console.error(`Block with id ${partialBlock.id} not found`);
+    throw new Error(`Block with id ${partialBlock.id} not found`);
   }
 
-  const updatedBlock = {
-    ...block,
-    updatedAt: new Date().toISOString(),
-  };
+  try {
+    // 2. 트랜잭션 내에서 업데이트 실행
+    await dbClient.transaction("rw", dbClient.blocks, async () => {
+      // 깊은 병합을 통해 기존 블록과 부분 블록 통합
+      const updatedBlock = {
+        ...existing,
+        ...partialBlock,
+        properties: {
+          ...existing.properties,
+          ...(partialBlock.properties || {}),
+        },
+        updatedAt: new Date().toISOString(),
+      } as Block; // 단순히 Block으로 타입 단언
 
-  await dbClient.blocks.put(updatedBlock);
-};
-
-// 여러 블록 업데이트
-export const updateBlocks = async (blocks: Block[]): Promise<void> => {
-  const now = new Date().toISOString();
-
-  // 모든 블록에 업데이트 시간 설정
-  const updatedBlocks = blocks.map((block) => ({
-    ...block,
-    updatedAt: now,
-  }));
-
-  // 트랜잭션으로 모든 블록 업데이트
-  await dbClient.transaction("rw", dbClient.blocks, async () => {
-    for (const block of updatedBlocks) {
-      await dbClient.blocks.put(block);
-    }
-  });
+      // DB에 저장
+      await dbClient.blocks.put(updatedBlock);
+      console.log("Block updated successfully:", updatedBlock);
+    });
+  } catch (error) {
+    console.error("BlockService updateBlock error:", error);
+    throw error;
+  }
 };
 
 // 블록 삭제

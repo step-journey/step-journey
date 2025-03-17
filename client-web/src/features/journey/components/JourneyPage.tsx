@@ -125,15 +125,6 @@ export default function JourneyPage() {
     }
   }, [data?.flattenedSteps, setStepClickHandler, setCurrentStepIndex]);
 
-  // 정기적으로 데이터 다시 불러오기
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-    }, 30000); // 30초마다 새로고침
-
-    return () => clearInterval(interval);
-  }, [refetch]);
-
   // 데이터 및 현재 스텝 추출
   const journeyBlock = data?.journeyBlock || null;
   const flattenedSteps = data?.flattenedSteps || [];
