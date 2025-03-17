@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "@blocknote/core/fonts/inter.css";
 import { Block, StepContainerMap } from "@/features/block/types";
-import { useQueryClient } from "@tanstack/react-query"; // 추가
+import { useQueryClient } from "@tanstack/react-query";
 
 import { JourneySidebar } from "./JourneySidebar";
 import { JourneyHeader } from "./JourneyHeader";
@@ -13,18 +13,21 @@ import PATH from "@/constants/path";
 
 // React Query 훅 사용
 import { useJourney } from "../hooks/useJourneys";
-import { QUERY_KEYS } from "@/constants/queryKeys"; // 추가
+import { QUERY_KEYS } from "@/constants/queryKeys";
 
 // Zustand 스토어
 import { useBlockStore } from "@/features/block/store/blockStore";
 import { useContentStore } from "@/features/block/store/contentStore";
-import { useSidebarStore } from "@/features/block/store/sidebarStore";
+import {
+  useSidebarStore,
+  useUpdateGroupsForCurrentStep,
+} from "@/features/block/store/sidebarStore";
 import { handleKeyboardShortcuts } from "@/features/block/utils/keyboardUtils";
 
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient(); // 추가: queryClient 가져오기
+  const queryClient = useQueryClient();
   const prevJourneyIdRef = useRef<string | undefined>(journeyId);
 
   // Zustand 스토어에서 필요한 상태와 액션 가져오기
@@ -38,6 +41,7 @@ export default function JourneyPage() {
 
   const { updateState: updateContentState } = useContentStore();
   const { setCurrentStepId, setStepClickHandler } = useSidebarStore();
+  const updateStepGroupsForCurrentStep = useUpdateGroupsForCurrentStep();
 
   // React Query와 관련 상태/액션 사용
   const { data, refetch } = useJourney(journeyId);
@@ -124,6 +128,22 @@ export default function JourneyPage() {
       });
     }
   }, [data?.flattenedSteps, setStepClickHandler, setCurrentStepIndex]);
+
+  // 현재 step 이 변경될 때마다 step group 상태 업데이트
+  useEffect(() => {
+    if (data?.flattenedSteps && data?.allBlocks) {
+      const currentStep = data.flattenedSteps[currentStepIndex];
+      if (currentStep) {
+        // 현재 step ID와 모든 블록을 전달하여 step group 상태 업데이트
+        updateStepGroupsForCurrentStep(currentStep.id, data.allBlocks);
+      }
+    }
+  }, [
+    currentStepIndex,
+    data?.flattenedSteps,
+    data?.allBlocks,
+    updateStepGroupsForCurrentStep,
+  ]);
 
   // 데이터 및 현재 스텝 추출
   const journeyBlock = data?.journeyBlock || null;
