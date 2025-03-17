@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "@blocknote/core/fonts/inter.css";
 import { Block, StepContainerMap } from "@/features/block/types";
+import { useQueryClient } from "@tanstack/react-query"; // 추가
 
 import { JourneySidebar } from "./JourneySidebar";
 import { JourneyHeader } from "./JourneyHeader";
@@ -12,6 +13,7 @@ import PATH from "@/constants/path";
 
 // React Query 훅 사용
 import { useJourney } from "../hooks/useJourneys";
+import { QUERY_KEYS } from "@/constants/queryKeys"; // 추가
 
 // Zustand 스토어
 import { useBlockStore } from "@/features/block/store/blockStore";
@@ -22,6 +24,8 @@ import { handleKeyboardShortcuts } from "@/features/block/utils/keyboardUtils";
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient(); // 추가: queryClient 가져오기
+  const prevJourneyIdRef = useRef<string | undefined>(journeyId);
 
   // Zustand 스토어에서 필요한 상태와 액션 가져오기
   const {
@@ -50,7 +54,13 @@ export default function JourneyPage() {
 
   // journeyId가 변경될 때 상태를 초기화
   useEffect(() => {
-    if (journeyId) {
+    if (journeyId && journeyId !== prevJourneyIdRef.current) {
+      // journeyId가 실제로 변경되었을 때만 실행
+      console.log(
+        `Journey changed from ${prevJourneyIdRef.current} to ${journeyId}`,
+      );
+      prevJourneyIdRef.current = journeyId;
+
       // 상태 초기화 - 새로운 journeyId로 이동할 때 상태를 리셋
       setCurrentStepIndex(0);
       updateContentState({
@@ -59,8 +69,21 @@ export default function JourneyPage() {
         highlightKeywords: true,
       });
       setCurrentStepId(undefined);
+
+      // React Query 캐시 무효화 및 강제 리패치
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+      refetch(); // 즉시 리패치 강제 실행
     }
-  }, [journeyId, setCurrentStepIndex, updateContentState, setCurrentStepId]);
+  }, [
+    journeyId,
+    setCurrentStepIndex,
+    updateContentState,
+    setCurrentStepId,
+    queryClient,
+    refetch,
+  ]);
 
   // 데이터가 로드되면 Zustand 스토어 상태 업데이트
   useEffect(() => {

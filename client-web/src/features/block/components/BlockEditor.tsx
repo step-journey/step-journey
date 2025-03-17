@@ -7,6 +7,8 @@ import { saveBlockNoteContent } from "@/features/block/services/blockService";
 import { useAllBlocks } from "@/features/block/store/blockStore";
 import { toast } from "sonner";
 import { getBlockNoteBlocksFromStep } from "@/features/block/utils/blockNoteConverter";
+import { useQueryClient } from "@tanstack/react-query"; // 추가
+import { QUERY_KEYS } from "@/constants/queryKeys"; // 추가
 
 interface BlockEditorProps {
   block: StepBlock;
@@ -21,13 +23,22 @@ export function BlockEditor({
 }: BlockEditorProps) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const allBlocks = useAllBlocks();
+  const queryClient = useQueryClient(); // 추가: queryClient 가져오기
+
+  // rootJourneyId 추출 - 상위 Journey ID를 찾아 캐시 무효화에 사용
+  const rootJourneyId = useMemo(() => {
+    // block.parentId는 StepGroup의 ID
+    // StepGroup의 parentId는 Journey의 ID
+    const stepGroupBlock = allBlocks.find((b) => b.id === block.parentId);
+    return stepGroupBlock?.parentId; // Journey ID
+  }, [block.parentId, allBlocks]);
 
   // BlockNote에 필요한 초기 콘텐츠를 useMemo로 최적화
   const initialContent = useMemo(() => {
     return getBlockNoteBlocksFromStep(block, allBlocks);
-  }, [block, allBlocks]);
+  }, [block.id, block.updatedAt, allBlocks]); // 의존성 배열 개선
 
-  // 에디터 인스턴스 생성
+  // 에디터 인스턴스 생성 - block.id를 의존성으로 추가하여 재생성 보장
   const editor = useCreateBlockNote({
     initialContent,
   });
@@ -46,6 +57,13 @@ export function BlockEditor({
         await saveBlockNoteContent(block, topLevelBlocks);
         setLastSaved(new Date());
 
+        // 변경 사항 저장 후 관련 Journey 쿼리 무효화 (추가)
+        if (rootJourneyId) {
+          await queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.journeys.detail(rootJourneyId),
+          });
+        }
+
         // 사용자 콜백 호출
         if (onSave) {
           onSave();
@@ -57,7 +75,7 @@ export function BlockEditor({
     }, 1000); // 1초마다 저장
 
     return () => clearInterval(saveInterval);
-  }, [editor, block, onSave, readOnly]);
+  }, [editor, block, onSave, readOnly, queryClient, rootJourneyId]);
 
   return (
     <div className="editor-container">

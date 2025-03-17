@@ -128,8 +128,14 @@ export function useJourneyActions() {
     }
   };
 
-  // 여정 클릭 시 상세 페이지로 이동
+  // 여정 클릭 시 상세 페이지로 이동 및 쿼리 무효화
   const navigateToJourney = (journeyId: string) => {
+    // 해당 Journey 관련 쿼리 캐시 무효화
+    queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.journeys.detail(journeyId),
+    });
+
+    // 페이지 이동
     navigate(`${PATH.JOURNEY}/${journeyId}`);
   };
 

@@ -24,8 +24,11 @@ export function JourneyContent({ journeyBlock }: Props) {
               <p className="mb-1 text-lg font-semibold">
                 {currentStep.properties.title}
               </p>
-              {/* 항상 BlockEditor 컴포넌트를 보여줌 (WYSIWYG) */}
-              <BlockEditor block={currentStep} />
+              {/* key 속성 추가: journey, step 변경될 때 컴포넌트 강제 재생성 */}
+              <BlockEditor
+                key={`${journeyBlock.id}-${currentStep.id}`}
+                block={currentStep}
+              />
             </>
           )}
         </div>

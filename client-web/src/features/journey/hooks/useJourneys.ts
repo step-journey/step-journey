@@ -6,9 +6,21 @@ import {
 } from "@/features/block/services/blockService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useEffect, useState } from "react";
-import { BlockType } from "@/features/block/types";
+import {
+  Block,
+  BlockType,
+  FlattenedBlock,
+  JourneyBlock,
+} from "@/features/block/types";
 import { useBlockRenderer } from "@/features/block/hooks/useBlockRenderer";
 import { useBlockData } from "@/features/block/hooks/useBlockData";
+
+// 여정 데이터 반환 타입 정의
+type JourneyData = {
+  journeyBlock: JourneyBlock | null;
+  flattenedSteps: FlattenedBlock[];
+  allBlocks: Block[];
+};
 
 // 여정 목록을 조회하는 훅
 export function useJourneys() {
@@ -39,21 +51,23 @@ export function useJourney(journeyId: string | undefined) {
     setCurrentStepIndex(0);
   }, [journeyId]);
 
-  // 여정 데이터 조회
-  const journeyQuery = useQuery({
+  const journeyQuery = useQuery<JourneyData>({
     queryKey: QUERY_KEYS.journeys.detail(journeyId || ""),
     queryFn: async () => {
       if (!journeyId)
         return { journeyBlock: null, flattenedSteps: [], allBlocks: [] };
+
+      console.log(`Loading journey data for: ${journeyId}`);
       return loadJourneyWithSteps(journeyId);
     },
     enabled: !!journeyId,
-    staleTime: 5 * 60 * 1000, // 5분
-    refetchOnWindowFocus: false, // 윈도우 포커스 시 자동 리페치 비활성화
+    staleTime: 0, // 항상 stale로 간주하여 데이터 요청 시 refetch (수정)
+    refetchOnWindowFocus: true, // 윈도우 포커스 시 자동 리패치 활성화
+    gcTime: 2 * 60 * 1000,
   });
 
-  // 블록 데이터 활용
-  const { allBlocks = [] } = journeyQuery.data || {};
+  // 블록 데이터 활용 - 타입 안전하게 처리
+  const allBlocks = journeyQuery.data?.allBlocks || [];
   const blockData = useBlockData(allBlocks);
 
   // 여정 ID가 있는 경우 블록 렌더러 사용
@@ -67,7 +81,7 @@ export function useJourney(journeyId: string | undefined) {
   // 스텝 인덱스 변경 함수
   const nextStep = () => {
     if (!journeyQuery.data) return;
-    const { flattenedSteps } = journeyQuery.data;
+    const flattenedSteps = journeyQuery.data.flattenedSteps;
     const maxIndex = flattenedSteps.length - 1;
     setCurrentStepIndex((prev) => Math.min(prev + 1, maxIndex));
   };
