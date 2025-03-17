@@ -54,7 +54,7 @@ export function BlockEditor({
         console.error("Failed to save editor content:", error);
         toast.error("내용 저장에 실패했습니다.");
       }
-    }, 2000); // 2초마다 저장
+    }, 1000); // 1초마다 저장
 
     return () => clearInterval(saveInterval);
   }, [editor, block, onSave, readOnly]);
