@@ -25,6 +25,16 @@ CURRENT_DIR="$(basename "$(pwd)")"
 rm -f "$OUTPUT_FILE"
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
+# 프로젝트 소개
+echo "# StepJourney 프로젝트 소개:" >> "$OUTPUT_FILE"
+echo "- Notion의 block-based Editor 에 영감을 받아서 개발 중인 block-based step Editor" >> "$OUTPUT_FILE"
+echo "- StepJourney의 Notion 과의 핵심 차이점은 StepJourney 는 단계적인 관찰에 특화되어 핵심 데이터인 journey block 이 여러 개의 step block 으로 구성되며, 쉽게 step 간 이동을 할 수 있다는 것임" >> "$OUTPUT_FILE"
+echo "- StepJourney의 Notion 과의 차이점은 journey, step_group, step 이라는 block type으로 구성된다는 점" >> "$OUTPUT_FILE"
+echo "- Notion 의 page block 이 StepJourney 의 step block 에 부합함" >> "$OUTPUT_FILE"
+echo "- StepJourney 의 하나의 컨텐츠는 journey block 이며, journey 는 여러 개의 step block 혹은 step_group block 으로 구성됨" >> "$OUTPUT_FILE"
+echo "- 유저가 JourneyPage에서 특정 journey 를 조회할 때, 키보드 방향키를 통해 해당 journey의 이전, 이후 step 으로 이동할 수 있음." >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
 # 구현시 주의사항
 echo "# StepJourney React Client 구현시 주의사항:" >> "$OUTPUT_FILE"
 echo "- 프로젝트 이름은 StepJourney 임" >> "$OUTPUT_FILE"
