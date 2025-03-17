@@ -3,12 +3,15 @@
  */
 
 import {
-  Block as BlockNoteBlock,
+  DefaultBlockSchema,
   DefaultInlineContentSchema,
   DefaultStyleSchema,
+  InlineContent,
+  Link,
   StyledText,
   TableCell,
   TableContent,
+  BlockNoDefaults,
 } from "@blocknote/core";
 import {
   Block,
@@ -24,26 +27,106 @@ import {
 } from "../types";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
 
+// BlockNote 타입 정의
+
+type BlockNoteInlineContent = InlineContent<
+  DefaultInlineContentSchema,
+  DefaultStyleSchema
+>;
+
+type BlockNoteStyledText = StyledText<DefaultStyleSchema>;
+
+type BlockNoteLink = Link<DefaultStyleSchema>;
+
+type BlockNoteTableCell = TableCell<
+  DefaultInlineContentSchema,
+  DefaultStyleSchema
+>;
+
+type BlockNoteTableContent = TableContent<
+  DefaultInlineContentSchema,
+  DefaultStyleSchema
+>;
+
+type BlockNoteGenericBlock = BlockNoDefaults<
+  DefaultBlockSchema,
+  DefaultInlineContentSchema,
+  DefaultStyleSchema
+>;
+
 /**
  * BlockNote 인라인 콘텐츠를 StepJourney 인라인 콘텐츠로 변환
+ * 블록 콘텐츠용: 모든 인라인 콘텐츠를 StyledText로 변환
  */
 export function convertBlockNoteInlineToCustomInline(
-  content: any[],
-): StyledText<DefaultStyleSchema>[] {
+  content: BlockNoteInlineContent[],
+): BlockNoteStyledText[] {
   if (!content || !Array.isArray(content)) return [];
 
   return content.map((item) => {
     if (item.type === "text") {
-      const textContent: StyledText<DefaultStyleSchema> = {
+      const textItem = item as BlockNoteStyledText;
+      return {
         type: "text",
-        text: item.text || "",
+        text: textItem.text || "",
         styles: {
-          ...(item.styles || {}),
+          ...(textItem.styles || {}),
         },
       };
-      return textContent;
+    } else if (item.type === "link") {
+      // Link 타입을 StyledText로 변환
+      const linkItem = item as BlockNoteLink;
+      const linkText =
+        linkItem.content && Array.isArray(linkItem.content)
+          ? linkItem.content.map((c) => c.text || "").join("")
+          : "";
+      return {
+        type: "text",
+        text: `${linkText} (${linkItem.href || ""})`,
+        styles: {
+          // 링크 스타일 적용
+          underline: true,
+        },
+      };
     }
-    // 다른 인라인 타입이 있으면 추가
+    // 다른 인라인 타입도 텍스트로 변환
+    return {
+      type: "text",
+      text: JSON.stringify(item),
+      styles: {},
+    };
+  });
+}
+
+/**
+ * 테이블 셀을 위한 BlockNote 인라인 콘텐츠를 StepJourney 인라인 콘텐츠로 변환
+ */
+export function convertTableCellContentToCustom(
+  content: BlockNoteInlineContent[],
+): BlockNoteInlineContent[] {
+  if (!content || !Array.isArray(content)) return [];
+
+  return content.map((item) => {
+    if (item.type === "text") {
+      const textItem = item as BlockNoteStyledText;
+      return {
+        type: "text",
+        text: textItem.text || "",
+        styles: {
+          ...(textItem.styles || {}),
+        },
+      };
+    } else if (item.type === "link") {
+      // Link 타입 처리
+      const linkItem = item as BlockNoteLink;
+      const linkContent: BlockNoteLink = {
+        type: "link",
+        href: linkItem.href || "",
+        content: convertBlockNoteInlineToCustomInline(linkItem.content || []),
+      };
+      return linkContent;
+    }
+    // 기본 텍스트로 반환
     return {
       type: "text",
       text: JSON.stringify(item),
@@ -56,21 +139,53 @@ export function convertBlockNoteInlineToCustomInline(
  * StepJourney 인라인 콘텐츠를 BlockNote 인라인 콘텐츠로 변환
  */
 export function convertCustomInlineToBlockNoteInline(
-  content: StyledText<DefaultStyleSchema>[],
-): any[] {
+  content: BlockNoteStyledText[],
+): BlockNoteInlineContent[] {
+  if (!content || !Array.isArray(content)) return [];
+
+  return content.map((item) => {
+    return {
+      type: "text",
+      text: item.text || "",
+      styles: {
+        ...(item.styles || {}),
+      },
+    };
+  });
+}
+
+/**
+ * 테이블 셀 콘텐츠용 변환 함수
+ */
+export function convertTableCellContentToBlockNoteInline(
+  content: BlockNoteInlineContent[],
+): BlockNoteInlineContent[] {
   if (!content || !Array.isArray(content)) return [];
 
   return content.map((item) => {
     if (item.type === "text") {
+      const textItem = item as BlockNoteStyledText;
       return {
         type: "text",
-        text: item.text || "",
+        text: textItem.text || "",
         styles: {
-          ...(item.styles || {}),
+          ...(textItem.styles || {}),
         },
       };
+    } else if (item.type === "link") {
+      // Link 타입 처리
+      const linkItem = item as BlockNoteLink;
+      return {
+        type: "link",
+        href: linkItem.href || "",
+        content: linkItem.content.map((textItem) => ({
+          type: "text",
+          text: textItem.text || "",
+          styles: textItem.styles || {},
+        })),
+      };
     }
-    // 다른 인라인 타입이 있으면 추가
+    // 기본 빈 텍스트로 반환
     return {
       type: "text",
       text: "",
@@ -83,11 +198,11 @@ export function convertCustomInlineToBlockNoteInline(
  * BlockNote 테이블 셀을 StepJourney 테이블 셀로 변환
  */
 export function convertBlockNoteTableCellToCustom(
-  cell: any,
-): TableCell<DefaultInlineContentSchema, DefaultStyleSchema> {
+  cell: Partial<BlockNoteTableCell>,
+): BlockNoteTableCell {
   return {
     type: "tableCell",
-    content: convertBlockNoteInlineToCustomInline(cell.content || []),
+    content: convertTableCellContentToCustom(cell.content || []),
     props: {
       colspan: cell.props?.colspan || 1,
       rowspan: cell.props?.rowspan || 1,
@@ -102,11 +217,11 @@ export function convertBlockNoteTableCellToCustom(
  * StepJourney 테이블 셀을 BlockNote 테이블 셀로 변환
  */
 export function convertCustomTableCellToBlockNote(
-  cell: TableCell<DefaultInlineContentSchema, DefaultStyleSchema>,
-): any {
+  cell: BlockNoteTableCell,
+): BlockNoteTableCell {
   return {
     type: "tableCell",
-    content: convertCustomInlineToBlockNoteInline(cell.content || []),
+    content: convertTableCellContentToBlockNoteInline(cell.content),
     props: {
       colspan: cell.props?.colspan || 1,
       rowspan: cell.props?.rowspan || 1,
@@ -121,12 +236,12 @@ export function convertCustomTableCellToBlockNote(
  * BlockNote 테이블 콘텐츠를 StepJourney 테이블 콘텐츠로 변환
  */
 export function convertBlockNoteTableContentToCustom(
-  tableContent: any,
-): TableContent<DefaultInlineContentSchema, DefaultStyleSchema> {
+  tableContent: Partial<BlockNoteTableContent>,
+): BlockNoteTableContent {
   return {
     type: "tableContent",
     columnWidths: tableContent.columnWidths || [],
-    rows: (tableContent.rows || []).map((row: any) => ({
+    rows: (tableContent.rows || []).map((row) => ({
       cells: Array.isArray(row.cells)
         ? row.cells.map(convertBlockNoteTableCellToCustom)
         : [],
@@ -138,24 +253,44 @@ export function convertBlockNoteTableContentToCustom(
  * StepJourney 테이블 콘텐츠를 BlockNote 테이블 콘텐츠로 변환
  */
 export function convertCustomTableContentToBlockNote(
-  tableContent: TableContent<DefaultInlineContentSchema, DefaultStyleSchema>,
-): any {
+  tableContent: BlockNoteTableContent,
+): BlockNoteTableContent {
   return {
     type: "tableContent",
     columnWidths: tableContent.columnWidths || [],
     rows: (tableContent.rows || []).map((row) => ({
       cells: Array.isArray(row.cells)
-        ? row.cells.map(convertCustomTableCellToBlockNote)
+        ? row.cells.map((cell) =>
+            convertCustomTableCellToBlockNote(cell as BlockNoteTableCell),
+          )
         : [],
     })),
   };
 }
 
 /**
+ * BlockNote 프로퍼티 타입
+ */
+interface BlockNoteProps {
+  textColor?: string;
+  backgroundColor?: string;
+  textAlignment?: "left" | "center" | "right" | "justify";
+  level?: 1 | 2 | 3; // 수정: 명확한 유니온 타입으로 정의
+  language?: string;
+  checked?: boolean;
+  start?: number;
+  url?: string;
+  name?: string;
+  caption?: string;
+  showPreview?: boolean;
+  previewWidth?: number;
+}
+
+/**
  * BlockNote 블록을 StepJourney 커스텀 블록으로 변환
  */
 export function convertBlockNoteToCustomBlock(
-  blockNoteBlock: BlockNoteBlock,
+  blockNoteBlock: BlockNoteGenericBlock,
   parentId: string,
   createdBy: string = "user",
 ): Block {
@@ -176,17 +311,20 @@ export function convertBlockNoteToCustomBlock(
   // 블록 타입에 따른 변환
   switch (blockNoteBlock.type) {
     case "paragraph": {
+      const props = blockNoteBlock.props as BlockNoteProps;
       const paragraphBlock: ParagraphBlock = {
         ...baseBlock,
         type: BlockType.PARAGRAPH,
         properties: {
-          textColor: blockNoteBlock.props?.textColor || "default",
-          backgroundColor: blockNoteBlock.props?.backgroundColor || "default",
-          textAlignment: (blockNoteBlock.props?.textAlignment as any) || "left",
+          textColor: props?.textColor || "default",
+          backgroundColor: props?.backgroundColor || "default",
+          textAlignment: props?.textAlignment || "left",
         },
-        content: convertBlockNoteInlineToCustomInline(
-          blockNoteBlock.content || [],
-        ),
+        content: Array.isArray(blockNoteBlock.content)
+          ? convertBlockNoteInlineToCustomInline(
+              blockNoteBlock.content as BlockNoteInlineContent[],
+            )
+          : [],
       };
 
       // BlockNote의 children 처리 - ID만 참조
@@ -200,18 +338,24 @@ export function convertBlockNoteToCustomBlock(
     }
 
     case "heading": {
+      const props = blockNoteBlock.props as BlockNoteProps;
       const headingBlock: HeadingBlock = {
         ...baseBlock,
         type: BlockType.HEADING,
         properties: {
-          level: (blockNoteBlock.props?.level as any) || 1,
-          textColor: blockNoteBlock.props?.textColor || "default",
-          backgroundColor: blockNoteBlock.props?.backgroundColor || "default",
-          textAlignment: (blockNoteBlock.props?.textAlignment as any) || "left",
+          // 에러 수정: heading level은 1, 2, 3 중 하나만 가능
+          level: (props?.level && [1, 2, 3].includes(props.level)
+            ? props.level
+            : 1) as 1 | 2 | 3,
+          textColor: props?.textColor || "default",
+          backgroundColor: props?.backgroundColor || "default",
+          textAlignment: props?.textAlignment || "left",
         },
-        content: convertBlockNoteInlineToCustomInline(
-          blockNoteBlock.content || [],
-        ),
+        content: Array.isArray(blockNoteBlock.content)
+          ? convertBlockNoteInlineToCustomInline(
+              blockNoteBlock.content as BlockNoteInlineContent[],
+            )
+          : [],
       };
 
       // BlockNote의 children 처리 - ID만 참조
@@ -225,17 +369,20 @@ export function convertBlockNoteToCustomBlock(
     }
 
     case "bulletListItem": {
+      const props = blockNoteBlock.props as BlockNoteProps;
       const bulletListBlock: BulletListItemBlock = {
         ...baseBlock,
         type: BlockType.BULLET_LIST,
         properties: {
-          textColor: blockNoteBlock.props?.textColor || "default",
-          backgroundColor: blockNoteBlock.props?.backgroundColor || "default",
-          textAlignment: (blockNoteBlock.props?.textAlignment as any) || "left",
+          textColor: props?.textColor || "default",
+          backgroundColor: props?.backgroundColor || "default",
+          textAlignment: props?.textAlignment || "left",
         },
-        content: convertBlockNoteInlineToCustomInline(
-          blockNoteBlock.content || [],
-        ),
+        content: Array.isArray(blockNoteBlock.content)
+          ? convertBlockNoteInlineToCustomInline(
+              blockNoteBlock.content as BlockNoteInlineContent[],
+            )
+          : [],
       };
 
       // BlockNote의 children 처리 - ID만 참조
@@ -249,19 +396,22 @@ export function convertBlockNoteToCustomBlock(
     }
 
     case "numberedListItem": {
+      const props = blockNoteBlock.props as BlockNoteProps;
       const numberedListBlock: NumberedListItemBlock = {
         ...baseBlock,
         type: BlockType.NUMBERED_LIST,
         properties: {
-          // 필수 속성인 start 추가 (컴파일 에러 해결)
-          start: blockNoteBlock.props?.start,
-          textColor: blockNoteBlock.props?.textColor || "default",
-          backgroundColor: blockNoteBlock.props?.backgroundColor || "default",
-          textAlignment: (blockNoteBlock.props?.textAlignment as any) || "left",
+          // 에러 수정: start 속성이 undefined일 수 없음, 기본값 제공
+          start: props?.start ?? 1,
+          textColor: props?.textColor || "default",
+          backgroundColor: props?.backgroundColor || "default",
+          textAlignment: props?.textAlignment || "left",
         },
-        content: convertBlockNoteInlineToCustomInline(
-          blockNoteBlock.content || [],
-        ),
+        content: Array.isArray(blockNoteBlock.content)
+          ? convertBlockNoteInlineToCustomInline(
+              blockNoteBlock.content as BlockNoteInlineContent[],
+            )
+          : [],
       };
 
       // BlockNote의 children 처리 - ID만 참조
@@ -275,18 +425,21 @@ export function convertBlockNoteToCustomBlock(
     }
 
     case "checkListItem": {
+      const props = blockNoteBlock.props as BlockNoteProps;
       const checkListBlock: CheckListItemBlock = {
         ...baseBlock,
         type: BlockType.CHECK_LIST,
         properties: {
-          checked: !!blockNoteBlock.props?.checked,
-          textColor: blockNoteBlock.props?.textColor || "default",
-          backgroundColor: blockNoteBlock.props?.backgroundColor || "default",
-          textAlignment: (blockNoteBlock.props?.textAlignment as any) || "left",
+          checked: !!props?.checked,
+          textColor: props?.textColor || "default",
+          backgroundColor: props?.backgroundColor || "default",
+          textAlignment: props?.textAlignment || "left",
         },
-        content: convertBlockNoteInlineToCustomInline(
-          blockNoteBlock.content || [],
-        ),
+        content: Array.isArray(blockNoteBlock.content)
+          ? convertBlockNoteInlineToCustomInline(
+              blockNoteBlock.content as BlockNoteInlineContent[],
+            )
+          : [],
       };
 
       // BlockNote의 children 처리 - ID만 참조
@@ -300,15 +453,18 @@ export function convertBlockNoteToCustomBlock(
     }
 
     case "codeBlock": {
+      const props = blockNoteBlock.props as BlockNoteProps;
       const codeBlock: CodeBlock = {
         ...baseBlock,
         type: BlockType.CODE_BLOCK,
         properties: {
-          language: blockNoteBlock.props?.language || "plain",
+          language: props?.language || "plain",
         },
-        content: convertBlockNoteInlineToCustomInline(
-          blockNoteBlock.content || [],
-        ),
+        content: Array.isArray(blockNoteBlock.content)
+          ? convertBlockNoteInlineToCustomInline(
+              blockNoteBlock.content as BlockNoteInlineContent[],
+            )
+          : [],
       };
 
       // BlockNote의 children 처리 - ID만 참조 (코드 블록은 일반적으로 자식이 없음)
@@ -322,14 +478,15 @@ export function convertBlockNoteToCustomBlock(
     }
 
     case "table": {
+      const props = blockNoteBlock.props as BlockNoteProps;
       const tableBlock: TableBlock = {
         ...baseBlock,
         type: BlockType.TABLE,
         properties: {
-          textColor: blockNoteBlock.props?.textColor || "default",
+          textColor: props?.textColor || "default",
         },
         tableContent: convertBlockNoteTableContentToCustom(
-          blockNoteBlock.content,
+          blockNoteBlock.content as BlockNoteTableContent,
         ),
       };
 
@@ -344,18 +501,18 @@ export function convertBlockNoteToCustomBlock(
     }
 
     case "image": {
+      const props = blockNoteBlock.props as BlockNoteProps;
       const imageBlock: ImageBlock = {
         ...baseBlock,
         type: BlockType.IMAGE,
         properties: {
-          name: blockNoteBlock.props?.name || "",
-          url: blockNoteBlock.props?.url || "",
-          caption: blockNoteBlock.props?.caption || "",
-          showPreview: blockNoteBlock.props?.showPreview ?? true,
-          previewWidth: blockNoteBlock.props?.previewWidth || 300,
-          backgroundColor: blockNoteBlock.props?.backgroundColor || "default",
-          textAlignment: (blockNoteBlock.props?.textAlignment as any) || "left",
-          // textColor 속성 제거 (컴파일 에러 해결)
+          name: props?.name || "",
+          url: props?.url || "",
+          caption: props?.caption || "",
+          showPreview: props?.showPreview ?? true,
+          previewWidth: props?.previewWidth || 300,
+          backgroundColor: props?.backgroundColor || "default",
+          textAlignment: props?.textAlignment || "left",
         },
       };
 
@@ -382,9 +539,11 @@ export function convertBlockNoteToCustomBlock(
           backgroundColor: "default",
           textAlignment: "left",
         },
-        content: convertBlockNoteInlineToCustomInline(
-          blockNoteBlock.content || [],
-        ),
+        content: Array.isArray(blockNoteBlock.content)
+          ? convertBlockNoteInlineToCustomInline(
+              blockNoteBlock.content as BlockNoteInlineContent[],
+            )
+          : [],
       };
 
       if (blockNoteBlock.children && blockNoteBlock.children.length > 0) {
@@ -403,10 +562,11 @@ export function convertBlockNoteToCustomBlock(
  */
 export function convertCustomToBlockNoteBlock(
   customBlock: Block,
-): BlockNoteBlock {
+): BlockNoteGenericBlock {
   // 공통 블록 속성
   const baseBlockNote = {
     id: customBlock.id,
+    children: [] as BlockNoteGenericBlock[],
   };
 
   // 블록 타입에 따른 변환
@@ -425,8 +585,7 @@ export function convertCustomToBlockNoteBlock(
         content: convertCustomInlineToBlockNoteInline(
           paragraphBlock.content || [],
         ),
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
 
     case BlockType.HEADING: {
@@ -443,8 +602,7 @@ export function convertCustomToBlockNoteBlock(
         content: convertCustomInlineToBlockNoteInline(
           headingBlock.content || [],
         ),
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
 
     case BlockType.BULLET_LIST: {
@@ -461,8 +619,7 @@ export function convertCustomToBlockNoteBlock(
         content: convertCustomInlineToBlockNoteInline(
           bulletListBlock.content || [],
         ),
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
 
     case BlockType.NUMBERED_LIST: {
@@ -471,8 +628,8 @@ export function convertCustomToBlockNoteBlock(
         ...baseBlockNote,
         type: "numberedListItem",
         props: {
-          // start 속성 추가 (컴파일 에러 해결)
-          start: numberedListBlock.properties.start,
+          // start 속성 수정 - undefined일 수 없음
+          start: numberedListBlock.properties.start ?? 1,
           textColor: numberedListBlock.properties.textColor || "default",
           backgroundColor:
             numberedListBlock.properties.backgroundColor || "default",
@@ -481,8 +638,7 @@ export function convertCustomToBlockNoteBlock(
         content: convertCustomInlineToBlockNoteInline(
           numberedListBlock.content || [],
         ),
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
 
     case BlockType.CHECK_LIST: {
@@ -500,8 +656,7 @@ export function convertCustomToBlockNoteBlock(
         content: convertCustomInlineToBlockNoteInline(
           checkListBlock.content || [],
         ),
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
 
     case BlockType.CODE_BLOCK: {
@@ -513,8 +668,7 @@ export function convertCustomToBlockNoteBlock(
           language: codeBlock.properties.language || "plain",
         },
         content: convertCustomInlineToBlockNoteInline(codeBlock.content || []),
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
 
     case BlockType.TABLE: {
@@ -526,8 +680,7 @@ export function convertCustomToBlockNoteBlock(
           textColor: tableBlock.properties.textColor || "default",
         },
         content: convertCustomTableContentToBlockNote(tableBlock.tableContent),
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
 
     case BlockType.IMAGE: {
@@ -547,8 +700,7 @@ export function convertCustomToBlockNoteBlock(
         },
         // content undefined로 설정 (컴파일 에러 해결)
         content: undefined,
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
 
     // 기본: 지원하지 않는 타입이면 단락으로 변환
@@ -565,8 +717,7 @@ export function convertCustomToBlockNoteBlock(
           textAlignment: "left",
         },
         content: [],
-        children: [], // 실제 children은 별도로 처리됨
-      } as BlockNoteBlock;
+      } as BlockNoteGenericBlock;
     }
   }
 }
@@ -576,7 +727,7 @@ export function convertCustomToBlockNoteBlock(
  * @returns 변환된 모든 블록의 배열
  */
 export function convertBlockNoteTreeToCustomBlocks(
-  blockNoteBlocks: BlockNoteBlock[],
+  blockNoteBlocks: BlockNoteGenericBlock[],
   parentId: string,
   createdBy: string = "user",
 ): Block[] {
@@ -631,7 +782,7 @@ export function convertBlockNoteTreeToCustomBlocks(
 export function buildBlockNoteTree(
   customBlock: Block,
   allBlocks: Block[],
-): BlockNoteBlock {
+): BlockNoteGenericBlock {
   // 현재 블록을 BlockNote 형식으로 변환
   const blockNoteBlock = convertCustomToBlockNoteBlock(customBlock);
 
@@ -655,7 +806,7 @@ export function buildBlockNoteTree(
 export function getBlockNoteBlocksFromStep(
   stepBlock: Block,
   allBlocks: Block[],
-): BlockNoteBlock[] {
+): BlockNoteGenericBlock[] {
   // 스텝 블록의 자식 블록들 가져오기
   const contentBlocks = stepBlock.childrenIds
     .map((childId) => allBlocks.find((block) => block.id === childId))
@@ -670,7 +821,7 @@ export function getBlockNoteBlocksFromStep(
  * (모든 중첩 블록을 평면화하여 저장 가능한 형태로 변환)
  */
 export async function prepareBlocksForSaving(
-  blockNoteBlocks: BlockNoteBlock[],
+  blockNoteBlocks: BlockNoteGenericBlock[],
   parentId: string,
   createdBy: string = "user",
 ): Promise<Block[]> {
