@@ -4,13 +4,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PATH from "@/constants/path";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { Block, BlockType } from "@/features/block/types";
+import { Block, BlockType, FlattenedBlock } from "@/features/block/types";
 import {
   createBlock,
   deleteBlockTree,
+  updateBlock,
 } from "@/features/block/services/blockService";
 import { createDefaultParagraphBlock } from "@/features/block/utils/blockUtils";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
+
+// Journey 데이터의 타입 정의 추가
+interface JourneyData {
+  journeyBlock: Block | null;
+  flattenedSteps: FlattenedBlock[];
+  allBlocks: Block[];
+}
 
 export function useJourneyActions() {
   const navigate = useNavigate();
@@ -18,6 +26,7 @@ export function useJourneyActions() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddingStep, setIsAddingStep] = useState(false);
 
   // Journey 생성 함수
   const createJourney = async (title: string, description: string) => {
@@ -139,11 +148,112 @@ export function useJourneyActions() {
     navigate(`${PATH.JOURNEY}/${journeyId}`);
   };
 
+  // Step 추가 함수 - 반환 타입을 {stepId: string, index: number} | null로 변경
+  const addStep = async (journeyId: string, groupId: string) => {
+    if (!journeyId || !groupId) return null;
+
+    setIsAddingStep(true);
+
+    try {
+      // 1. 해당 그룹 블록 조회 - 타입 명시
+      const journeyData = await queryClient.fetchQuery<JourneyData>({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      // throw 대신 early return 사용
+      if (!journeyData) {
+        console.error("Journey data not found");
+        toast.error("여정 데이터를 찾을 수 없습니다.");
+        return null;
+      }
+
+      const { allBlocks } = journeyData;
+      const groupBlock = allBlocks.find((block: Block) => block.id === groupId);
+
+      // throw 대신 early return 사용
+      if (!groupBlock) {
+        console.error("Group block not found");
+        toast.error("그룹 데이터를 찾을 수 없습니다.");
+        return null;
+      }
+
+      // 2. 새 Step 인덱스 결정 - 타입 명시
+      const stepBlocks = allBlocks.filter(
+        (block: Block) =>
+          block.parentId === groupId && block.type === BlockType.STEP,
+      );
+      const stepIdInGroup = stepBlocks.length + 1;
+
+      // 3. 새 Step ID 생성
+      const stepId = generateBlockId();
+
+      // 4. 기본 스텝 생성
+      const newStep: Partial<Block> = {
+        id: stepId,
+        type: BlockType.STEP,
+        parentId: groupId,
+        childrenIds: [],
+        createdBy: "user",
+        properties: {
+          title: "새 단계",
+          stepIdInGroup,
+        },
+      };
+
+      // 5. 기본 문단 블록 생성
+      const defaultParagraphBlock = createDefaultParagraphBlock(stepId);
+
+      // 6. 관계 설정
+      newStep.childrenIds = [defaultParagraphBlock.id];
+
+      // 7. 부모 그룹 블록 업데이트
+      await updateBlock({
+        id: groupId,
+        childrenIds: [...(groupBlock.childrenIds || []), stepId],
+      });
+
+      // 8. DB에 저장
+      await createBlock(newStep);
+      await createBlock(defaultParagraphBlock);
+
+      // 9. 리스트 새로고침
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      // 10. 새로 추가된 Step 데이터 조회
+      const updatedData = await queryClient.fetchQuery<JourneyData>({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      if (!updatedData) {
+        toast.error("업데이트된 데이터를 가져오지 못했습니다.");
+        return { stepId, index: -1 }; // 인덱스를 찾지 못했을 경우
+      }
+
+      // 11. 새로 추가된 Step의 globalIndex 찾기
+      const newStepIndex = updatedData.flattenedSteps.findIndex(
+        (step) => step.id === stepId,
+      );
+
+      toast.success("새 단계가 추가되었습니다.");
+      return { stepId, index: newStepIndex };
+    } catch (error) {
+      console.error("Failed to add step:", error);
+      toast.error("단계 추가에 실패했습니다.");
+      return null;
+    } finally {
+      setIsAddingStep(false);
+    }
+  };
+
   return {
     createJourney,
     deleteJourney,
     navigateToJourney,
+    addStep,
     isCreating,
     isDeleting,
+    isAddingStep,
   };
 }

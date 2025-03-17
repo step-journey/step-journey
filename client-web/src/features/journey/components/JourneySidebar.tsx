@@ -1,6 +1,7 @@
-import { IconSearch, IconHome } from "@tabler/icons-react";
+import { IconSearch, IconHome, IconPlus } from "@tabler/icons-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Block,
   BlockType,
@@ -10,6 +11,13 @@ import {
 } from "@/features/block/types";
 import React from "react";
 import { BlockRenderer, RenderingArea } from "@/features/block/renderers";
+import { useJourneyActions } from "../hooks/useJourneyActions";
+import { useParams } from "react-router-dom";
+import {
+  useExpandedGroups,
+  useToggleGroup,
+} from "@/features/block/store/sidebarStore";
+import { useBlockStore } from "@/features/block/store/blockStore";
 
 interface Props {
   journeyBlock: Block;
@@ -23,6 +31,14 @@ export function JourneySidebar({
   allBlocks,
   onNavigateHome,
 }: Props) {
+  const { journeyId } = useParams<{ journeyId: string }>();
+  const { addStep, isAddingStep } = useJourneyActions();
+  const expandedGroups = useExpandedGroups();
+  const toggleGroup = useToggleGroup();
+  const setCurrentStepIndex = useBlockStore(
+    (state) => state.setCurrentStepIndex,
+  );
+
   // 타입 가드 확인
   if (!isJourneyBlock(journeyBlock)) {
     return (
@@ -42,6 +58,22 @@ export function JourneySidebar({
       (block: Block | undefined) =>
         block && block.type === BlockType.STEP_GROUP,
     ) as Block[];
+
+  const handleAddStep = async (groupId: string) => {
+    if (journeyId) {
+      const result = await addStep(journeyId, groupId);
+
+      if (result && result.index !== -1) {
+        // 그룹이 접혀있으면 펼치기
+        if (!expandedGroups[groupId]) {
+          toggleGroup(groupId);
+        }
+
+        // 새로 추가된 스텝으로 이동
+        setCurrentStepIndex(result.index);
+      }
+    }
+  };
 
   return (
     <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
@@ -75,6 +107,21 @@ export function JourneySidebar({
             <div className="flex justify-between items-center">
               <BlockRenderer block={groupBlock} area={RenderingArea.SIDEBAR} />
             </div>
+
+            {/* Step 추가 버튼 - 그룹이 펼쳐져 있을 때만 표시 */}
+            {expandedGroups[groupBlock.id] && (
+              <div className="ml-5 mt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => handleAddStep(groupBlock.id)}
+                  disabled={isAddingStep}
+                >
+                  <IconPlus size={12} className="mr-1" />새 단계 추가
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </ScrollArea>
