@@ -66,7 +66,7 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
 
   // 스타일 클래스 구성
   const stepClass = [
-    "flex justify-between items-center px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-100 group",
+    "flex justify-between items-center px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-100 group h-[28px]",
     isActive ? "bg-gray-100 font-medium text-blue-600" : "",
   ].join(" ");
 
@@ -82,16 +82,16 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
         {/* 스텝 제목 */}
         <span className="truncate flex-1">{stepTitle}</span>
 
-        {/* 삭제 아이콘 - hover 시에만 표시 */}
-        {(isHovered || isActive) && (
-          <button
-            onClick={handleDeleteClick}
-            className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 p-1 rounded-sm hover:bg-gray-200 text-gray-500 hover:text-red-500"
-            title="단계 삭제"
-          >
-            <IconTrash size={14} />
-          </button>
-        )}
+        {/* 삭제 아이콘 - 수정: hover 된 경우에만 표시 */}
+        <button
+          onClick={handleDeleteClick}
+          className={`transition-opacity duration-150 ml-1 p-1 rounded-sm hover:bg-gray-200 text-gray-500 hover:text-red-500 flex-shrink-0 w-6 h-6 flex items-center justify-center ${
+            isHovered ? "opacity-100" : "opacity-0"
+          }`}
+          title="단계 삭제"
+        >
+          <IconTrash size={14} />
+        </button>
       </div>
 
       {/* 삭제 확인 모달 */}

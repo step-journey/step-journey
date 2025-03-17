@@ -45,8 +45,8 @@ export const StepGroupSidebarRenderer: React.FC<
 
   // 그룹 라벨 스타일
   let stepGroupTitleClass = `
-    flex items-center h-8 px-2 gap-2 cursor-pointer
-    rounded hover:bg-gray-100
+    flex items-center h-8 px-2 cursor-pointer w-full
+    rounded hover:bg-gray-100 justify-between
   `;
   if (isCurrentGroup) {
     stepGroupTitleClass += " font-semibold";
@@ -58,19 +58,17 @@ export const StepGroupSidebarRenderer: React.FC<
     .filter((b) => b?.type === BlockType.STEP) as StepBlock[];
 
   return (
-    <div className="mb-2">
+    <div className="mb-2 w-full">
       {/* 그룹 라벨 */}
       <div
         className={stepGroupTitleClass}
         onClick={() => toggleGroup(block.id)}
       >
-        <span className="text-sm flex-1 whitespace-nowrap">
-          {getStepGroupTitle(block)}
-        </span>
+        <span className="text-sm truncate">{getStepGroupTitle(block)}</span>
         {isExpanded ? (
-          <IconChevronDown className="h-4 w-4" />
+          <IconChevronDown className="h-4 w-4 flex-shrink-0 ml-2" />
         ) : (
-          <IconChevronRight className="h-4 w-4" />
+          <IconChevronRight className="h-4 w-4 flex-shrink-0 ml-2" />
         )}
       </div>
 

@@ -103,10 +103,9 @@ export function JourneySidebar({
       {/* 단계 목록 스크롤 영역 */}
       <ScrollArea className="flex-1 py-2 pl-4 pr-1">
         {stepGroupBlocks.map((groupBlock) => (
-          <div key={groupBlock.id} className="mb-3">
-            <div className="flex justify-between items-center">
-              <BlockRenderer block={groupBlock} area={RenderingArea.SIDEBAR} />
-            </div>
+          <div key={groupBlock.id} className="mb-3 w-full">
+            {/* BlockRenderer 가 전체 너비를 갖도록 함 */}
+            <BlockRenderer block={groupBlock} area={RenderingArea.SIDEBAR} />
 
             {/* Step 추가 버튼 - 그룹이 펼쳐져 있을 때만 표시 */}
             {expandedGroups[groupBlock.id] && (
