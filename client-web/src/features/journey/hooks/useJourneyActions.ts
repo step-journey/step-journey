@@ -10,8 +10,10 @@ import {
   deleteBlockTree,
   updateBlock,
 } from "@/features/block/services/blockService";
-import { createDefaultParagraphBlock } from "@/features/block/utils/blockUtils";
-import { generateBlockId } from "@/features/block/utils/blockUtils";
+import {
+  createDefaultParagraphBlock,
+  generateBlockId,
+} from "@/features/block/utils/blockUtils";
 
 // Journey 데이터의 타입 정의 추가
 interface JourneyData {
@@ -27,6 +29,7 @@ export function useJourneyActions() {
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingStep, setIsAddingStep] = useState(false);
+  const [isDeletingStep, setIsDeletingStep] = useState(false);
 
   // Journey 생성 함수
   const createJourney = async (title: string, description: string) => {
@@ -140,7 +143,7 @@ export function useJourneyActions() {
   // 여정 클릭 시 상세 페이지로 이동 및 쿼리 무효화
   const navigateToJourney = (journeyId: string) => {
     // 해당 Journey 관련 쿼리 캐시 무효화
-    queryClient.invalidateQueries({
+    void queryClient.invalidateQueries({
       queryKey: QUERY_KEYS.journeys.detail(journeyId),
     });
 
@@ -247,13 +250,109 @@ export function useJourneyActions() {
     }
   };
 
+  // Step 삭제 함수
+  const deleteStep = async (journeyId: string, stepId: string) => {
+    if (!journeyId || !stepId) return null;
+
+    setIsDeletingStep(true);
+
+    try {
+      // 1. Step 블록과 관련 데이터 조회
+      const journeyData = await queryClient.fetchQuery<JourneyData>({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      if (!journeyData) {
+        console.error("Journey data not found");
+        toast.error("여정 데이터를 찾을 수 없습니다.");
+        return null;
+      }
+
+      const { allBlocks, flattenedSteps } = journeyData;
+
+      // Step 블록 찾기
+      const stepBlock = allBlocks.find((block: Block) => block.id === stepId);
+
+      if (!stepBlock) {
+        console.error("Step block not found");
+        toast.error("단계 데이터를 찾을 수 없습니다.");
+        return null;
+      }
+
+      // 현재 단계의 globalIndex 찾기
+      const currentStepIndex = flattenedSteps.findIndex(
+        (step) => step.id === stepId,
+      );
+
+      // 부모 그룹 블록 찾기
+      const parentId = stepBlock.parentId;
+      if (!parentId) {
+        console.error("Step has no parent group");
+        toast.error("단계에 부모 그룹이 없습니다.");
+        return null;
+      }
+
+      const groupBlock = allBlocks.find(
+        (block: Block) => block.id === parentId,
+      );
+
+      if (!groupBlock) {
+        console.error("Parent group block not found");
+        toast.error("그룹 데이터를 찾을 수 없습니다.");
+        return null;
+      }
+
+      // 2. 부모 그룹에서 step ID 제거
+      const updatedChildrenIds = groupBlock.childrenIds.filter(
+        (id) => id !== stepId,
+      );
+
+      // 3. 해당 step을 트리째로 삭제 (자식들도 모두 삭제)
+      await deleteBlockTree(stepId);
+
+      // 4. 부모 그룹 블록 업데이트 - 명확한 string 타입 보장
+      await updateBlock({
+        id: parentId, // 이제 parentId는 null 체크를 통과했으므로 string 타입이 됨
+        childrenIds: updatedChildrenIds,
+      });
+
+      // 5. 리스트 새로고침
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      toast.success("단계가 삭제되었습니다.");
+
+      // 삭제 후 이동할 다음 인덱스 계산 (이전 인덱스로 이동, 없으면 0)
+      const nextIndex = Math.max(0, currentStepIndex - 1);
+
+      // 데이터 다시 가져오기
+      const updatedData = await queryClient.fetchQuery<JourneyData>({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      // 다음 인덱스가 유효하지 않으면 조정
+      return updatedData && updatedData.flattenedSteps.length > 0
+        ? Math.min(nextIndex, updatedData.flattenedSteps.length - 1)
+        : 0;
+    } catch (error) {
+      console.error("Failed to delete step:", error);
+      toast.error("단계 삭제에 실패했습니다.");
+      return null;
+    } finally {
+      setIsDeletingStep(false);
+    }
+  };
+
   return {
     createJourney,
     deleteJourney,
     navigateToJourney,
     addStep,
+    deleteStep,
     isCreating,
     isDeleting,
     isAddingStep,
+    isDeletingStep,
   };
 }
