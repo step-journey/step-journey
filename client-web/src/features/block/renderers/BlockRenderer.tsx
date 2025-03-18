@@ -4,6 +4,7 @@ import { JourneySidebarRenderer } from "./implementations/journey/JourneySidebar
 import { JourneyContentRenderer } from "./implementations/journey/JourneyContentRenderer";
 import { StepGroupSidebarRenderer } from "./implementations/stepGroup/StepGroupSidebarRenderer";
 import { StepSidebarRenderer } from "./implementations/step/StepSidebarRenderer";
+import { StepContentRenderer } from "./implementations/step/StepContentRenderer"; // 추가
 
 /**
  * 렌더링 영역 타입
@@ -19,6 +20,7 @@ export enum RenderingArea {
 export interface BlockRendererProps {
   block: Block;
   area: RenderingArea;
+  journeyId?: string;
 }
 
 /**
@@ -69,6 +71,7 @@ const RenderError: React.FC<{ message: string; details?: string }> = ({
 export const BlockRenderer: React.FC<BlockRendererProps> = ({
   block,
   area,
+  journeyId,
 }) => {
   // 블록 타입과 영역에 따라 적절한 렌더러 선택
   switch (block.type) {
@@ -97,15 +100,13 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
       if (area === RenderingArea.SIDEBAR) {
         return <StepSidebarRenderer block={block} />;
       } else if (area === RenderingArea.CONTENT) {
-        console.error(
-          `Step block should not be rendered directly in CONTENT area: ${block.id}`,
-        );
-        return (
-          <RenderError
-            message="Step 블록은 Content 영역에서 직접 렌더링될 수 없습니다."
-            details="현재 JourneyContent에서는 BlockEditor를 그대로 표시하고 있기 때문에 별도의 커스텀 렌더링 로직이 필요 없습니다."
-          />
-        );
+        if (!journeyId) {
+          console.error("journeyId is required for rendering Step content");
+          return (
+            <RenderError message="Step 블록을 렌더링하려면 Journey ID가 필요합니다." />
+          );
+        }
+        return <StepContentRenderer block={block} journeyId={journeyId} />;
       }
       break;
   }

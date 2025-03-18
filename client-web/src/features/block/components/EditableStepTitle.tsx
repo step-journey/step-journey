@@ -68,7 +68,7 @@ export function EditableStepTitle({
     const currentValue = titleRef.current?.textContent || "";
 
     try {
-      console.log(`제목 업데이트 시도: ${stepId}, "${currentValue}"`);
+      console.log(`Step title 업데이트 시도: ${stepId}, "${currentValue}"`);
 
       // blockService의 updateBlock 함수 활용 - 더 간결하고 안전한 구현
       await updateBlock({
@@ -78,13 +78,13 @@ export function EditableStepTitle({
         },
       });
 
-      console.log("제목 업데이트 성공");
+      console.log("Step title 업데이트 성공");
 
       // 상위 컴포넌트의 onBlur 호출 (쿼리 캐시 무효화)
       onBlur?.();
     } catch (error) {
-      console.error("제목 저장 중 오류:", error);
-      toast.error("제목 저장에 실패했습니다");
+      console.error("Step title 저장 중 오류:", error);
+      toast.error("Step title 저장에 실패했습니다");
     }
   };
 

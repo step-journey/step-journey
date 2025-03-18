@@ -7,8 +7,8 @@ import { saveBlockNoteContent } from "@/features/block/services/blockService";
 import { useAllBlocks } from "@/features/block/store/blockStore";
 import { toast } from "sonner";
 import { getBlockNoteBlocksFromStep } from "@/features/block/utils/blockNoteConverter";
-import { useQueryClient } from "@tanstack/react-query"; // 추가
-import { QUERY_KEYS } from "@/constants/queryKeys"; // 추가
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 
 interface BlockEditorProps {
   block: StepBlock;
