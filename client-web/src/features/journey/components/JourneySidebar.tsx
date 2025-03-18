@@ -72,18 +72,18 @@ export function JourneySidebar({
     },
   });
 
-  // 스텝 블록 렌더링 로직과 드래그 앤 드롭
+  // step block 렌더링 로직과 드래그 앤 드롭
   const renderStepBlocks = (groupBlock: Block) => {
-    // 이 그룹에 속한 스텝들 찾기
+    // 이 그룹에 속한 step block들 찾기
     const stepBlocks = allBlocks.filter(
       (block) =>
         block.parentId === groupBlock.id && block.type === BlockType.STEP,
     ) as StepBlock[];
 
-    // stepIdInGroup 기준으로 스텝 정렬
+    // globalIndex 기준으로 step block 정렬
     stepBlocks.sort(
       (a, b) =>
-        (a.properties.stepIdInGroup ?? 0) - (b.properties.stepIdInGroup ?? 0),
+        (a.properties.globalIndex ?? 0) - (b.properties.globalIndex ?? 0),
     );
 
     // 모든 요소(스텝 + 드롭 표시기)를 담을 배열

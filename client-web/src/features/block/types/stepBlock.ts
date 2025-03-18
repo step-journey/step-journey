@@ -7,8 +7,7 @@ import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
 // Step 블록 전용 속성
 export interface StepBlockProperties extends BaseBlockProperties {
   title?: string;
-  stepIdInGroup?: number; // 그룹 내 순서
-  globalIndex?: number; // 전역 인덱스
+  globalIndex?: number;
 }
 
 // Step 블록 - 개별 콘텐츠 단위

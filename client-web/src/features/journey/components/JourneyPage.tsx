@@ -130,12 +130,14 @@ export default function JourneyPage() {
   // 스텝 클릭 핸들러 설정
   useEffect(() => {
     if (data?.flattenedSteps) {
-      // 스텝 클릭 시 인덱스 변경하는 핸들러 등록
-      setStepClickHandler((groupId, stepId) => {
+      // 스텝 클릭 시 해당 globalIndex 로 이동하는 핸들러 등록
+      setStepClickHandler((groupId, stepGlobalIndex) => {
         const found = data.flattenedSteps.find(
           (fs) =>
-            fs.parentId === groupId && fs.properties.stepIdInGroup === stepId,
+            fs.parentId === groupId &&
+            fs.properties.globalIndex === stepGlobalIndex,
         );
+
         if (found) {
           if (found.properties.globalIndex === undefined) {
             console.error(

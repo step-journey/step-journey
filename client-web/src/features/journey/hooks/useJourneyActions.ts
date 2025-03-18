@@ -81,7 +81,7 @@ export function useJourneyActions() {
         createdBy: "user",
         properties: {
           title: "시작하기",
-          stepIdInGroup: 1,
+          globalIndex: 0,
         },
       };
 
@@ -300,7 +300,7 @@ export function useJourneyActions() {
         return null;
       }
 
-      const { allBlocks } = journeyData;
+      const { allBlocks, flattenedSteps } = journeyData;
       const groupBlock = allBlocks.find((block: Block) => block.id === groupId);
 
       // throw 대신 early return 사용
@@ -310,12 +310,8 @@ export function useJourneyActions() {
         return null;
       }
 
-      // 2. 새 Step 인덱스 결정 - 타입 명시
-      const stepBlocks = allBlocks.filter(
-        (block: Block) =>
-          block.parentId === groupId && block.type === BlockType.STEP,
-      );
-      const stepIdInGroup = stepBlocks.length + 1;
+      // 2. 새 Step의 globalIndex 결정
+      const nextGlobalIndex = flattenedSteps.length;
 
       // 3. 새 Step ID 생성
       const stepId = generateBlockId();
@@ -329,7 +325,7 @@ export function useJourneyActions() {
         createdBy: "user",
         properties: {
           title: "새 단계",
-          stepIdInGroup,
+          globalIndex: nextGlobalIndex,
         },
       };
 

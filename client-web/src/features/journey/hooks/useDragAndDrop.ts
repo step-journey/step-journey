@@ -167,13 +167,12 @@ export const useDragAndDrop = ({
           childrenIds: [...targetGroup.childrenIds, activeId],
         });
 
-        // Update step's parentId
         await updateBlock({
           id: activeId,
           parentId: targetGroupId,
           properties: {
             ...stepBlock.properties,
-            stepIdInGroup: targetGroup.childrenIds.length + 1,
+            // Global index will be updated when the journey is reloaded
           },
         });
 
@@ -184,8 +183,7 @@ export const useDragAndDrop = ({
       }
       // Handle dropping between steps
       else if (over.data.current?.type === "stepGap" && state.insertPosition) {
-        const { groupId: targetGroupId, index: targetIndex } =
-          state.insertPosition;
+        const { groupId: targetGroupId } = state.insertPosition;
 
         // Find the target group
         const targetGroup = allBlocks.find(
@@ -199,11 +197,10 @@ export const useDragAndDrop = ({
             block.parentId === targetGroupId && block.type === BlockType.STEP,
         ) as StepBlock[];
 
-        // Sort steps by their stepIdInGroup
+        // Sort steps by their globalIndex
         stepsInTargetGroup.sort(
           (a, b) =>
-            (a.properties.stepIdInGroup ?? 0) -
-            (b.properties.stepIdInGroup ?? 0),
+            (a.properties.globalIndex ?? 0) - (b.properties.globalIndex ?? 0),
         );
 
         // Remove step from source group if it's a different group
@@ -243,46 +240,16 @@ export const useDragAndDrop = ({
           }
         }
 
-        // Update stepIdInGroup for all steps in the target group
-        const updates = stepsInTargetGroup.map(async (step, i) => {
-          // Skip the active step as we'll update it separately
-          if (step.id === activeId) return;
-
-          let newIndex = i + 1; // 1-based index
-
-          // Adjust indices for the insert position
-          if (i >= targetIndex) {
-            newIndex += 1;
-          }
-
-          return updateBlock({
-            id: step.id,
-            properties: {
-              ...step.properties,
-              stepIdInGroup: newIndex,
-            },
-          });
-        });
-
-        // Update the active step's index
-        await updateBlock({
-          id: activeId,
-          properties: {
-            ...stepBlock.properties,
-            stepIdInGroup: targetIndex + 1, // +1 because it's 1-based
-          },
-        });
+        // The globalIndex values will be recalculated when journey data is reloaded
+        // So we don't need to manually update them here
 
         // Wait for all updates to complete
-        await Promise.all(updates);
+        await queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        });
+
+        toast.success("Step position updated");
       }
-
-      // Refresh the journey data - 즉시 갱신
-      await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
-      });
-
-      toast.success("Step position updated");
     } catch (error) {
       console.error("Failed to update step position:", error);
       toast.error("Failed to update step position");
