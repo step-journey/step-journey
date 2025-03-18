@@ -30,6 +30,7 @@ export function useJourneyActions() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingStep, setIsAddingStep] = useState(false);
   const [isDeletingStep, setIsDeletingStep] = useState(false);
+  const [isAddingStepGroup, setIsAddingStepGroup] = useState(false);
 
   // Journey 생성 함수
   const createJourney = async (title: string, description: string) => {
@@ -149,6 +150,70 @@ export function useJourneyActions() {
 
     // 페이지 이동
     navigate(`${PATH.JOURNEY}/${journeyId}`);
+  };
+
+  // Step Group 추가 함수
+  const addStepGroup = async (journeyId: string) => {
+    if (!journeyId) return null;
+
+    setIsAddingStepGroup(true);
+
+    try {
+      // 1. 해당 Journey block 조회
+      const journeyData = await queryClient.fetchQuery<JourneyData>({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      if (!journeyData) {
+        console.error("Journey data not found");
+        toast.error("Journey 데이터를 찾을 수 없습니다.");
+        return null;
+      }
+
+      const { journeyBlock } = journeyData;
+      if (!journeyBlock) {
+        toast.error("Journey 블록을 찾을 수 없습니다.");
+        return null;
+      }
+
+      // 2. 새 step group ID 생성
+      const groupId = generateBlockId();
+
+      // 3. 기본 step group 생성
+      const stepNewGroup: Partial<Block> = {
+        id: groupId,
+        type: BlockType.STEP_GROUP,
+        parentId: journeyId,
+        childrenIds: [],
+        createdBy: "user",
+        properties: {
+          title: "새 그룹",
+        },
+      };
+
+      // 4. 부모 Journey block 업데이트
+      await updateBlock({
+        id: journeyId,
+        childrenIds: [...(journeyBlock.childrenIds || []), groupId],
+      });
+
+      // 5. DB에 저장
+      await createBlock(stepNewGroup);
+
+      // 6. 리스트 새로고침
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      toast.success("새 그룹이 추가되었습니다.");
+      return { groupId };
+    } catch (error) {
+      console.error("Failed to add step group:", error);
+      toast.error("그룹 추가에 실패했습니다.");
+      return null;
+    } finally {
+      setIsAddingStepGroup(false);
+    }
   };
 
   // Step 추가 함수 - 반환 타입을 {stepId: string, index: number} | null로 변경
@@ -350,9 +415,11 @@ export function useJourneyActions() {
     navigateToJourney,
     addStep,
     deleteStep,
+    addStepGroup,
     isCreating,
     isDeleting,
     isAddingStep,
     isDeletingStep,
+    isAddingStepGroup,
   };
 }

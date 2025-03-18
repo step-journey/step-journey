@@ -1,4 +1,9 @@
-import { IconSearch, IconHome, IconPlus } from "@tabler/icons-react";
+import {
+  IconSearch,
+  IconHome,
+  IconPlus,
+  IconFolderPlus,
+} from "@tabler/icons-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,7 +37,8 @@ export function JourneySidebar({
   onNavigateHome,
 }: Props) {
   const { journeyId } = useParams<{ journeyId: string }>();
-  const { addStep, isAddingStep } = useJourneyActions();
+  const { addStep, isAddingStep, addStepGroup, isAddingStepGroup } =
+    useJourneyActions();
   const expandedGroups = useExpandedGroups();
   const toggleGroup = useToggleGroup();
   const setCurrentStepIndex = useBlockStore(
@@ -75,6 +81,13 @@ export function JourneySidebar({
     }
   };
 
+  const handleAddStepGroup = async () => {
+    if (journeyId) {
+      await addStepGroup(journeyId);
+      // 새 step group 이 추가되면 자동으로 데이터가 갱신됨
+    }
+  };
+
   return (
     <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
       {/* 상단: 제목 + 검색창 */}
@@ -100,8 +113,22 @@ export function JourneySidebar({
         </div>
       </div>
 
-      {/* 단계 목록 스크롤 영역 */}
+      {/* step 목록 스크롤 영역 */}
       <ScrollArea className="flex-1 py-2 pl-4 pr-1">
+        {/* step group 추가 버튼 */}
+        <div className="mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
+            onClick={handleAddStepGroup}
+            disabled={isAddingStepGroup}
+          >
+            <IconFolderPlus size={14} className="mr-1" />
+            스텝 그룹 추가
+          </Button>
+        </div>
+
         {stepGroupBlocks.map((groupBlock) => (
           <div key={groupBlock.id} className="mb-3 w-full">
             {/* BlockRenderer 가 전체 너비를 갖도록 함 */}
@@ -117,7 +144,7 @@ export function JourneySidebar({
                   onClick={() => handleAddStep(groupBlock.id)}
                   disabled={isAddingStep}
                 >
-                  <IconPlus size={12} className="mr-1" />새 단계 추가
+                  <IconPlus size={12} className="mr-1" />새 스텝 추가
                 </Button>
               </div>
             )}

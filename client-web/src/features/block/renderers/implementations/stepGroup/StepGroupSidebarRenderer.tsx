@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StepGroupBlock,
   isStepGroupBlock,
@@ -13,7 +13,14 @@ import {
   useToggleGroup,
 } from "@/features/block/store/sidebarStore";
 import { BlockRenderer, RenderingArea } from "../../BlockRenderer";
-import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronRight,
+  IconEdit,
+  IconCornerDownLeft,
+} from "@tabler/icons-react";
+import { EditableStepGroupTitle } from "@/features/block/components/EditableStepGroupTitle";
+import { useParams } from "react-router-dom";
 
 interface StepGroupSidebarRendererProps {
   block: StepGroupBlock;
@@ -29,6 +36,9 @@ export const StepGroupSidebarRenderer: React.FC<
   const expandedGroups = useExpandedGroups();
   const toggleGroup = useToggleGroup();
   const currentStepId = useCurrentStepId();
+  const { journeyId } = useParams<{ journeyId: string }>();
+  const [isHovered, setIsHovered] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // 타입 가드
   if (!isStepGroupBlock(block)) {
@@ -57,19 +67,77 @@ export const StepGroupSidebarRenderer: React.FC<
     .map((id) => allBlocks.find((b) => b.id === id))
     .filter((b) => b?.type === BlockType.STEP) as StepBlock[];
 
+  // 편집 버튼 클릭 핸들러
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 펼치기/접기 방지
+    setIsEditing(true);
+  };
+
+  // 편집 완료 버튼 클릭 핸들러
+  const handleCompleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 펼치기/접기 방지
+    setIsEditing(false);
+  };
+
+  const completeEditingHandler = () => {
+    setIsEditing(false);
+  };
+
   return (
     <div className="mb-2 w-full">
       {/* 그룹 라벨 */}
       <div
         className={stepGroupTitleClass}
-        onClick={() => toggleGroup(block.id)}
+        onClick={isEditing ? undefined : () => toggleGroup(block.id)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <span className="text-sm truncate">{getStepGroupTitle(block)}</span>
-        {isExpanded ? (
-          <IconChevronDown className="h-4 w-4 flex-shrink-0 ml-2" />
-        ) : (
-          <IconChevronRight className="h-4 w-4 flex-shrink-0 ml-2" />
-        )}
+        <div className="flex items-center justify-between flex-1 truncate">
+          {/* 제목 - WYSIWYG 편집 스타일 */}
+          <EditableStepGroupTitle
+            groupId={block.id}
+            value={getStepGroupTitle(block)}
+            className="text-sm truncate"
+            placeholder="제목 없는 그룹"
+            journeyId={journeyId || ""}
+            isEditing={isEditing}
+            onEditingChange={setIsEditing}
+            onComplete={completeEditingHandler}
+          />
+
+          {/* 아이콘 컨테이너 - 편집/완료 및 화살표 아이콘 함께 배치 */}
+          <div className="flex items-center">
+            {/* 편집 또는 완료 아이콘 - 상태에 따라 표시 */}
+            {isEditing ? (
+              // 편집 중일 때는 저장 아이콘 표시 (무채색)
+              <button
+                onClick={handleCompleteClick}
+                className="transition-opacity duration-150 p-1 rounded-sm hover:bg-gray-200 text-gray-500 hover:text-gray-700 flex-shrink-0 w-6 h-6 flex items-center justify-center mr-1"
+                title="편집 완료"
+              >
+                <IconCornerDownLeft size={14} />
+              </button>
+            ) : (
+              // 편집 중이 아닐 때는 호버 시 편집 아이콘 표시 (무채색)
+              isHovered && (
+                <button
+                  onClick={handleEditClick}
+                  className="transition-opacity duration-150 p-1 rounded-sm hover:bg-gray-200 text-gray-500 hover:text-gray-700 flex-shrink-0 w-6 h-6 flex items-center justify-center mr-1"
+                  title="그룹 이름 편집"
+                >
+                  <IconEdit size={14} />
+                </button>
+              )
+            )}
+
+            {/* 화살표 아이콘 - 항상 표시 (무채색) */}
+            {isExpanded ? (
+              <IconChevronDown className="h-4 w-4 flex-shrink-0 text-gray-500" />
+            ) : (
+              <IconChevronRight className="h-4 w-4 flex-shrink-0 text-gray-500" />
+            )}
+          </div>
+        </div>
       </div>
 
       {/* 펼쳐진 목록 */}
