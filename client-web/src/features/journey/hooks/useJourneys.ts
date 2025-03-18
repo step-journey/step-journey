@@ -57,13 +57,18 @@ export function useJourney(journeyId: string | undefined) {
       if (!journeyId)
         return { journeyBlock: null, flattenedSteps: [], allBlocks: [] };
 
-      console.log(`Loading journey data for: ${journeyId}`);
+      if (import.meta.env.DEV) {
+        console.log(
+          `Loading journey data for: ${journeyId}`,
+          new Date().toISOString(),
+        );
+      }
       return loadJourneyWithSteps(journeyId);
     },
     enabled: !!journeyId,
-    staleTime: 0, // 항상 stale로 간주하여 데이터 요청 시 refetch (수정)
-    refetchOnWindowFocus: true, // 윈도우 포커스 시 자동 리패치 활성화
-    gcTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // 30초 동안 신선한 상태 유지
+    refetchOnWindowFocus: false, // 창 포커스 시 자동 리패치 비활성화
+    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
   });
 
   // 블록 데이터 활용 - 타입 안전하게 처리
@@ -110,8 +115,8 @@ export function useJourney(journeyId: string | undefined) {
 
   return {
     ...journeyQuery,
-    ...blockRenderer, // 렌더러 결과도 포함하여 내보냄
-    blockData, // 블록 데이터 접근 메서드 제공
+    ...blockRenderer,
+    blockData,
     currentStepOrder: currentStepOrder,
     setCurrentStepOrder: setCurrentStepOrder,
     nextStep,

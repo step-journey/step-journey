@@ -50,7 +50,6 @@ export default function JourneyPage() {
   const totalSteps = flattenedSteps.length;
 
   // useCallback 사용하여 함수 메모이제이션
-  // currentStepOrder 또는 totalSteps 변경될 때만 함수가 재생성되므로 불필요한 useEffect 호출 방지
   const goPrev = useCallback(() => {
     setCurrentStepOrder(Math.max(0, currentStepOrder - 1));
   }, [currentStepOrder, setCurrentStepOrder]);
@@ -67,14 +66,16 @@ export default function JourneyPage() {
     return () => window.removeEventListener("keydown", handler);
   }, [goPrev, goNext]);
 
-  // URL 에서 journeyId가 변경될 때 애플리케이션 상태를 재설정하여
-  // 다른 Journey 로 이동할 때 깨끗한 상태에서 시작하도록 보장
+  // URL에서 journeyId가 변경될 때 애플리케이션 상태를 재설정하여
+  // 다른 Journey로 이동할 때 깨끗한 상태에서 시작하도록 보장
   useEffect(() => {
     if (journeyId && journeyId !== prevJourneyIdRef.current) {
       // journeyId가 실제로 변경되었을 때만 실행
-      console.log(
-        `Journey changed from ${prevJourneyIdRef.current} to ${journeyId}`,
-      );
+      if (import.meta.env.DEV) {
+        console.log(
+          `Journey changed from ${prevJourneyIdRef.current} to ${journeyId}`,
+        );
+      }
       prevJourneyIdRef.current = journeyId;
 
       // 상태 초기화 - 새로운 journeyId로 이동할 때 상태를 리셋
@@ -86,11 +87,13 @@ export default function JourneyPage() {
       });
       setCurrentStepId(undefined);
 
-      // React Query 캐시 무효화 및 강제 리패치
-      queryClient.invalidateQueries({
+      // 무한 리패치 사이클을 방지하기 위해 기존 쿼리를 완전히 제거 후 강제 리패치
+      queryClient.removeQueries({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
-      refetch(); // 즉시 리패치 강제 실행
+
+      // 이후 새 데이터 요청
+      refetch();
     }
   }, [
     journeyId,
@@ -138,9 +141,7 @@ export default function JourneyPage() {
 
         if (found) {
           if (found.properties.order === undefined) {
-            console.error(
-              `Step ${found.id} has undefined order property`,
-            );
+            console.error(`Step ${found.id} has undefined order property`);
             throw new Error(`Step is missing required order property`);
           }
           setCurrentStepOrder(found.properties.order);
