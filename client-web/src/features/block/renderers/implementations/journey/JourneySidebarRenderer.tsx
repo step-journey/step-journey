@@ -1,5 +1,6 @@
 import React from "react";
 import { JourneyBlock, isJourneyBlock, getJourneyTitle } from "../../../types";
+import { EditableJourneyTitle } from "../../../components/EditableJourneyTitle";
 
 interface JourneySidebarRendererProps {
   block: JourneyBlock;
@@ -16,5 +17,12 @@ export const JourneySidebarRenderer: React.FC<JourneySidebarRendererProps> = ({
     return <div>Invalid journey block</div>;
   }
 
-  return <h1 className="text-base font-bold mb-3">{getJourneyTitle(block)}</h1>;
+  return (
+    <EditableJourneyTitle
+      journeyId={block.id}
+      value={getJourneyTitle(block)}
+      className="text-base font-bold mb-3"
+      placeholder="제목 없는 Journey"
+    />
+  );
 };
