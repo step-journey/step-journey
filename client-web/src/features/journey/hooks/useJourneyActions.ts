@@ -31,6 +31,7 @@ export function useJourneyActions() {
   const [isAddingStep, setIsAddingStep] = useState(false);
   const [isDeletingStep, setIsDeletingStep] = useState(false);
   const [isAddingStepGroup, setIsAddingStepGroup] = useState(false);
+  const [isDeletingStepGroup, setIsDeletingStepGroup] = useState(false);
 
   // Journey 생성 함수
   const createJourney = async (title: string, description: string) => {
@@ -213,6 +214,70 @@ export function useJourneyActions() {
       return null;
     } finally {
       setIsAddingStepGroup(false);
+    }
+  };
+
+  // Step Group 삭제 함수
+  const deleteStepGroup = async (journeyId: string, groupId: string) => {
+    if (!journeyId || !groupId) return false;
+
+    setIsDeletingStepGroup(true);
+
+    try {
+      // 1. Journey 와 Step Group 블록 조회
+      const journeyData = await queryClient.fetchQuery<JourneyData>({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      if (!journeyData) {
+        console.error("Journey data not found");
+        toast.error("여정 데이터를 찾을 수 없습니다.");
+        return false;
+      }
+
+      const { journeyBlock, allBlocks } = journeyData;
+
+      if (!journeyBlock) {
+        console.error("Journey block not found");
+        toast.error("여정 블록을 찾을 수 없습니다.");
+        return false;
+      }
+
+      // Step Group 블록 찾기
+      const groupBlock = allBlocks.find((block) => block.id === groupId);
+      if (!groupBlock) {
+        console.error("Group block not found");
+        toast.error("그룹 데이터를 찾을 수 없습니다.");
+        return false;
+      }
+
+      // 2. 부모 Journey 에서 group ID 제거
+      const updatedChildrenIds = journeyBlock.childrenIds.filter(
+        (id) => id !== groupId,
+      );
+
+      // 3. 해당 group 을 트리째로 삭제 (모든 step 과 그 자식들도 모두 삭제)
+      await deleteBlockTree(groupId);
+
+      // 4. 부모 Journey 블록 업데이트
+      await updateBlock({
+        id: journeyId,
+        childrenIds: updatedChildrenIds,
+      });
+
+      // 5. 리스트 새로고침
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      toast.success("그룹이 삭제되었습니다.");
+      return true;
+    } catch (error) {
+      console.error("Failed to delete step group:", error);
+      toast.error("그룹 삭제에 실패했습니다.");
+      return false;
+    } finally {
+      setIsDeletingStepGroup(false);
     }
   };
 
@@ -416,10 +481,12 @@ export function useJourneyActions() {
     addStep,
     deleteStep,
     addStepGroup,
+    deleteStepGroup,
     isCreating,
     isDeleting,
     isAddingStep,
     isDeletingStep,
     isAddingStepGroup,
+    isDeletingStepGroup,
   };
 }

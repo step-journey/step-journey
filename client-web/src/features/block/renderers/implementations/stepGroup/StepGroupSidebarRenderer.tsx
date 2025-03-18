@@ -18,9 +18,12 @@ import {
   IconChevronRight,
   IconEdit,
   IconCornerDownLeft,
+  IconTrash,
 } from "@tabler/icons-react";
 import { EditableStepGroupTitle } from "@/features/block/components/EditableStepGroupTitle";
 import { useParams } from "react-router-dom";
+import { useJourneyActions } from "@/features/journey/hooks/useJourneyActions";
+import { DeleteStepGroupModal } from "@/features/journey/components/DeleteStepGroupModal";
 
 interface StepGroupSidebarRendererProps {
   block: StepGroupBlock;
@@ -39,6 +42,8 @@ export const StepGroupSidebarRenderer: React.FC<
   const { journeyId } = useParams<{ journeyId: string }>();
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const { deleteStepGroup, isDeletingStepGroup } = useJourneyActions();
 
   // 타입 가드
   if (!isStepGroupBlock(block)) {
@@ -77,6 +82,22 @@ export const StepGroupSidebarRenderer: React.FC<
   const handleCompleteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // 펼치기/접기 방지
     setIsEditing(false);
+  };
+
+  // 삭제 버튼 클릭 핸들러
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 펼치기/접기 방지
+    setIsDeleteModalOpen(true);
+  };
+
+  // 삭제 확인 핸들러
+  const handleConfirmDelete = async () => {
+    if (!journeyId) return;
+
+    const success = await deleteStepGroup(journeyId, block.id);
+    if (success) {
+      setIsDeleteModalOpen(false);
+    }
   };
 
   const completeEditingHandler = () => {
@@ -120,13 +141,22 @@ export const StepGroupSidebarRenderer: React.FC<
             ) : (
               // 편집 중이 아닐 때는 호버 시 편집 아이콘 표시 (무채색)
               isHovered && (
-                <button
-                  onClick={handleEditClick}
-                  className="transition-opacity duration-150 p-1 rounded-sm hover:bg-gray-200 text-gray-500 hover:text-gray-700 flex-shrink-0 w-6 h-6 flex items-center justify-center mr-1"
-                  title="그룹 이름 편집"
-                >
-                  <IconEdit size={14} />
-                </button>
+                <>
+                  <button
+                    onClick={handleEditClick}
+                    className="transition-opacity duration-150 p-1 rounded-sm hover:bg-gray-200 text-gray-500 hover:text-gray-700 flex-shrink-0 w-6 h-6 flex items-center justify-center mr-1"
+                    title="그룹 이름 편집"
+                  >
+                    <IconEdit size={14} />
+                  </button>
+                  <button
+                    onClick={handleDeleteClick}
+                    className="transition-opacity duration-150 p-1 rounded-sm hover:bg-gray-200 text-gray-500 hover:text-red-500 flex-shrink-0 w-6 h-6 flex items-center justify-center mr-1"
+                    title="그룹 삭제"
+                  >
+                    <IconTrash size={14} />
+                  </button>
+                </>
               )
             )}
 
@@ -152,6 +182,15 @@ export const StepGroupSidebarRenderer: React.FC<
           ))}
         </div>
       )}
+
+      {/* 삭제 확인 모달 */}
+      <DeleteStepGroupModal
+        isOpen={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        groupTitle={getStepGroupTitle(block)}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeletingStepGroup}
+      />
     </div>
   );
 };
