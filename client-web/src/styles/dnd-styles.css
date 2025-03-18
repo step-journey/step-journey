@@ -1,0 +1,44 @@
+/* Drop indicators */
+.step-drop-indicator {
+    height: 2px;
+    margin: 3px 0;
+    background-color: transparent;
+    border-radius: 1px;
+}
+
+.step-drop-indicator-active {
+    height: 3px;
+    background-color: #3b82f6;
+    box-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
+}
+
+/* Step container */
+.step-item {
+    touch-action: none;
+    position: relative;
+}
+
+/* 드래그 오버레이 스타일 */
+.step-item.drag-overlay {
+    background-color: white;
+    border-radius: 4px;
+    opacity: 0.9;
+    border: 1px solid #e5e7eb;
+    pointer-events: none;
+}
+
+/* Step group drop target */
+.step-group-droppable {
+    border-radius: 4px;
+}
+
+.step-group-drop-active {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Step items container */
+.step-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
