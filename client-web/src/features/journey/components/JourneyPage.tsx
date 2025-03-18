@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "@blocknote/core/fonts/inter.css";
 import { Block, StepContainerMap } from "@/features/block/types";
@@ -31,13 +31,8 @@ export default function JourneyPage() {
   const prevJourneyIdRef = useRef<string | undefined>(journeyId);
 
   // Zustand 스토어에서 필요한 상태와 액션 가져오기
-  const {
-    setAllBlocks,
-    setCurrentStepIndex,
-    currentStepIndex,
-    prevStep: zustandPrevStep,
-    nextStep: zustandNextStep,
-  } = useBlockStore();
+  const { setAllBlocks, setCurrentStepIndex, currentStepIndex } =
+    useBlockStore();
 
   const { updateState: updateContentState } = useContentStore();
   const { setCurrentStepId, setStepClickHandler } = useSidebarStore();
@@ -48,15 +43,32 @@ export default function JourneyPage() {
 
   const stepContainerRefs = useRef<StepContainerMap>({});
 
+  // 데이터 및 현재 스텝 추출
+  const journeyBlock = data?.journeyBlock || null;
+  const flattenedSteps = data?.flattenedSteps || [];
+  const allBlocks = data?.allBlocks || [];
+  const totalSteps = flattenedSteps.length;
+
+  // useCallback 사용하여 함수 메모이제이션
+  // currentStepIndex 또는 totalSteps 변경될 때만 함수가 재생성되므로 불필요한 useEffect 호출 방지
+  const goPrev = useCallback(() => {
+    setCurrentStepIndex(Math.max(0, currentStepIndex - 1));
+  }, [currentStepIndex, setCurrentStepIndex]);
+
+  const goNext = useCallback(() => {
+    setCurrentStepIndex(Math.min(currentStepIndex + 1, totalSteps - 1));
+  }, [currentStepIndex, totalSteps, setCurrentStepIndex]);
+
   // 키보드 단축키 등록 (편집 모드가 아닐 때만)
   useEffect(() => {
     const handler = (e: KeyboardEvent) =>
-      handleKeyboardShortcuts(e, zustandPrevStep, zustandNextStep);
+      handleKeyboardShortcuts(e, goPrev, goNext);
     window.addEventListener("keydown", handler, { passive: false });
     return () => window.removeEventListener("keydown", handler);
-  }, [zustandPrevStep, zustandNextStep]);
+  }, [goPrev, goNext]);
 
-  // journeyId가 변경될 때 상태를 초기화
+  // URL 에서 journeyId가 변경될 때 애플리케이션 상태를 재설정하여
+  // 다른 Journey 로 이동할 때 깨끗한 상태에서 시작하도록 보장
   useEffect(() => {
     if (journeyId && journeyId !== prevJourneyIdRef.current) {
       // journeyId가 실제로 변경되었을 때만 실행
@@ -145,11 +157,6 @@ export default function JourneyPage() {
     updateStepGroupsForCurrentStep,
   ]);
 
-  // 데이터 및 현재 스텝 추출
-  const journeyBlock = data?.journeyBlock || null;
-  const flattenedSteps = data?.flattenedSteps || [];
-  const allBlocks = data?.allBlocks || [];
-
   // 데이터 로딩이 완료되고 journeyBlock이 있는 경우만 UI 렌더링
   if (!journeyBlock) {
     return (
@@ -162,7 +169,7 @@ export default function JourneyPage() {
 
   return (
     <div className="flex h-screen bg-white">
-      {/* 사이드바는 항상 표시 */}
+      {/* 사이드바 */}
       <JourneySidebar
         journeyBlock={journeyBlock as Block}
         allBlocks={allBlocks}
@@ -175,16 +182,16 @@ export default function JourneyPage() {
         {/* 헤더 */}
         <JourneyHeader />
 
-        {/* 본문 영역 - 항상 WYSIWYG 편집기 표시 */}
+        {/* 본문 영역 */}
         <JourneyContent journeyBlock={journeyBlock as Block} />
 
-        {/* 푸터 - 항상 표시 */}
+        {/* 푸터 */}
         <JourneyFooter
           globalIndex={currentStepIndex}
           setGlobalIndex={setCurrentStepIndex}
-          goPrev={zustandPrevStep}
-          goNext={zustandNextStep}
-          totalSteps={flattenedSteps.length}
+          goPrev={goPrev}
+          goNext={goNext}
+          totalSteps={totalSteps}
         />
       </div>
     </div>

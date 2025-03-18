@@ -16,13 +16,11 @@ interface BlockState {
 interface BlockActions {
   setAllBlocks: (blocks: Block[]) => void; // 모든 블록 설정
   setCurrentStepIndex: (index: number) => void; // 현재 스텝 인덱스 변경
-  nextStep: () => void; // 다음 스텝으로 이동
-  prevStep: () => void; // 이전 스텝으로 이동
 }
 
 export const useBlockStore = create<BlockState & BlockActions>()(
   devtools(
-    immer((set, get) => ({
+    immer((set) => ({
       // 상태
       allBlocks: [],
       currentStepIndex: 0,
@@ -37,22 +35,6 @@ export const useBlockStore = create<BlockState & BlockActions>()(
         set((state) => {
           state.currentStepIndex = index;
         }),
-
-      nextStep: () =>
-        set((state) => {
-          // 전체 블록 수 확인 로직 필요 시 추가
-          const maxIndex =
-            get().allBlocks.filter((b) => b.type === "step").length - 1;
-          state.currentStepIndex = Math.min(
-            state.currentStepIndex + 1,
-            maxIndex,
-          );
-        }),
-
-      prevStep: () =>
-        set((state) => {
-          state.currentStepIndex = Math.max(0, state.currentStepIndex - 1);
-        }),
     })),
     { name: "block-store" },
   ),
@@ -62,5 +44,3 @@ export const useBlockStore = create<BlockState & BlockActions>()(
 export const useAllBlocks = () => useBlockStore((state) => state.allBlocks);
 export const useCurrentStepIndex = () =>
   useBlockStore((state) => state.currentStepIndex);
-export const useNextStep = () => useBlockStore((state) => state.nextStep);
-export const usePrevStep = () => useBlockStore((state) => state.prevStep);
