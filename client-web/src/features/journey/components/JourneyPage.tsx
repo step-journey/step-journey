@@ -136,7 +136,15 @@ export default function JourneyPage() {
           (fs) =>
             fs.parentId === groupId && fs.properties.stepIdInGroup === stepId,
         );
-        if (found) setCurrentStepIndex(found.globalIndex);
+        if (found) {
+          if (found.properties.globalIndex === undefined) {
+            console.error(
+              `Step ${found.id} has undefined globalIndex property`,
+            );
+            throw new Error(`Step is missing required globalIndex property`);
+          }
+          setCurrentStepIndex(found.properties.globalIndex);
+        }
       });
     }
   }, [data?.flattenedSteps, setStepClickHandler, setCurrentStepIndex]);

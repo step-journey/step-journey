@@ -8,17 +8,13 @@ import { BaseBlock, BaseBlockProperties, BlockType } from "./baseBlock";
 export interface StepBlockProperties extends BaseBlockProperties {
   title?: string;
   stepIdInGroup?: number; // 그룹 내 순서
+  globalIndex?: number; // 전역 인덱스
 }
 
 // Step 블록 - 개별 콘텐츠 단위
 export interface StepBlock extends BaseBlock {
   type: BlockType.STEP;
   properties: StepBlockProperties;
-}
-
-// UI 렌더링을 위한 전역 인덱스가 포함된 강화된 Step 블록
-export interface FlattenedBlock extends StepBlock {
-  globalIndex: number;
 }
 
 // DOM 조작을 위한 단계 컨테이너 참조 맵

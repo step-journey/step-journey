@@ -4,7 +4,6 @@
 import { BlockType, Block, StepBlock } from "../types";
 import { isJourneyBlock } from "../types";
 import { StepGroupBlock } from "../types";
-import { FlattenedBlock } from "../types";
 import { v4 as uuidv4 } from "uuid";
 
 /**
@@ -51,17 +50,17 @@ export function getChildBlocksByType<T extends Block>(
  * 블록 계층 구조의 평면화된 표현 생성
  * @param journeyBlock 최상위 Journey 블록
  * @param allBlocks 사용 가능한 모든 블록 배열
- * @returns 전역 인덱스가 있는 평면화된 단계 블록 배열
+ * @returns 전역 인덱스가 포함된 평면화된 단계 블록 배열
  */
 export function flattenBlocks(
   journeyBlock: Block,
   allBlocks: Block[],
-): FlattenedBlock[] {
+): StepBlock[] {
   if (!isJourneyBlock(journeyBlock)) {
     throw new Error("Journey 블록이 아닙니다");
   }
 
-  const result: FlattenedBlock[] = [];
+  const result: StepBlock[] = [];
   let globalIndex = 0;
 
   // StepGroup 블록 가져오기
@@ -79,14 +78,17 @@ export function flattenBlocks(
       BlockType.STEP,
     );
 
-    // 각 Step 을 globalIndex 와 함께 결과에 추가
+    // 각 Step 에 globalIndex 속성 추가하여 결과에 추가
     stepBlocks.forEach((stepBlock) => {
-      const flatBlock: FlattenedBlock = {
+      const blockWithIndex: StepBlock = {
         ...stepBlock,
-        globalIndex,
+        properties: {
+          ...stepBlock.properties,
+          globalIndex,
+        },
       };
 
-      result.push(flatBlock);
+      result.push(blockWithIndex);
       globalIndex++;
     });
   });
@@ -125,32 +127,4 @@ export function createDefaultParagraphBlock(parentId: string): Block {
       },
     ],
   };
-}
-
-/**
- * BlockNote 타입을 내부 BlockType으로 변환
- */
-export function convertBlockNoteTypeToBlockType(
-  blockNoteType: string,
-): BlockType {
-  switch (blockNoteType) {
-    case "paragraph":
-      return BlockType.PARAGRAPH;
-    case "heading":
-      return BlockType.HEADING;
-    case "bulletListItem":
-      return BlockType.BULLET_LIST;
-    case "numberedListItem":
-      return BlockType.NUMBERED_LIST;
-    case "checkListItem":
-      return BlockType.CHECK_LIST;
-    case "codeBlock":
-      return BlockType.CODE_BLOCK;
-    case "table":
-      return BlockType.TABLE;
-    case "image":
-      return BlockType.IMAGE;
-    default:
-      return BlockType.PARAGRAPH; // 기본값
-  }
 }

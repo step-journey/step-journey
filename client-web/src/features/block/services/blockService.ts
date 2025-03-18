@@ -2,7 +2,6 @@ import dbClient from "@/services/dbClient";
 import {
   Block,
   BlockType,
-  FlattenedBlock,
   isJourneyBlock,
   JourneyBlock,
   StepBlock,
@@ -76,7 +75,7 @@ export const loadJourneyWithSteps = async (
   id: string,
 ): Promise<{
   journeyBlock: JourneyBlock | null;
-  flattenedSteps: FlattenedBlock[];
+  flattenedSteps: StepBlock[];
   allBlocks: Block[];
 }> => {
   // DB에서 Journey와 관련 블록 조회

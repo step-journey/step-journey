@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PATH from "@/constants/path";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { Block, BlockType, FlattenedBlock } from "@/features/block/types";
+import { Block, BlockType, StepBlock } from "@/features/block/types";
 import {
   createBlock,
   deleteBlockTree,
@@ -18,7 +18,7 @@ import {
 // Journey 데이터의 타입 정의 추가
 interface JourneyData {
   journeyBlock: Block | null;
-  flattenedSteps: FlattenedBlock[];
+  flattenedSteps: StepBlock[];
   allBlocks: Block[];
 }
 

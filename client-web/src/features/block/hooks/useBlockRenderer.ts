@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { BlockType, Block, FlattenedBlock } from "../types";
+import { BlockType, Block, StepBlock } from "../types";
 import { findBlockById, findChildBlocksByType } from "../utils/renderUtils";
 
 /**
@@ -14,7 +14,7 @@ import { findBlockById, findChildBlocksByType } from "../utils/renderUtils";
 export function useBlockRenderer(
   journeyId: string,
   allBlocks: Block[],
-  flattenedSteps: FlattenedBlock[],
+  flattenedSteps: StepBlock[],
   currentStepIndex: number,
 ) {
   // 여정 블록 찾기

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { devtools } from "zustand/middleware";
-import { FlattenedBlock } from "../types";
+import { StepBlock } from "../types";
 
 /**
  * 콘텐츠 영역 관련 상태와 액션을 관리하는 스토어
@@ -10,14 +10,14 @@ import { FlattenedBlock } from "../types";
  * - 키워드 강조 설정
  */
 interface ContentState {
-  currentStep: FlattenedBlock | null; // 현재 활성화된 스텝
-  allSteps: FlattenedBlock[]; // 모든 스텝 목록
+  currentStep: StepBlock | null; // 현재 활성화된 스텝
+  allSteps: StepBlock[]; // 모든 스텝 목록
   highlightKeywords: boolean; // 키워드 강조 여부
 }
 
 interface ContentActions {
-  setCurrentStep: (step: FlattenedBlock | null) => void; // 현재 스텝 설정
-  setAllSteps: (steps: FlattenedBlock[]) => void; // 모든 스텝 설정
+  setCurrentStep: (step: StepBlock | null) => void; // 현재 스텝 설정
+  setAllSteps: (steps: StepBlock[]) => void; // 모든 스텝 설정
   setHighlightKeywords: (highlight: boolean) => void; // 키워드 강조 설정
   updateState: (partial: Partial<ContentState>) => void; // 여러 상태 동시 업데이트
 }

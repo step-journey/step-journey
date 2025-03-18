@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import {
   Block,
   BlockType,
-  FlattenedBlock,
+  StepBlock,
   JourneyBlock,
 } from "@/features/block/types";
 import { useBlockRenderer } from "@/features/block/hooks/useBlockRenderer";
@@ -18,7 +18,7 @@ import { useBlockData } from "@/features/block/hooks/useBlockData";
 // 여정 데이터 반환 타입 정의
 type JourneyData = {
   journeyBlock: JourneyBlock | null;
-  flattenedSteps: FlattenedBlock[];
+  flattenedSteps: StepBlock[];
   allBlocks: Block[];
 };
 
