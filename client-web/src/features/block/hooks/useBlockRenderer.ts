@@ -8,14 +8,14 @@ import { findBlockById, findChildBlocksByType } from "../utils/renderUtils";
  * @param journeyId 여정 ID
  * @param allBlocks 모든 블록 목록
  * @param flattenedSteps 평면화된 스텝 목록
- * @param currentStepIndex 현재 활성화된 스텝 인덱스
+ * @param currentStepOrder 현재 활성화된 스텝의 정렬 순서
  * @returns 렌더링에 필요한 데이터 객체
  */
 export function useBlockRenderer(
   journeyId: string,
   allBlocks: Block[],
   flattenedSteps: StepBlock[],
-  currentStepIndex: number,
+  currentStepOrder: number,
 ) {
   // 여정 블록 찾기
   const journeyBlock = useMemo(() => {
@@ -24,8 +24,8 @@ export function useBlockRenderer(
 
   // 현재 스텝 찾기
   const currentStep = useMemo(() => {
-    return flattenedSteps[currentStepIndex] || null;
-  }, [flattenedSteps, currentStepIndex]);
+    return flattenedSteps[currentStepOrder] || null;
+  }, [flattenedSteps, currentStepOrder]);
 
   // 스텝 그룹 블록들 찾기
   const stepGroupBlocks = useMemo(() => {

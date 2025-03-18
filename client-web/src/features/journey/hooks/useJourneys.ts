@@ -41,14 +41,14 @@ export function useJourneys() {
 
 // 특정 여정과 그 단계들을 조회하는 훅
 export function useJourney(journeyId: string | undefined) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [currentStepOrder, setCurrentStepOrder] = useState(0);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
   );
 
   // journeyId가 변경될 때 스텝 인덱스 초기화
   useEffect(() => {
-    setCurrentStepIndex(0);
+    setCurrentStepOrder(0);
   }, [journeyId]);
 
   const journeyQuery = useQuery<JourneyData>({
@@ -75,19 +75,19 @@ export function useJourney(journeyId: string | undefined) {
     journeyId || "",
     allBlocks,
     journeyQuery.data?.flattenedSteps || [],
-    currentStepIndex,
+    currentStepOrder,
   );
 
   // 스텝 인덱스 변경 함수
   const nextStep = () => {
     if (!journeyQuery.data) return;
     const flattenedSteps = journeyQuery.data.flattenedSteps;
-    const maxIndex = flattenedSteps.length - 1;
-    setCurrentStepIndex((prev) => Math.min(prev + 1, maxIndex));
+    const maxOrder = flattenedSteps.length - 1;
+    setCurrentStepOrder((prev) => Math.min(prev + 1, maxOrder));
   };
 
   const prevStep = () => {
-    setCurrentStepIndex((prev) => Math.max(0, prev - 1));
+    setCurrentStepOrder((prev) => Math.max(0, prev - 1));
   };
 
   // 그룹 토글 함수
@@ -112,8 +112,8 @@ export function useJourney(journeyId: string | undefined) {
     ...journeyQuery,
     ...blockRenderer, // 렌더러 결과도 포함하여 내보냄
     blockData, // 블록 데이터 접근 메서드 제공
-    currentStepIndex,
-    setCurrentStepIndex,
+    currentStepOrder: currentStepOrder,
+    setCurrentStepOrder: setCurrentStepOrder,
     nextStep,
     prevStep,
     expandedGroups,

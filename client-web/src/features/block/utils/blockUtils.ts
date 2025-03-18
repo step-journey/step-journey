@@ -61,7 +61,7 @@ export function flattenBlocks(
   }
 
   const result: StepBlock[] = [];
-  let globalIndex = 0;
+  let order = 0;
 
   // StepGroup 블록 가져오기
   const stepGroupBlocks = getChildBlocksByType<StepGroupBlock>(
@@ -78,18 +78,18 @@ export function flattenBlocks(
       BlockType.STEP,
     );
 
-    // 각 Step 에 globalIndex 속성 추가하여 결과에 추가
+    // 각 Step 에 order 속성 추가하여 결과에 추가
     stepBlocks.forEach((stepBlock) => {
-      const blockWithIndex: StepBlock = {
+      const blockWithOrder: StepBlock = {
         ...stepBlock,
         properties: {
           ...stepBlock.properties,
-          globalIndex,
+          order: order,
         },
       };
 
-      result.push(blockWithIndex);
-      globalIndex++;
+      result.push(blockWithOrder);
+      order++;
     });
   });
 

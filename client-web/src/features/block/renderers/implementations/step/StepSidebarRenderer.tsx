@@ -21,8 +21,8 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
   const { journeyId } = useParams<{ journeyId: string }>();
   const currentStepId = useCurrentStepId();
   const handleStepClick = useHandleStepClick();
-  const setCurrentStepIndex = useBlockStore(
-    (state) => state.setCurrentStepIndex,
+  const setCurrentStepOrder = useBlockStore(
+    (state) => state.setCurrentStepOrder,
   );
   const { deleteStep, isDeletingStep } = useJourneyActions();
 
@@ -43,7 +43,7 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
 
   // 현재 선택된 스텝인지 확인
   const isActive = currentStepId === block.id;
-  const globalIndex = block.properties.globalIndex || 0;
+  const order = block.properties.order || 0;
   const parentId = block.parentId || "";
 
   // Step 삭제 핸들러
@@ -56,10 +56,10 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
   const handleConfirmDelete = async () => {
     if (!journeyId) return;
 
-    const nextIndex = await deleteStep(journeyId, block.id);
+    const nextStepOrder = await deleteStep(journeyId, block.id);
 
-    if (nextIndex !== null) {
-      setCurrentStepIndex(nextIndex);
+    if (nextStepOrder !== null) {
+      setCurrentStepOrder(nextStepOrder);
       setIsDeleteModalOpen(false);
     }
   };
@@ -75,7 +75,7 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
       <div
         id={`step-${block.id}`}
         className={stepClass}
-        onClick={() => handleStepClick(parentId, globalIndex)}
+        onClick={() => handleStepClick(parentId, order)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

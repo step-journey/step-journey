@@ -31,7 +31,7 @@ export default function JourneyPage() {
   const prevJourneyIdRef = useRef<string | undefined>(journeyId);
 
   // Zustand 스토어에서 필요한 상태와 액션 가져오기
-  const { setAllBlocks, setCurrentStepIndex, currentStepIndex } =
+  const { setAllBlocks, setCurrentStepOrder, currentStepOrder } =
     useBlockStore();
 
   const { updateState: updateContentState } = useContentStore();
@@ -50,14 +50,14 @@ export default function JourneyPage() {
   const totalSteps = flattenedSteps.length;
 
   // useCallback 사용하여 함수 메모이제이션
-  // currentStepIndex 또는 totalSteps 변경될 때만 함수가 재생성되므로 불필요한 useEffect 호출 방지
+  // currentStepOrder 또는 totalSteps 변경될 때만 함수가 재생성되므로 불필요한 useEffect 호출 방지
   const goPrev = useCallback(() => {
-    setCurrentStepIndex(Math.max(0, currentStepIndex - 1));
-  }, [currentStepIndex, setCurrentStepIndex]);
+    setCurrentStepOrder(Math.max(0, currentStepOrder - 1));
+  }, [currentStepOrder, setCurrentStepOrder]);
 
   const goNext = useCallback(() => {
-    setCurrentStepIndex(Math.min(currentStepIndex + 1, totalSteps - 1));
-  }, [currentStepIndex, totalSteps, setCurrentStepIndex]);
+    setCurrentStepOrder(Math.min(currentStepOrder + 1, totalSteps - 1));
+  }, [currentStepOrder, totalSteps, setCurrentStepOrder]);
 
   // 키보드 단축키 등록 (편집 모드가 아닐 때만)
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function JourneyPage() {
       prevJourneyIdRef.current = journeyId;
 
       // 상태 초기화 - 새로운 journeyId로 이동할 때 상태를 리셋
-      setCurrentStepIndex(0);
+      setCurrentStepOrder(0);
       updateContentState({
         currentStep: null,
         allSteps: [],
@@ -94,7 +94,7 @@ export default function JourneyPage() {
     }
   }, [
     journeyId,
-    setCurrentStepIndex,
+    setCurrentStepOrder,
     updateContentState,
     setCurrentStepId,
     queryClient,
@@ -111,17 +111,17 @@ export default function JourneyPage() {
 
       // 콘텐츠 스토어 상태 업데이트
       updateContentState({
-        currentStep: flattenedSteps[currentStepIndex] || null,
+        currentStep: flattenedSteps[currentStepOrder] || null,
         allSteps: flattenedSteps,
         highlightKeywords: true,
       });
 
       // 사이드바 스토어 현재 선택된 스텝 ID 업데이트
-      setCurrentStepId(flattenedSteps[currentStepIndex]?.id);
+      setCurrentStepId(flattenedSteps[currentStepOrder]?.id);
     }
   }, [
     data,
-    currentStepIndex,
+    currentStepOrder,
     setAllBlocks,
     updateContentState,
     setCurrentStepId,
@@ -130,38 +130,36 @@ export default function JourneyPage() {
   // 스텝 클릭 핸들러 설정
   useEffect(() => {
     if (data?.flattenedSteps) {
-      // 스텝 클릭 시 해당 globalIndex 로 이동하는 핸들러 등록
-      setStepClickHandler((groupId, stepGlobalIndex) => {
+      // 스텝 클릭 시 해당 order 로 이동하는 핸들러 등록
+      setStepClickHandler((groupId, stepOrder) => {
         const found = data.flattenedSteps.find(
-          (fs) =>
-            fs.parentId === groupId &&
-            fs.properties.globalIndex === stepGlobalIndex,
+          (fs) => fs.parentId === groupId && fs.properties.order === stepOrder,
         );
 
         if (found) {
-          if (found.properties.globalIndex === undefined) {
+          if (found.properties.order === undefined) {
             console.error(
-              `Step ${found.id} has undefined globalIndex property`,
+              `Step ${found.id} has undefined order property`,
             );
-            throw new Error(`Step is missing required globalIndex property`);
+            throw new Error(`Step is missing required order property`);
           }
-          setCurrentStepIndex(found.properties.globalIndex);
+          setCurrentStepOrder(found.properties.order);
         }
       });
     }
-  }, [data?.flattenedSteps, setStepClickHandler, setCurrentStepIndex]);
+  }, [data?.flattenedSteps, setStepClickHandler, setCurrentStepOrder]);
 
   // 현재 step 이 변경될 때마다 step group 상태 업데이트
   useEffect(() => {
     if (data?.flattenedSteps && data?.allBlocks) {
-      const currentStep = data.flattenedSteps[currentStepIndex];
+      const currentStep = data.flattenedSteps[currentStepOrder];
       if (currentStep) {
         // 현재 step ID와 모든 블록을 전달하여 step group 상태 업데이트
         updateStepGroupsForCurrentStep(currentStep.id, data.allBlocks);
       }
     }
   }, [
-    currentStepIndex,
+    currentStepOrder,
     data?.flattenedSteps,
     data?.allBlocks,
     updateStepGroupsForCurrentStep,
@@ -197,8 +195,8 @@ export default function JourneyPage() {
 
         {/* 푸터 */}
         <JourneyFooter
-          globalIndex={currentStepIndex}
-          setGlobalIndex={setCurrentStepIndex}
+          order={currentStepOrder}
+          setOrder={setCurrentStepOrder}
           goPrev={goPrev}
           goNext={goNext}
           totalSteps={totalSteps}

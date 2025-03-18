@@ -3,23 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 
 interface Props {
-  globalIndex: number;
-  setGlobalIndex: (val: number) => void;
+  order: number;
+  setOrder: (val: number) => void;
   goPrev: () => void;
   goNext: () => void;
   totalSteps: number; // 전체 단계 수
 }
 
 export function JourneyFooter({
-  globalIndex,
-  setGlobalIndex,
+  order,
+  setOrder,
   goPrev,
   goNext,
   totalSteps,
 }: Props) {
   // 슬라이더 onChange
   const handleSliderChange = (val: number[]) => {
-    setGlobalIndex(val[0]);
+    setOrder(val[0]);
   };
 
   // 슬라이더 PointerUp 시 포커스 해제
@@ -38,7 +38,7 @@ export function JourneyFooter({
         className="flex-1"
         // max를 totalSteps - 1로 설정 → 0~(총개수-1)
         max={totalSteps - 1}
-        value={[globalIndex]}
+        value={[order]}
         onValueChange={handleSliderChange}
         onPointerUp={handleSliderPointerUp}
       />
@@ -57,7 +57,7 @@ export function JourneyFooter({
 
       {/* Step 표시 */}
       <span className="w-20 whitespace-nowrap text-right text-sm text-gray-500">
-        Step {globalIndex + 1} / {totalSteps}
+        Step {order + 1} / {totalSteps}
       </span>
     </div>
   );

@@ -81,7 +81,7 @@ export function useJourneyActions() {
         createdBy: "user",
         properties: {
           title: "시작하기",
-          globalIndex: 0,
+          order: 0,
         },
       };
 
@@ -281,7 +281,7 @@ export function useJourneyActions() {
     }
   };
 
-  // Step 추가 함수 - 반환 타입을 {stepId: string, index: number} | null로 변경
+  // Step 추가 함수
   const addStep = async (journeyId: string, groupId: string) => {
     if (!journeyId || !groupId) return null;
 
@@ -310,8 +310,8 @@ export function useJourneyActions() {
         return null;
       }
 
-      // 2. 새 Step의 globalIndex 결정
-      const nextGlobalIndex = flattenedSteps.length;
+      // 2. 새 Step의 order 결정
+      const nextOrder = flattenedSteps.length;
 
       // 3. 새 Step ID 생성
       const stepId = generateBlockId();
@@ -325,7 +325,7 @@ export function useJourneyActions() {
         createdBy: "user",
         properties: {
           title: "새 단계",
-          globalIndex: nextGlobalIndex,
+          order: nextOrder,
         },
       };
 
@@ -357,16 +357,16 @@ export function useJourneyActions() {
 
       if (!updatedData) {
         toast.error("업데이트된 데이터를 가져오지 못했습니다.");
-        return { stepId, index: -1 }; // 인덱스를 찾지 못했을 경우
+        return { stepId, order: -1 }; // 인덱스를 찾지 못했을 경우
       }
 
-      // 11. 새로 추가된 Step의 globalIndex 찾기
-      const newStepIndex = updatedData.flattenedSteps.findIndex(
+      // 11. 새로 추가된 Step의 order 찾기
+      const newStepOrder = updatedData.flattenedSteps.findIndex(
         (step) => step.id === stepId,
       );
 
       toast.success("새 단계가 추가되었습니다.");
-      return { stepId, index: newStepIndex };
+      return { stepId, order: newStepOrder };
     } catch (error) {
       console.error("Failed to add step:", error);
       toast.error("단계 추가에 실패했습니다.");
@@ -405,8 +405,8 @@ export function useJourneyActions() {
         return null;
       }
 
-      // 현재 단계의 globalIndex 찾기
-      const currentStepIndex = flattenedSteps.findIndex(
+      // 현재 단계의 order 찾기
+      const currentStepOrder = flattenedSteps.findIndex(
         (step) => step.id === stepId,
       );
 
@@ -450,7 +450,7 @@ export function useJourneyActions() {
       toast.success("단계가 삭제되었습니다.");
 
       // 삭제 후 이동할 다음 인덱스 계산 (이전 인덱스로 이동, 없으면 0)
-      const nextIndex = Math.max(0, currentStepIndex - 1);
+      const nextOrder = Math.max(0, currentStepOrder - 1);
 
       // 데이터 다시 가져오기
       const updatedData = await queryClient.fetchQuery<JourneyData>({
@@ -459,7 +459,7 @@ export function useJourneyActions() {
 
       // 다음 인덱스가 유효하지 않으면 조정
       return updatedData && updatedData.flattenedSteps.length > 0
-        ? Math.min(nextIndex, updatedData.flattenedSteps.length - 1)
+        ? Math.min(nextOrder, updatedData.flattenedSteps.length - 1)
         : 0;
     } catch (error) {
       console.error("Failed to delete step:", error);

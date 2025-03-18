@@ -47,8 +47,8 @@ export function JourneySidebar({
     useJourneyActions();
   const expandedGroups = useExpandedGroups();
   const toggleGroup = useToggleGroup();
-  const setCurrentStepIndex = useBlockStore(
-    (state) => state.setCurrentStepIndex,
+  const setCurrentStepOrder = useBlockStore(
+    (state) => state.setCurrentStepOrder,
   );
 
   // 드래그 앤 드롭 기능을 위한 커스텀 훅
@@ -80,10 +80,9 @@ export function JourneySidebar({
         block.parentId === groupBlock.id && block.type === BlockType.STEP,
     ) as StepBlock[];
 
-    // globalIndex 기준으로 step block 정렬
+    // order 기준으로 step block 정렬
     stepBlocks.sort(
-      (a, b) =>
-        (a.properties.globalIndex ?? 0) - (b.properties.globalIndex ?? 0),
+      (a, b) => (a.properties.order ?? 0) - (b.properties.order ?? 0),
     );
 
     // 모든 요소(스텝 + 드롭 표시기)를 담을 배열
@@ -98,7 +97,7 @@ export function JourneySidebar({
         index={0}
         isOver={
           insertPosition?.groupId === groupBlock.id &&
-          insertPosition?.index === 0
+          insertPosition?.order === 0
         }
       />,
     );
@@ -123,7 +122,7 @@ export function JourneySidebar({
           index={i + 1}
           isOver={
             insertPosition?.groupId === groupBlock.id &&
-            insertPosition?.index === i + 1
+            insertPosition?.order === i + 1
           }
         />,
       );
@@ -137,14 +136,14 @@ export function JourneySidebar({
     if (journeyId) {
       const result = await addStep(journeyId, groupId);
 
-      if (result && result.index !== -1) {
+      if (result && result.order !== -1) {
         // 그룹이 접혀있으면 펼치기
         if (!expandedGroups[groupId]) {
           toggleGroup(groupId);
         }
 
         // 새로 추가된 스텝으로 이동
-        setCurrentStepIndex(result.index);
+        setCurrentStepOrder(result.order);
       }
     }
   };

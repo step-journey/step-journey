@@ -19,7 +19,7 @@ interface DragAndDropState {
   activeBlock: Block | null;
   activeGroupId: string | null;
   overGroupId: string | null;
-  insertPosition: { groupId: string; index: number } | null;
+  insertPosition: { groupId: string; order: number } | null;
 }
 
 interface UseDragAndDropProps {
@@ -98,7 +98,7 @@ export const useDragAndDrop = ({
         overGroupId: null,
         insertPosition: {
           groupId: overData.groupId,
-          index: overData.index,
+          order: overData.index,
         },
       }));
     }
@@ -172,7 +172,7 @@ export const useDragAndDrop = ({
           parentId: targetGroupId,
           properties: {
             ...stepBlock.properties,
-            // Global index will be updated when the journey is reloaded
+            // Step Order will be updated when the journey is reloaded
           },
         });
 
@@ -197,10 +197,9 @@ export const useDragAndDrop = ({
             block.parentId === targetGroupId && block.type === BlockType.STEP,
         ) as StepBlock[];
 
-        // Sort steps by their globalIndex
+        // Sort steps by their order
         stepsInTargetGroup.sort(
-          (a, b) =>
-            (a.properties.globalIndex ?? 0) - (b.properties.globalIndex ?? 0),
+          (a, b) => (a.properties.order ?? 0) - (b.properties.order ?? 0),
         );
 
         // Remove step from source group if it's a different group
@@ -240,7 +239,7 @@ export const useDragAndDrop = ({
           }
         }
 
-        // The globalIndex values will be recalculated when journey data is reloaded
+        // The order values will be recalculated when journey data is reloaded
         // So we don't need to manually update them here
 
         // Wait for all updates to complete
