@@ -7,7 +7,7 @@ import {
   StepBlock,
 } from "../types";
 import { Block as BlockNoteBlock } from "@blocknote/core";
-import { flattenBlocks } from "../utils/blockUtils";
+import { filterAndSortStepBlocks } from "../utils/blockUtils";
 import { prepareBlocksForSaving } from "../utils/blockNoteConverter";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
 
@@ -71,27 +71,30 @@ export const getAllJourneyBlocks = async (): Promise<JourneyBlock[]> => {
 };
 
 // Journey와 그 단계들 로드
-export const loadJourneyWithSteps = async (
+export const fetchJourneyAndOrderedSteps = async (
   id: string,
 ): Promise<{
   journeyBlock: JourneyBlock | null;
   flattenedSteps: StepBlock[];
   allBlocks: Block[];
 }> => {
-  // DB에서 Journey와 관련 블록 조회
-  const dbBlocks = await getJourneyWithRelatedBlocks(id);
-  let journeyBlock = dbBlocks.find(
+  // DB에서 Journey와 하위 블록 조회
+  const allBlocksInJourney = await getJourneyWithRelatedBlocks(id);
+  let journeyBlock = allBlocksInJourney.find(
     (block) => block.id === id && isJourneyBlock(block),
   ) as JourneyBlock | undefined;
 
-  // DB에 없는 경우
+  // Journey 블록이 없는 경우 에러 발생
   if (!journeyBlock) {
-    return { journeyBlock: null, flattenedSteps: [], allBlocks: [] };
+    throw new Error(`Journey with id ${id} not found`);
   }
 
-  // DB에서 찾은 경우
-  const flattenedSteps = flattenBlocks(journeyBlock, dbBlocks);
-  return { journeyBlock, flattenedSteps, allBlocks: dbBlocks };
+  const sortedStepBlocks = filterAndSortStepBlocks(allBlocksInJourney);
+  return {
+    journeyBlock,
+    flattenedSteps: sortedStepBlocks,
+    allBlocks: allBlocksInJourney,
+  };
 };
 
 // 데이터베이스 초기화 - 더 이상 정적 데이터를 사용하지 않음

@@ -2,8 +2,6 @@
  * 블록 관계 및 변환을 위한 유틸리티 함수
  */
 import { BlockType, Block, StepBlock } from "../types";
-import { isJourneyBlock } from "../types";
-import { StepGroupBlock } from "../types";
 import { v4 as uuidv4 } from "uuid";
 
 /**
@@ -47,53 +45,27 @@ export function getChildBlocksByType<T extends Block>(
 }
 
 /**
- * 블록 계층 구조의 평면화된 표현 생성
- * @param journeyBlock 최상위 Journey 블록
- * @param allBlocks 사용 가능한 모든 블록 배열
- * @returns 전역 인덱스가 포함된 평면화된 단계 블록 배열
+ * 모든 Step 블록을 찾고 order 값에 따라 정렬
+ *
+ * @param allBlocks 모든 블록 배열
+ * @returns order 값에 따라 정렬된 Step 블록 배열
  */
-export function flattenBlocks(
-  journeyBlock: Block,
-  allBlocks: Block[],
-): StepBlock[] {
-  if (!isJourneyBlock(journeyBlock)) {
-    throw new Error("Journey 블록이 아닙니다");
-  }
+export function filterAndSortStepBlocks(allBlocks: Block[]): StepBlock[] {
+  // 모든 블록에서 Step 타입인 것만 필터링
+  const stepBlocks = allBlocks.filter(
+    (block) => block.type === BlockType.STEP,
+  ) as StepBlock[];
 
-  const result: StepBlock[] = [];
-  let order = 0;
-
-  // StepGroup 블록 가져오기
-  const stepGroupBlocks = getChildBlocksByType<StepGroupBlock>(
-    journeyBlock,
-    allBlocks,
-    BlockType.STEP_GROUP,
-  );
-
-  // 각 StepGroup 에 대해 Step 블록 가져오기
-  stepGroupBlocks.forEach((groupBlock) => {
-    const stepBlocks = getChildBlocksByType<StepBlock>(
-      groupBlock,
-      allBlocks,
-      BlockType.STEP,
-    );
-
-    // 각 Step 에 order 속성 추가하여 결과에 추가
-    stepBlocks.forEach((stepBlock) => {
-      const blockWithOrder: StepBlock = {
-        ...stepBlock,
-        properties: {
-          ...stepBlock.properties,
-          order: order,
-        },
-      };
-
-      result.push(blockWithOrder);
-      order++;
-    });
+  // order 기준으로 정렬
+  stepBlocks.sort((a, b) => {
+    const orderA =
+      typeof a.properties.order === "number" ? a.properties.order : 0;
+    const orderB =
+      typeof b.properties.order === "number" ? b.properties.order : 0;
+    return orderA - orderB;
   });
 
-  return result;
+  return stepBlocks;
 }
 
 /**

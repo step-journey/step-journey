@@ -40,7 +40,7 @@ export default function JourneyPage() {
   const updateStepGroupsForCurrentStep = useUpdateGroupsForCurrentStep();
 
   // React Query와 관련 상태/액션 사용
-  const { data, refetch } = useJourney(journeyId);
+  const { data, refetch, isError, error } = useJourney(journeyId);
 
   const stepContainerRefs = useRef<StepContainerMap>({});
 
@@ -167,7 +167,18 @@ export default function JourneyPage() {
     updateStepGroupsForCurrentStep,
   ]);
 
-  // 데이터 로딩이 완료되고 journeyBlock이 있는 경우만 UI 렌더링
+  // 에러 상태 처리
+  if (isError) {
+    return (
+      <div className="flex h-screen items-center justify-center flex-col gap-4">
+        <p>Journey를 불러오는 중 오류가 발생했습니다.</p>
+        <p className="text-red-500">{(error as Error).message}</p>
+        <Button onClick={() => navigate(PATH.HOME)}>홈으로 돌아가기</Button>
+      </div>
+    );
+  }
+
+  // 기존 데이터 없음 체크
   if (!journeyBlock) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4">

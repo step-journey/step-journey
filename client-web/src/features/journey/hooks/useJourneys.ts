@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   getAllJourneyBlocks,
-  loadJourneyWithSteps,
+  fetchJourneyAndOrderedSteps,
   initializeDatabase,
 } from "@/features/block/services/blockService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
@@ -54,8 +54,7 @@ export function useJourney(journeyId: string | undefined) {
   const journeyQuery = useQuery<JourneyData>({
     queryKey: QUERY_KEYS.journeys.detail(journeyId || ""),
     queryFn: async () => {
-      if (!journeyId)
-        return { journeyBlock: null, flattenedSteps: [], allBlocks: [] };
+      if (!journeyId) throw new Error("Journey ID is required");
 
       if (import.meta.env.DEV) {
         console.log(
@@ -63,7 +62,7 @@ export function useJourney(journeyId: string | undefined) {
           new Date().toISOString(),
         );
       }
-      return loadJourneyWithSteps(journeyId);
+      return fetchJourneyAndOrderedSteps(journeyId);
     },
     enabled: !!journeyId,
     staleTime: 30 * 1000, // 30초 동안 신선한 상태 유지
