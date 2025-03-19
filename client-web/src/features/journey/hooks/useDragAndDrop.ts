@@ -15,16 +15,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { DND_TYPES } from "@/features/journey/constants/dndTypes";
 
+// 드롭 타겟 위치를 나타내는 타입
+interface DropTargetPosition {
+  stepGroupBlockId: string;
+  insertionIndex: number;
+}
+
 // 드래그 앤 드롭 상태 인터페이스
 interface DragAndDropState {
   draggedStepBlockId: string | null;
   draggedStepBlock: Block | null;
   sourceStepGroupId: string | null;
   hoveredStepGroupId: string | null;
-  dropTargetPosition: {
-    stepGroupBlockId: string;
-    insertionIndex: number;
-  } | null;
+  dropTargetPosition: DropTargetPosition | null;
 }
 
 interface UseDragAndDropProps {
@@ -45,14 +48,55 @@ export const useDragAndDrop = ({
 }: UseDragAndDropProps) => {
   const queryClient = useQueryClient();
 
-  // 드래그 앤 드롭 상태
-  const [state, setState] = useState<DragAndDropState>({
+  // 초기 상태 정의
+  const initialState: DragAndDropState = {
     draggedStepBlockId: null,
     draggedStepBlock: null,
     sourceStepGroupId: null,
     hoveredStepGroupId: null,
     dropTargetPosition: null,
-  });
+  };
+
+  // 드래그 앤 드롭 상태
+  const [state, setStateRaw] = useState<DragAndDropState>(initialState);
+
+  // 타입 안전한 상태 업데이트 함수들
+  const setDraggedStep = (stepId: string | null, stepBlock: Block | null) => {
+    setStateRaw((prev) => ({
+      ...prev,
+      draggedStepBlockId: stepId,
+      draggedStepBlock: stepBlock,
+    }));
+  };
+
+  const setSourceGroup = (groupId: string | null) => {
+    setStateRaw((prev) => ({
+      ...prev,
+      sourceStepGroupId: groupId,
+    }));
+  };
+
+  const setHoveredGroup = (groupId: string | null) => {
+    setStateRaw((prev) => ({
+      ...prev,
+      hoveredStepGroupId: groupId,
+      // 그룹 위에 있을 때는 드롭 위치 지우기
+      dropTargetPosition: groupId !== null ? null : prev.dropTargetPosition,
+    }));
+  };
+
+  const setDropPosition = (position: DropTargetPosition | null) => {
+    setStateRaw((prev) => ({
+      ...prev,
+      dropTargetPosition: position,
+      // 드롭 위치가 있을 때는 호버 그룹 지우기
+      hoveredStepGroupId: position !== null ? null : prev.hoveredStepGroupId,
+    }));
+  };
+
+  const resetDragState = () => {
+    setStateRaw(initialState);
+  };
 
   // 드래그 감지 센서 설정
   const sensors = useSensors(
@@ -265,13 +309,11 @@ export const useDragAndDrop = ({
     const stepData = active.data.current;
 
     if (stepData && stepData.block) {
-      setState({
-        draggedStepBlockId: active.id as string,
-        draggedStepBlock: stepData.block as Block,
-        sourceStepGroupId: stepData.block.parentId,
-        hoveredStepGroupId: null,
-        dropTargetPosition: null,
-      });
+      // 개별 상태 설정 함수 사용
+      setDraggedStep(active.id as string, stepData.block as Block);
+      setSourceGroup(stepData.block.parentId);
+      setHoveredGroup(null);
+      setDropPosition(null);
     }
   };
 
@@ -282,11 +324,8 @@ export const useDragAndDrop = ({
     const { over } = event;
     if (!over) {
       // 드롭 가능한 영역 위에 없는 경우
-      setState((prev) => ({
-        ...prev,
-        hoveredStepGroupId: null,
-        dropTargetPosition: null,
-      }));
+      setHoveredGroup(null);
+      setDropPosition(null);
       return;
     }
 
@@ -295,29 +334,17 @@ export const useDragAndDrop = ({
 
     if (overData.type === DND_TYPES.STEP_GROUP) {
       // 케이스 1: 스텝 그룹 자체 위에 있을 때
-      setState((prev) => ({
-        ...prev,
-        hoveredStepGroupId: overData.groupId, // 현재 위치한 그룹 ID 저장
-        dropTargetPosition: null, // 스텝 간 위치 정보는 없음
-      }));
+      setHoveredGroup(overData.groupId);
     } else if (overData.type === DND_TYPES.STEP_GAP) {
       // 케이스 2: 스텝 사이 갭 위에 있을 때
-      setState((prev) => ({
-        ...prev,
-        hoveredStepGroupId: null,
-        dropTargetPosition: {
-          // 정확한 삽입 위치 정보 저장
-          stepGroupBlockId: overData.groupId, // 어떤 그룹 내의
-          insertionIndex: overData.index, // 몇 번째 위치에 삽입할 것인지
-        },
-      }));
+      setDropPosition({
+        stepGroupBlockId: overData.groupId,
+        insertionIndex: overData.index,
+      });
     } else {
       // 케이스 3: 다른 타입 위에 있을 때 (드롭 불가 영역)
-      setState((prev) => ({
-        ...prev,
-        hoveredStepGroupId: null,
-        dropTargetPosition: null,
-      }));
+      setHoveredGroup(null);
+      setDropPosition(null);
     }
   };
 
@@ -328,14 +355,10 @@ export const useDragAndDrop = ({
     const { active, over } = event;
 
     // 상태 저장 후 초기화 (드래그 작업 종료)
-    const { draggedStepBlockId, sourceStepGroupId } = state;
-    setState({
-      draggedStepBlockId: null,
-      draggedStepBlock: null,
-      sourceStepGroupId: null,
-      hoveredStepGroupId: null,
-      dropTargetPosition: null,
-    });
+    const { draggedStepBlockId, sourceStepGroupId, dropTargetPosition } = state;
+
+    // 작업 후 상태 초기화
+    resetDragState();
 
     // 유효성 검사
     if (
@@ -371,10 +394,10 @@ export const useDragAndDrop = ({
       // 케이스 2: 스텝 사이에 드롭한 경우
       else if (
         over.data.current?.type === DND_TYPES.STEP_GAP &&
-        state.dropTargetPosition
+        dropTargetPosition
       ) {
         const { stepGroupBlockId: targetGroupId, insertionIndex: dropIndex } =
-          state.dropTargetPosition;
+          dropTargetPosition;
 
         // 다른 그룹으로 이동하는 경우 먼저 그룹 변경
         if (sourceStepGroupId !== targetGroupId) {
