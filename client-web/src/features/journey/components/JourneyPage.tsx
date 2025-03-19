@@ -23,6 +23,7 @@ import {
   useUpdateGroupsForCurrentStep,
 } from "@/features/block/store/sidebarStore";
 import { handleKeyboardShortcuts } from "@/features/block/utils/keyboardUtils";
+import { DebugPanel } from "@/features/journey/components/DebugPanel";
 
 export default function JourneyPage() {
   const { journeyId } = useParams<{ journeyId: string }>();
@@ -203,6 +204,13 @@ export default function JourneyPage() {
           totalSteps={totalSteps}
         />
       </div>
+
+      {/* 디버깅 패널 */}
+      <DebugPanel
+        currentStepOrder={currentStepOrder}
+        flattenedSteps={flattenedSteps}
+        allBlocks={allBlocks}
+      />
     </div>
   );
 }

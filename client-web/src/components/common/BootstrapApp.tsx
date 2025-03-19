@@ -13,7 +13,10 @@ export default function BootstrapApp() {
         <TooltipProvider>
           <App />
         </TooltipProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
+        <ReactQueryDevtools
+          initialIsOpen={false}
+          buttonPosition={"bottom-left"}
+        />
       </BrowserRouter>
     </QueryClientProvider>
   );
