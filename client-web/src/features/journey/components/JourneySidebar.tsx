@@ -226,40 +226,39 @@ export function JourneySidebar({
         >
           {/* 스텝 그룹 매핑 */}
           {stepGroupBlocks.map((groupBlock) => (
-            <DroppableStepGroup
-              key={groupBlock.id}
-              id={groupBlock.id}
-              isOver={hoveredStepGroupId === groupBlock.id}
-            >
-              <div className="mb-3 w-full">
+            <div key={groupBlock.id} className="mb-3 w-full">
+              <DroppableStepGroup
+                id={groupBlock.id}
+                isOver={hoveredStepGroupId === groupBlock.id}
+              >
                 {/* 그룹 블록 헤더 */}
                 <BlockRenderer
                   block={groupBlock}
                   area={RenderingArea.SIDEBAR}
                 />
+              </DroppableStepGroup>
 
-                {/* 스텝 블록과 드롭 표시기 */}
-                {expandedGroups[groupBlock.id] && (
-                  <div className="ml-5 mt-1">
-                    {/* 드롭 표시기가 있는 스텝 */}
-                    <div className="step-items-container">
-                      {renderStepBlocks(groupBlock)}
-                    </div>
-
-                    {/* 스텝 추가 버튼 */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-xs text-muted-foreground hover:text-foreground mt-1"
-                      onClick={() => handleAddStep(groupBlock.id)}
-                      disabled={isAddingStep}
-                    >
-                      <IconPlus size={12} className="mr-1" />새 스텝 추가
-                    </Button>
+              {/* 스텝 블록과 드롭 표시기 - 별도 컨테이너로 분리 */}
+              {expandedGroups[groupBlock.id] && (
+                <div className="ml-5 mt-1">
+                  {/* 드롭 표시기가 있는 스텝 */}
+                  <div className="step-items-container">
+                    {renderStepBlocks(groupBlock)}
                   </div>
-                )}
-              </div>
-            </DroppableStepGroup>
+
+                  {/* 스텝 추가 버튼 */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs text-muted-foreground hover:text-foreground mt-1"
+                    onClick={() => handleAddStep(groupBlock.id)}
+                    disabled={isAddingStep}
+                  >
+                    <IconPlus size={12} className="mr-1" />새 스텝 추가
+                  </Button>
+                </div>
+              )}
+            </div>
           ))}
 
           {/* 드래그 오버레이 - 드래그 중인 아이템의 복제본을 보여줌 (애니메이션 제거) */}
