@@ -40,7 +40,7 @@ export default function JourneyPage() {
   const updateStepGroupsForCurrentStep = useUpdateGroupsForCurrentStep();
 
   // React Query와 관련 상태/액션 사용
-  const { data, refetch, isError, error } = useJourney(journeyId);
+  const { data, refetch, isError, error } = useJourney(journeyId as string);
 
   const stepContainerRefs = useRef<StepContainerMap>({});
 

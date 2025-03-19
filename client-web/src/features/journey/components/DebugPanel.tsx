@@ -79,7 +79,7 @@ export function DebugPanel({
       <Button
         size="sm"
         variant="outline"
-        className="fixed bottom-4 right-4 z-50 rounded-full shadow-md h-10 w-10 p-0 bg-background"
+        className="fixed bottom-10 right-4 z-50 rounded-full shadow-md h-10 w-10 p-0 bg-background"
         onClick={() => setIsOpen(!isOpen)}
         title={isOpen ? "Hide Debug Panel" : "Show Debug Panel"}
       >
