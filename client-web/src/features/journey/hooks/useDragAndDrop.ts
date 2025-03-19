@@ -13,6 +13,7 @@ import { updateBlock } from "@/features/block/services/blockService";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { DND_TYPES } from "@/features/journey/constants/dndTypes";
 
 // 드래그 앤 드롭 상태 인터페이스
 interface DragAndDropState {
@@ -283,8 +284,8 @@ export const useDragAndDrop = ({
       // 드롭 가능한 영역 위에 없는 경우
       setState((prev) => ({
         ...prev,
-        overGroupId: null,
-        insertPosition: null,
+        hoveredStepGroupId: null,
+        dropTargetPosition: null,
       }));
       return;
     }
@@ -292,30 +293,30 @@ export const useDragAndDrop = ({
     const overData = over.data.current;
     if (!overData) return;
 
-    if (overData.type === "stepGroup") {
+    if (overData.type === DND_TYPES.STEP_GROUP) {
       // 케이스 1: 스텝 그룹 자체 위에 있을 때
       setState((prev) => ({
         ...prev,
-        overGroupId: overData.groupId, // 현재 위치한 그룹 ID 저장
-        insertPosition: null, // 스텝 간 위치 정보는 없음
+        hoveredStepGroupId: overData.groupId, // 현재 위치한 그룹 ID 저장
+        dropTargetPosition: null, // 스텝 간 위치 정보는 없음
       }));
-    } else if (overData.type === "stepGap") {
+    } else if (overData.type === DND_TYPES.STEP_GAP) {
       // 케이스 2: 스텝 사이 갭 위에 있을 때
       setState((prev) => ({
         ...prev,
-        overGroupId: null,
-        insertPosition: {
+        hoveredStepGroupId: null,
+        dropTargetPosition: {
           // 정확한 삽입 위치 정보 저장
-          groupId: overData.groupId, // 어떤 그룹 내의
-          order: overData.index, // 몇 번째 위치에 삽입할 것인지
+          stepGroupBlockId: overData.groupId, // 어떤 그룹 내의
+          insertionIndex: overData.index, // 몇 번째 위치에 삽입할 것인지
         },
       }));
     } else {
       // 케이스 3: 다른 타입 위에 있을 때 (드롭 불가 영역)
       setState((prev) => ({
         ...prev,
-        overGroupId: null,
-        insertPosition: null,
+        hoveredStepGroupId: null,
+        dropTargetPosition: null,
       }));
     }
   };
@@ -327,7 +328,7 @@ export const useDragAndDrop = ({
     const { active, over } = event;
 
     // 상태 저장 후 초기화 (드래그 작업 종료)
-    const { draggedStepBlockId, sourceStepGroupId: sourceGroupId } = state;
+    const { draggedStepBlockId, sourceStepGroupId } = state;
     setState({
       draggedStepBlockId: null,
       draggedStepBlock: null,
@@ -337,7 +338,13 @@ export const useDragAndDrop = ({
     });
 
     // 유효성 검사
-    if (!over || !active || !journeyId || !sourceGroupId || !draggedStepBlockId)
+    if (
+      !over ||
+      !active ||
+      !journeyId ||
+      !sourceStepGroupId ||
+      !draggedStepBlockId
+    )
       return;
 
     const stepBlock = allBlocks.find(
@@ -347,33 +354,33 @@ export const useDragAndDrop = ({
 
     try {
       // 케이스 1: 그룹 자체에 드롭한 경우
-      if (over.data.current?.type === "stepGroup") {
+      if (over.data.current?.type === DND_TYPES.STEP_GROUP) {
         const targetGroupId = over.data.current.groupId;
 
         // 동일 그룹 내 이동이면 무시
-        if (targetGroupId === sourceGroupId) return;
+        if (targetGroupId === sourceStepGroupId) return;
 
         // 다른 그룹으로 이동: 두 단계 작업 수행
         await moveStepBetweenGroups(
           draggedStepBlockId,
-          sourceGroupId,
+          sourceStepGroupId,
           targetGroupId,
         );
         await appendStepToGroup(draggedStepBlockId, targetGroupId, stepBlock);
       }
       // 케이스 2: 스텝 사이에 드롭한 경우
       else if (
-        over.data.current?.type === "stepGap" &&
+        over.data.current?.type === DND_TYPES.STEP_GAP &&
         state.dropTargetPosition
       ) {
         const { stepGroupBlockId: targetGroupId, insertionIndex: dropIndex } =
           state.dropTargetPosition;
 
         // 다른 그룹으로 이동하는 경우 먼저 그룹 변경
-        if (sourceGroupId !== targetGroupId) {
+        if (sourceStepGroupId !== targetGroupId) {
           await moveStepBetweenGroups(
             draggedStepBlockId,
-            sourceGroupId,
+            sourceStepGroupId,
             targetGroupId,
           );
         }

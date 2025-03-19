@@ -1,5 +1,6 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
+import { DND_TYPES } from "../constants/dndTypes";
 
 interface DroppableStepGroupProps {
   id: string;
@@ -15,7 +16,7 @@ export function DroppableStepGroup({
   const { setNodeRef } = useDroppable({
     id,
     data: {
-      type: "stepGroup",
+      type: DND_TYPES.STEP_GROUP,
       groupId: id,
     },
   });

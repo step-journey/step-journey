@@ -1,4 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
+import { DND_TYPES } from "../constants/dndTypes";
 
 interface StepDropIndicatorProps {
   id: string;
@@ -16,7 +17,7 @@ export function StepDropIndicator({
   const { setNodeRef } = useDroppable({
     id,
     data: {
-      type: "stepGap",
+      type: DND_TYPES.STEP_GAP,
       groupId,
       index,
     },

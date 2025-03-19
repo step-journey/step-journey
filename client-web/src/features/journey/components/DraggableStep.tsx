@@ -3,6 +3,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { BlockRenderer, RenderingArea } from "@/features/block/renderers";
 import { Block } from "@/features/block/types";
+import { DND_TYPES } from "@/features/journey/constants/dndTypes";
 
 interface DraggableStepProps {
   id: string;
@@ -18,7 +19,7 @@ export function DraggableStep({
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
     data: {
-      type: "step",
+      type: DND_TYPES.STEP,
       block,
     },
   });
