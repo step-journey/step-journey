@@ -245,6 +245,7 @@ export const useDragAndDrop = ({
     stepId: string,
     targetGroupId: string,
     dropIndex: number,
+    isSameGroup: boolean = false,
   ) => {
     // 대상 그룹의 모든 스텝 가져오기
     const stepsInGroup = allBlocks.filter(
@@ -278,11 +279,9 @@ export const useDragAndDrop = ({
       return;
     }
 
-    // 필터링으로 인한 인덱스 차이를 보정해주는 로직
-    // 예: [A, B*, C, D, E] 에서 B를 D와 E 사이로 드래그할 때,
-    // B가 제거된 배열 [A, C, D, E]에서는 원래 인덱스 4(D와 E 사이)가 실제로는 3(D와 E 사이)가 됨
+    // 같은 그룹 내 이동일 때만 인덱스 조정 적용
     let adjustedDropIndex = dropIndex;
-    if (currentIndex < dropIndex) {
+    if (isSameGroup && currentIndex < dropIndex) {
       // 현재 위치가 드롭 위치보다 위에 있는 경우, 필터링으로 인덱스가 하나 줄어들었으므로 1을 빼서 조정해야 함
       adjustedDropIndex = dropIndex - 1;
     }
@@ -430,8 +429,11 @@ export const useDragAndDrop = ({
         const { stepGroupBlockId: targetGroupId, insertionIndex: dropIndex } =
           dropTargetPosition;
 
+        // 동일 그룹 내 이동 여부 확인
+        const isSameGroup = sourceStepGroupId === targetGroupId;
+
         // 다른 그룹으로 이동하는 경우 먼저 그룹 변경
-        if (sourceStepGroupId !== targetGroupId) {
+        if (!isSameGroup) {
           await moveStepBetweenGroups(
             draggedStepBlockId,
             sourceStepGroupId,
@@ -440,10 +442,12 @@ export const useDragAndDrop = ({
         }
 
         // 순서 재배치 (동일 그룹 내 이동과 다른 그룹으로 이동 모두 적용)
+        // isSameGroup 플래그 전달
         await reorderStepInStepGroup(
           draggedStepBlockId,
           targetGroupId,
           dropIndex,
+          isSameGroup,
         );
       }
 
