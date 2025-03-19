@@ -43,8 +43,6 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
 
   // 현재 선택된 스텝인지 확인
   const isActive = currentStepId === block.id;
-  const order = block.properties.order || 0;
-  const parentId = block.parentId || "";
 
   // Step 삭제 핸들러
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -75,7 +73,7 @@ export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
       <div
         id={`step-${block.id}`}
         className={stepClass}
-        onClick={() => handleStepClick(parentId, order)}
+        onClick={() => handleStepClick(block.id)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

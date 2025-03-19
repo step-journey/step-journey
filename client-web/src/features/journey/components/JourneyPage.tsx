@@ -135,17 +135,17 @@ export default function JourneyPage() {
   useEffect(() => {
     if (data?.sortedStepBlocks) {
       // 스텝 클릭 시 해당 order 로 이동하는 핸들러 등록
-      setStepClickHandler((groupId, stepOrder) => {
-        const found = data.sortedStepBlocks.find(
-          (fs) => fs.parentId === groupId && fs.properties.order === stepOrder,
+      setStepClickHandler((stepId) => {
+        // ID로 직접 스텝을 찾음
+        const stepIndex = data.sortedStepBlocks.findIndex(
+          (step) => step.id === stepId,
         );
 
-        if (found) {
-          if (found.properties.order === undefined) {
-            console.error(`Step ${found.id} has undefined order property`);
-            throw new Error(`Step is missing required order property`);
-          }
-          setCurrentStepOrder(found.properties.order);
+        // 스텝을 찾았으면 해당 인덱스로 이동
+        if (stepIndex !== -1) {
+          setCurrentStepOrder(stepIndex);
+        } else {
+          console.error(`Step with id ${stepId} not found in sortedStepBlocks`);
         }
       });
     }

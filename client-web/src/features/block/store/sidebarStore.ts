@@ -4,9 +4,9 @@ import { devtools } from "zustand/middleware";
 import { Block, BlockType } from "../types";
 
 /**
- * 스텝 클릭 핸들러 타입
+ * 스텝 클릭 핸들러 타입 - StepID로 직접 핸들링
  */
-type StepClickHandler = (groupId: string, stepIdInGroup: number) => void;
+type StepClickHandler = (stepId: string) => void;
 
 /**
  * 사이드바 관련 상태와 액션을 관리하는 스토어
@@ -22,7 +22,7 @@ interface SidebarActions {
   toggleGroup: (groupId: string) => void; // 그룹 펼치기/접기 토글
   setCurrentStepId: (stepId: string | undefined) => void; // 현재 스텝 ID 설정
   setStepClickHandler: (handler: StepClickHandler) => void; // 스텝 클릭 핸들러 설정
-  handleStepClick: (groupId: string, stepIdInGroup: number) => void; // 스텝 클릭 처리
+  handleStepClick: (stepId: string) => void; // 스텝 클릭 처리
   expandGroup: (groupId: string) => void; // 특정 그룹 펼치기
   collapseGroup: (groupId: string) => void; // 특정 그룹 접기
   expandAllGroups: () => void; // 모든 그룹 펼치기
@@ -63,9 +63,8 @@ export const useSidebarStore = create<SidebarState & SidebarActions>()(
           state.stepClickHandler = handler;
         }),
 
-      handleStepClick: (groupId, stepIdInGroup) => {
-        // 현재 저장된 핸들러 실행
-        get().stepClickHandler(groupId, stepIdInGroup);
+      handleStepClick: (stepId) => {
+        get().stepClickHandler(stepId);
       },
 
       expandGroup: (groupId) =>
