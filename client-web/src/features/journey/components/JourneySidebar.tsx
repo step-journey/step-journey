@@ -28,6 +28,8 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { DraggableStep } from "./DraggableStep";
 import { DroppableStepGroup } from "./DroppableStepGroup";
 import { StepDropIndicator } from "./StepDropIndicator";
+import { DraggableStepGroup } from "./DraggableStepGroup";
+import { StepGroupDropIndicator } from "./StepGroupDropIndicator";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 
 interface Props {
@@ -55,8 +57,11 @@ export function JourneySidebar({
   const {
     draggedStepBlockId,
     draggedStepBlock,
+    draggedStepGroupBlockId,
+    draggedStepGroupBlock,
     hoveredStepGroupId,
     dropTargetPosition,
+    dropGroupTargetIndex,
     sensors,
     collisionDetection,
     handleDragStart,
@@ -224,52 +229,86 @@ export function JourneySidebar({
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
+          {/* 스텝 그룹 맨 위에 드롭 표시기 */}
+          <StepGroupDropIndicator
+            key="group-gap-0"
+            id="group-gap-0"
+            index={0}
+            isOver={dropGroupTargetIndex === 0}
+          />
+
           {/* 스텝 그룹 매핑 */}
-          {stepGroupBlocks.map((groupBlock) => (
-            <div key={groupBlock.id} className="mb-3 w-full">
-              <DroppableStepGroup
-                id={groupBlock.id}
-                isOver={hoveredStepGroupId === groupBlock.id}
-              >
-                {/* 그룹 블록 헤더 */}
-                <BlockRenderer
-                  block={groupBlock}
-                  area={RenderingArea.SIDEBAR}
-                />
-              </DroppableStepGroup>
-
-              {/* 스텝 블록과 드롭 표시기 - 별도 컨테이너로 분리 */}
-              {expandedGroups[groupBlock.id] && (
-                <div className="ml-5 mt-1">
-                  {/* 드롭 표시기가 있는 스텝 */}
-                  <div className="step-items-container">
-                    {renderStepBlocks(groupBlock)}
-                  </div>
-
-                  {/* 스텝 추가 버튼 */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start text-xs text-muted-foreground hover:text-foreground mt-1"
-                    onClick={() => handleAddStep(groupBlock.id)}
-                    disabled={isAddingStep}
+          {stepGroupBlocks.map((groupBlock, index) => (
+            <React.Fragment key={groupBlock.id}>
+              <DraggableStepGroup id={groupBlock.id} block={groupBlock}>
+                <div className="mb-3 w-full">
+                  <DroppableStepGroup
+                    id={groupBlock.id}
+                    isOver={hoveredStepGroupId === groupBlock.id}
                   >
-                    <IconPlus size={12} className="mr-1" />새 스텝 추가
-                  </Button>
+                    {/* 그룹 블록 헤더 */}
+                    <BlockRenderer
+                      block={groupBlock}
+                      area={RenderingArea.SIDEBAR}
+                    />
+                  </DroppableStepGroup>
+
+                  {/* 스텝 블록과 드롭 표시기 - 별도 컨테이너로 분리 */}
+                  {expandedGroups[groupBlock.id] && (
+                    <div className="ml-5 mt-1">
+                      {/* 드롭 표시기가 있는 스텝 */}
+                      <div className="step-items-container">
+                        {renderStepBlocks(groupBlock)}
+                      </div>
+
+                      {/* 스텝 추가 버튼 */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-xs text-muted-foreground hover:text-foreground mt-1"
+                        onClick={() => handleAddStep(groupBlock.id)}
+                        disabled={isAddingStep}
+                      >
+                        <IconPlus size={12} className="mr-1" />새 스텝 추가
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </DraggableStepGroup>
+
+              {/* 스텝 그룹 다음에 드롭 표시기 */}
+              <StepGroupDropIndicator
+                key={`group-gap-${index + 1}`}
+                id={`group-gap-${index + 1}`}
+                index={index + 1}
+                isOver={dropGroupTargetIndex === index + 1}
+              />
+            </React.Fragment>
           ))}
 
-          {/* 드래그 오버레이 - 드래그 중인 아이템의 복제본을 보여줌 (애니메이션 제거) */}
+          {/* 드래그 오버레이 - 드래그 중인 아이템의 복제본을 보여줌 */}
           <DragOverlay dropAnimation={null}>
-            {draggedStepBlock ? (
+            {draggedStepBlock && (
               <DraggableStep
                 id={draggedStepBlockId || ""}
                 block={draggedStepBlock}
                 isDragOverlay={true}
               />
-            ) : null}
+            )}
+            {draggedStepGroupBlock && (
+              <DraggableStepGroup
+                id={draggedStepGroupBlockId || ""}
+                block={draggedStepGroupBlock}
+                isDragOverlay={true}
+              >
+                <div className="mb-3 w-full">
+                  <BlockRenderer
+                    block={draggedStepGroupBlock}
+                    area={RenderingArea.SIDEBAR}
+                  />
+                </div>
+              </DraggableStepGroup>
+            )}
           </DragOverlay>
         </DndContext>
       </ScrollArea>

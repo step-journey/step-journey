@@ -6,6 +6,8 @@ export const DND_TYPES = {
   STEP: "step",
   STEP_GROUP: "stepGroup",
   STEP_GAP: "stepGap",
+  STEP_GROUP_GAP: "stepGroupGap",
+  DRAGGABLE_STEP_GROUP: "draggableStepGroup",
 } as const;
 
 /**

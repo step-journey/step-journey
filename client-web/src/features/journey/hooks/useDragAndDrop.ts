@@ -28,6 +28,10 @@ interface DragAndDropState {
   sourceStepGroupId: string | null;
   hoveredStepGroupId: string | null;
   dropTargetPosition: DropTargetPosition | null;
+  // 스텝 그룹 드래그를 위한 추가 상태
+  draggedStepGroupBlockId: string | null;
+  draggedStepGroupBlock: Block | null;
+  dropGroupTargetIndex: number | null;
 }
 
 interface UseDragAndDropProps {
@@ -55,6 +59,10 @@ export const useDragAndDrop = ({
     sourceStepGroupId: null,
     hoveredStepGroupId: null,
     dropTargetPosition: null,
+    // 스텝 그룹 드래그를 위한 추가 상태
+    draggedStepGroupBlockId: null,
+    draggedStepGroupBlock: null,
+    dropGroupTargetIndex: null,
   };
 
   // 드래그 앤 드롭 상태
@@ -66,6 +74,25 @@ export const useDragAndDrop = ({
       ...prev,
       draggedStepBlockId: stepId,
       draggedStepBlock: stepBlock,
+    }));
+  };
+
+  // 스텝 그룹 드래그 상태 업데이트 함수
+  const setDraggedStepGroup = (
+    groupId: string | null,
+    groupBlock: Block | null,
+  ) => {
+    setStateRaw((prev) => ({
+      ...prev,
+      draggedStepGroupBlockId: groupId,
+      draggedStepGroupBlock: groupBlock,
+    }));
+  };
+
+  const setDropGroupTargetIndex = (index: number | null) => {
+    setStateRaw((prev) => ({
+      ...prev,
+      dropGroupTargetIndex: index,
     }));
   };
 
@@ -332,19 +359,68 @@ export const useDragAndDrop = ({
   };
 
   /**
+   * 스텝 그룹 순서 재배치
+   */
+  const reorderStepGroups = async (groupId: string, targetIndex: number) => {
+    if (!journeyId) return;
+
+    // 여정 블록 조회
+    const journeyBlock = allBlocks.find((block) => block.id === journeyId);
+    if (!journeyBlock) return;
+
+    // 스텝 그룹 ID 목록 추출
+    const stepGroupIds = journeyBlock.childrenIds.filter((id) => {
+      const block = allBlocks.find((b) => b.id === id);
+      return block && block.type === BlockType.STEP_GROUP;
+    });
+
+    // 현재 그룹의 인덱스 찾기
+    const currentIndex = stepGroupIds.indexOf(groupId);
+    if (currentIndex === -1) return;
+
+    // 새 순서 계산 (현재 위치에서 제거 후 새 위치에 삽입)
+    const newStepGroupIds = [...stepGroupIds];
+    newStepGroupIds.splice(currentIndex, 1);
+    newStepGroupIds.splice(targetIndex, 0, groupId);
+
+    // 여정의 모든 childrenIds 가져오기 (그룹이 아닌 항목도 포함)
+    const nonGroupIds = journeyBlock.childrenIds.filter((id) => {
+      const block = allBlocks.find((b) => b.id === id);
+      return !block || block.type !== BlockType.STEP_GROUP;
+    });
+
+    // 새 childrenIds 배열 생성 (그룹이 아닌 항목과 재정렬된 그룹 합치기)
+    const newChildrenIds = [...nonGroupIds, ...newStepGroupIds];
+
+    // 여정 블록 업데이트
+    await updateBlock({
+      id: journeyId,
+      childrenIds: newChildrenIds,
+    });
+  };
+
+  /**
    * 드래그 시작 처리: 무엇을 드래그하기 시작했는지 기록
    */
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const stepData = active.data.current;
+    const activeData = active.data.current;
 
-    if (stepData && stepData.block) {
-      // 개별 상태 설정 함수 사용
-      setDraggedStep(active.id as string, stepData.block as Block);
-      setSourceGroup(stepData.block.parentId);
-      setHoveredGroup(null);
-      setDropPosition(null);
+    if (!activeData) return;
+
+    if (activeData.type === DND_TYPES.STEP) {
+      // 스텝 드래그 시작
+      setDraggedStep(active.id as string, activeData.block as Block);
+      setSourceGroup(activeData.block.parentId);
+    } else if (activeData.type === DND_TYPES.DRAGGABLE_STEP_GROUP) {
+      // 스텝 그룹 드래그 시작
+      setDraggedStepGroup(active.id as string, activeData.block as Block);
     }
+
+    // 드래그 관련 상태 초기화
+    setHoveredGroup(null);
+    setDropPosition(null);
+    setDropGroupTargetIndex(null);
   };
 
   /**
@@ -356,25 +432,43 @@ export const useDragAndDrop = ({
       // 드롭 가능한 영역 위에 없는 경우
       setHoveredGroup(null);
       setDropPosition(null);
+      setDropGroupTargetIndex(null);
       return;
     }
 
     const overData = over.data.current;
     if (!overData) return;
 
-    if (overData.type === DND_TYPES.STEP_GROUP) {
-      // 케이스 1: 스텝 그룹 자체 위에 있을 때
-      setHoveredGroup(overData.groupId);
-    } else if (overData.type === DND_TYPES.STEP_GAP) {
-      // 케이스 2: 스텝 사이 갭 위에 있을 때
-      setDropPosition({
-        stepGroupBlockId: overData.groupId,
-        insertionIndex: overData.index,
-      });
-    } else {
-      // 케이스 3: 다른 타입 위에 있을 때 (드롭 불가 영역)
-      setHoveredGroup(null);
-      setDropPosition(null);
+    // 스텝 드래그 중인 경우
+    if (state.draggedStepBlockId) {
+      if (overData.type === DND_TYPES.STEP_GROUP) {
+        // 케이스 1: 스텝 그룹 자체 위에 있을 때
+        setHoveredGroup(overData.groupId);
+        setDropGroupTargetIndex(null);
+      } else if (overData.type === DND_TYPES.STEP_GAP) {
+        // 케이스 2: 스텝 사이 갭 위에 있을 때
+        setDropPosition({
+          stepGroupBlockId: overData.groupId,
+          insertionIndex: overData.index,
+        });
+        setDropGroupTargetIndex(null);
+      } else {
+        // 케이스 3: 다른 타입 위에 있을 때 (드롭 불가 영역)
+        setHoveredGroup(null);
+        setDropPosition(null);
+        setDropGroupTargetIndex(null);
+      }
+    }
+    // 스텝 그룹 드래그 중인 경우
+    else if (state.draggedStepGroupBlockId) {
+      if (overData.type === DND_TYPES.STEP_GROUP_GAP) {
+        // 그룹 갭 위에 있을 때
+        setDropGroupTargetIndex(overData.index);
+        setHoveredGroup(null);
+        setDropPosition(null);
+      } else {
+        setDropGroupTargetIndex(null);
+      }
     }
   };
 
@@ -385,70 +479,82 @@ export const useDragAndDrop = ({
     const { active, over } = event;
 
     // 상태 저장 후 초기화 (드래그 작업 종료)
-    const { draggedStepBlockId, sourceStepGroupId, dropTargetPosition } = state;
+    const {
+      draggedStepBlockId,
+      sourceStepGroupId,
+      dropTargetPosition,
+      draggedStepGroupBlockId,
+      dropGroupTargetIndex,
+    } = state;
 
     // 작업 후 상태 초기화
     resetDragState();
 
     // 유효성 검사
-    if (
-      !over ||
-      !active ||
-      !journeyId ||
-      !sourceStepGroupId ||
-      !draggedStepBlockId
-    )
-      return;
-
-    const stepBlock = allBlocks.find(
-      (block) => block.id === draggedStepBlockId,
-    ) as StepBlock | undefined;
-    if (!stepBlock) return;
+    if (!over || !active || !journeyId) return;
 
     try {
-      // 케이스 1: 그룹 자체에 드롭한 경우
-      if (over.data.current?.type === DND_TYPES.STEP_GROUP) {
-        const targetGroupId = over.data.current.groupId;
+      // 스텝 드래그 종료 처리
+      if (draggedStepBlockId && sourceStepGroupId) {
+        const stepBlock = allBlocks.find(
+          (block) => block.id === draggedStepBlockId,
+        ) as StepBlock | undefined;
 
-        // 동일 그룹 내 이동이면 무시
-        if (targetGroupId === sourceStepGroupId) return;
+        if (!stepBlock) return;
 
-        // 다른 그룹으로 이동: 두 단계 작업 수행
-        await moveStepBetweenGroups(
-          draggedStepBlockId,
-          sourceStepGroupId,
-          targetGroupId,
-        );
-        await appendStepToGroup(draggedStepBlockId, targetGroupId, stepBlock);
-      }
-      // 케이스 2: 스텝 사이에 드롭한 경우
-      else if (
-        over.data.current?.type === DND_TYPES.STEP_GAP &&
-        dropTargetPosition
-      ) {
-        const { stepGroupBlockId: targetGroupId, insertionIndex: dropIndex } =
-          dropTargetPosition;
+        // 케이스 1: 그룹 자체에 드롭한 경우
+        if (over.data.current?.type === DND_TYPES.STEP_GROUP) {
+          const targetGroupId = over.data.current.groupId;
 
-        // 동일 그룹 내 이동 여부 확인
-        const isSameGroup = sourceStepGroupId === targetGroupId;
+          // 동일 그룹 내 이동이면 무시
+          if (targetGroupId === sourceStepGroupId) return;
 
-        // 다른 그룹으로 이동하는 경우 먼저 그룹 변경
-        if (!isSameGroup) {
+          // 다른 그룹으로 이동: 두 단계 작업 수행
           await moveStepBetweenGroups(
             draggedStepBlockId,
             sourceStepGroupId,
             targetGroupId,
           );
+          await appendStepToGroup(draggedStepBlockId, targetGroupId, stepBlock);
         }
+        // 케이스 2: 스텝 사이에 드롭한 경우
+        else if (
+          over.data.current?.type === DND_TYPES.STEP_GAP &&
+          dropTargetPosition
+        ) {
+          const { stepGroupBlockId: targetGroupId, insertionIndex: dropIndex } =
+            dropTargetPosition;
 
-        // 순서 재배치 (동일 그룹 내 이동과 다른 그룹으로 이동 모두 적용)
-        // isSameGroup 플래그 전달
-        await reorderStepInStepGroup(
-          draggedStepBlockId,
-          targetGroupId,
-          dropIndex,
-          isSameGroup,
-        );
+          // 동일 그룹 내 이동 여부 확인
+          const isSameGroup = sourceStepGroupId === targetGroupId;
+
+          // 다른 그룹으로 이동하는 경우 먼저 그룹 변경
+          if (!isSameGroup) {
+            await moveStepBetweenGroups(
+              draggedStepBlockId,
+              sourceStepGroupId,
+              targetGroupId,
+            );
+          }
+
+          // 순서 재배치 (동일 그룹 내 이동과 다른 그룹으로 이동 모두 적용)
+          await reorderStepInStepGroup(
+            draggedStepBlockId,
+            targetGroupId,
+            dropIndex,
+            isSameGroup,
+          );
+        }
+      }
+      // 스텝 그룹 드래그 종료 처리
+      else if (draggedStepGroupBlockId && dropGroupTargetIndex !== null) {
+        if (over.data.current?.type === DND_TYPES.STEP_GROUP_GAP) {
+          // 그룹 순서 재배치
+          await reorderStepGroups(
+            draggedStepGroupBlockId,
+            dropGroupTargetIndex,
+          );
+        }
       }
 
       // 변경사항 반영을 위해 캐시 무효화
@@ -456,10 +562,10 @@ export const useDragAndDrop = ({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
 
-      toast.success("스텝 위치가 업데이트되었습니다");
+      toast.success("위치가 업데이트되었습니다");
     } catch (error) {
-      console.error("스텝 위치 업데이트 실패:", error);
-      toast.error("스텝 위치 업데이트에 실패했습니다");
+      console.error("위치 업데이트 실패:", error);
+      toast.error("위치 업데이트에 실패했습니다");
     }
   };
 
