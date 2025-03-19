@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  getAllJourneyBlocks,
+  fetchAllJourneyBlocks,
   fetchJourneyAndOrderedSteps,
-  initializeDatabase,
+  initializeBlocksDatabase,
 } from "@/features/block/services/blockService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useEffect, useState } from "react";
@@ -30,10 +30,10 @@ export function useJourneys() {
     queryKey: QUERY_KEYS.journeys.all,
     queryFn: async () => {
       if (!initialized) {
-        await initializeDatabase();
+        await initializeBlocksDatabase();
         setInitialized(true);
       }
-      return getAllJourneyBlocks();
+      return fetchAllJourneyBlocks();
     },
     staleTime: 5 * 60 * 1000, // 5분
   });

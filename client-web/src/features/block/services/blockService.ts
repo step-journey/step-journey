@@ -11,35 +11,58 @@ import { filterAndSortStepBlocks } from "../utils/blockUtils";
 import { prepareBlocksForSaving } from "../utils/blockNoteConverter";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
 
-// 특정 Journey 블록 조회
-export const getJourneyBlock = async (
+/**
+ * 특정 ID의 Journey 블록을 조회
+ *
+ * @param id - 조회할 Journey 블록의 ID
+ * @returns {Promise<JourneyBlock>} 조회된 Journey 블록
+ * @throws 블록을 찾을 수 없거나 Journey 타입이 아닌 경우 에러 발생
+ */
+export const fetchJourneyBlockById = async (
   id: string,
-): Promise<JourneyBlock | undefined> => {
+): Promise<JourneyBlock> => {
   const block = await dbClient.blocks.get(id);
-  if (!block) return undefined;
-  return isJourneyBlock(block) ? block : undefined;
+
+  if (!block) {
+    throw new Error(`Block with id ${id} not found`);
+  }
+  if (!isJourneyBlock(block)) {
+    throw new Error(
+      `Block with id ${id} is not a Journey block (found type: ${block.type})`,
+    );
+  }
+
+  return block;
 };
 
-// 특정 Journey 블록과 관련 모든 블록 조회
-export const getJourneyWithRelatedBlocks = async (
+/**
+ * 특정 Journey 블록과 그 모든 하위 블록들을 단일 배열로 조회
+ *
+ * @param journeyId - 조회할 Journey의 ID
+ * @returns {Promise<Block[]>} Journey 블록을 포함한 모든 하위 블록들의 평면화된 배열
+ * @throws Journey 블록을 찾을 수 없거나 타입이 맞지 않는 경우 에러 발생
+ */
+export const fetchJourneyWithDescendants = async (
   journeyId: string,
 ): Promise<Block[]> => {
-  const journeyBlock = await getJourneyBlock(journeyId);
-  if (!journeyBlock) return [];
+  const journeyBlock = await fetchJourneyBlockById(journeyId);
 
-  // Journey 블록 가져오기
-  const allBlocks: Block[] = [journeyBlock];
+  // journey 블록과 그 모든 하위 블록을 수집할 배열
+  const allBlocks: Block[] = [];
 
-  // Journey 블록의 하위 블록 트리 순회하기
-  await fetchChildrenRecursively(journeyId, allBlocks);
+  // 배열에 먼저 journey 블록을 추가
+  allBlocks.push(journeyBlock);
+
+  // journey 블록의 하위 블록 트리 순회하여 배열에 추가
+  await fetchChildBlocksRecursively(journeyId, allBlocks);
 
   return allBlocks;
 };
 
 /**
- * 재귀적으로 모든 자식 블록 가져오기
+ * 재귀적으로 모든 자식 블록들을 조회하여 결과 배열에 추가
  */
-async function fetchChildrenRecursively(
+async function fetchChildBlocksRecursively(
   blockId: string,
   results: Block[],
 ): Promise<void> {
@@ -55,18 +78,23 @@ async function fetchChildrenRecursively(
   // 각 자식에 대해 재귀적으로 자식의 자식 가져오기
   for (const child of children) {
     if (child.childrenIds && child.childrenIds.length > 0) {
-      await fetchChildrenRecursively(child.id, results);
+      await fetchChildBlocksRecursively(child.id, results);
     }
   }
 }
 
-// 모든 Journey 블록 조회
-export const getAllJourneyBlocks = async (): Promise<JourneyBlock[]> => {
+/**
+ * 모든 Journey 타입 블록을 조회
+ *
+ * @returns {Promise<JourneyBlock[]>} 모든 Journey 블록의 배열
+ */
+export const fetchAllJourneyBlocks = async (): Promise<JourneyBlock[]> => {
   const blocks = await dbClient.blocks
-    .where("type")
+    .where("type") // todo DB 필드 상수로 관리
     .equals(BlockType.JOURNEY)
     .toArray();
 
+  // 타입 가드로 필터링 후 반환
   return blocks.filter(isJourneyBlock) as JourneyBlock[];
 };
 
@@ -79,7 +107,7 @@ export const fetchJourneyAndOrderedSteps = async (
   allBlocks: Block[];
 }> => {
   // DB에서 Journey와 하위 블록 조회
-  const allBlocksInJourney = await getJourneyWithRelatedBlocks(id);
+  const allBlocksInJourney = await fetchJourneyWithDescendants(id);
   let journeyBlock = allBlocksInJourney.find(
     (block) => block.id === id && isJourneyBlock(block),
   ) as JourneyBlock | undefined;
@@ -97,8 +125,8 @@ export const fetchJourneyAndOrderedSteps = async (
   };
 };
 
-// 데이터베이스 초기화 - 더 이상 정적 데이터를 사용하지 않음
-export const initializeDatabase = async (): Promise<void> => {
+// 데이터베이스 초기화
+export const initializeBlocksDatabase = async (): Promise<void> => {
   // 이미 데이터가 있는지 확인
   const count = await dbClient.blocks.count();
   if (count > 0) {
@@ -108,11 +136,22 @@ export const initializeDatabase = async (): Promise<void> => {
   console.log("Database initialized");
 };
 
-// 블록 생성
+/**
+ * 새로운 블록을 생성하여 데이터베이스에 저장
+ *
+ * @param partialBlock 생성할 블록의 부분 정보
+ * @returns 생성된 블록의 ID
+ * @throws 필수 속성인 type 이 누락된 경우 에러 발생
+ */
 export const createBlock = async (
   partialBlock: Partial<Block>,
 ): Promise<string> => {
-  // ID가 없으면 블록 타입에 맞는 ID 생성
+  // 필수 속성 검증
+  if (!partialBlock.type) {
+    throw new Error("Block type is required for block creation");
+  }
+
+  // ID가 없으면 블록 ID 생성
   const id = partialBlock.id || generateBlockId();
   const now = new Date().toISOString();
 
@@ -125,7 +164,7 @@ export const createBlock = async (
     // 기본 속성이 없는 경우 빈 값 추가
     childrenIds: partialBlock.childrenIds || [],
     properties: partialBlock.properties || {},
-    type: partialBlock.type || BlockType.STEP, // 기본 타입 설정
+    type: partialBlock.type,
   };
 
   await dbClient.blocks.put(newBlock);
@@ -191,7 +230,7 @@ export const deleteBlockTree = async (id: string): Promise<void> => {
  * @param stepBlock 스텝 블록
  * @param blockNoteBlocks BlockNote 에디터의 블록 배열
  */
-export async function saveBlockNoteContent(
+export async function convertAndSaveBlockNoteContent(
   stepBlock: StepBlock,
   blockNoteBlocks: BlockNoteBlock[],
 ): Promise<void> {

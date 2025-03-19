@@ -3,7 +3,7 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@/styles/text-editor.css";
 import { Block, JourneyBlock, StepBlock } from "@/features/block/types";
-import { saveBlockNoteContent } from "@/features/block/services/blockService";
+import { convertAndSaveBlockNoteContent } from "@/features/block/services/blockService";
 import { useAllBlocks } from "@/features/block/store/blockStore";
 import { toast } from "sonner";
 import { getBlockNoteBlocksFromStep } from "@/features/block/utils/blockNoteConverter";
@@ -78,7 +78,7 @@ export function BlockEditor({
         isSavingRef.current = true;
 
         // 저장 로직
-        await saveBlockNoteContent(block, topLevelBlocks);
+        await convertAndSaveBlockNoteContent(block, topLevelBlocks);
 
         // 저장 성공 후 상태 업데이트
         setLastSaved(new Date());
