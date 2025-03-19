@@ -53,10 +53,10 @@ export function JourneySidebar({
 
   // 드래그 앤 드롭 기능을 위한 커스텀 훅
   const {
-    activeId,
-    activeBlock,
-    overGroupId,
-    insertPosition,
+    draggedStepBlockId,
+    draggedStepBlock,
+    hoveredStepGroupId,
+    dropTargetPosition,
     sensors,
     collisionDetection,
     handleDragStart,
@@ -96,8 +96,8 @@ export function JourneySidebar({
         groupId={groupBlock.id}
         index={0}
         isOver={
-          insertPosition?.groupId === groupBlock.id &&
-          insertPosition?.order === 0
+          dropTargetPosition?.stepGroupBlockId === groupBlock.id &&
+          dropTargetPosition?.insertionIndex === 0
         }
       />,
     );
@@ -121,8 +121,8 @@ export function JourneySidebar({
           groupId={groupBlock.id}
           index={i + 1}
           isOver={
-            insertPosition?.groupId === groupBlock.id &&
-            insertPosition?.order === i + 1
+            dropTargetPosition?.stepGroupBlockId === groupBlock.id &&
+            dropTargetPosition?.insertionIndex === i + 1
           }
         />,
       );
@@ -229,7 +229,7 @@ export function JourneySidebar({
             <DroppableStepGroup
               key={groupBlock.id}
               id={groupBlock.id}
-              isOver={overGroupId === groupBlock.id}
+              isOver={hoveredStepGroupId === groupBlock.id}
             >
               <div className="mb-3 w-full">
                 {/* 그룹 블록 헤더 */}
@@ -264,10 +264,10 @@ export function JourneySidebar({
 
           {/* 드래그 오버레이 - 드래그 중인 아이템의 복제본을 보여줌 (애니메이션 제거) */}
           <DragOverlay dropAnimation={null}>
-            {activeBlock ? (
+            {draggedStepBlock ? (
               <DraggableStep
-                id={activeId || ""}
-                block={activeBlock}
+                id={draggedStepBlockId || ""}
+                block={draggedStepBlock}
                 isDragOverlay={true}
               />
             ) : null}

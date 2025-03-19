@@ -14,12 +14,16 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 
+// 드래그 앤 드롭 상태 인터페이스
 interface DragAndDropState {
-  activeId: string | null;
-  activeBlock: Block | null;
-  activeGroupId: string | null;
-  overGroupId: string | null;
-  insertPosition: { groupId: string; order: number } | null;
+  draggedStepBlockId: string | null;
+  draggedStepBlock: Block | null;
+  sourceStepGroupId: string | null;
+  hoveredStepGroupId: string | null;
+  dropTargetPosition: {
+    stepGroupBlockId: string;
+    insertionIndex: number;
+  } | null;
 }
 
 interface UseDragAndDropProps {
@@ -28,10 +32,10 @@ interface UseDragAndDropProps {
   onExpandGroup?: (groupId: string) => void;
 }
 
-// 소수점 값으로 스텝을 정렬하기 위한 상수
-const ORDER_INITIAL_GAP = 1.0; // 초기 스텝 간의 간격
-const REBALANCING_THRESHOLD = 100; // 리밸런싱 임계값 (이 이상 이동이 발생하면 전체 재조정)
-let movesWithoutRebalancing = 0; // 리밸런싱 없이 발생한 이동 횟수 추적
+// 정렬 관련 상수
+const ORDER_INITIAL_GAP = 1.0; // 스텝 간 기본 간격 (정수로 유지)
+const REBALANCING_THRESHOLD = 100; // 이 횟수 이상 스텝 이동 시 전체 재정렬 수행
+let movesWithoutRebalancing = 0; // 재정렬 없이 진행된 이동 횟수
 
 export const useDragAndDrop = ({
   journeyId,
@@ -40,100 +44,38 @@ export const useDragAndDrop = ({
 }: UseDragAndDropProps) => {
   const queryClient = useQueryClient();
 
-  // State for drag & drop
+  // 드래그 앤 드롭 상태
   const [state, setState] = useState<DragAndDropState>({
-    activeId: null,
-    activeBlock: null,
-    activeGroupId: null,
-    overGroupId: null,
-    insertPosition: null,
+    draggedStepBlockId: null,
+    draggedStepBlock: null,
+    sourceStepGroupId: null,
+    hoveredStepGroupId: null,
+    dropTargetPosition: null,
   });
 
-  // Sensors configuration for dnd-kit - 더 민감하게 반응하도록 설정
+  // 드래그 감지 센서 설정
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // 5px of movement required before drag starts
+        distance: 5, // 5px 이상 움직여야 드래그 시작
       },
     }),
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-
-    const stepData = active.data.current;
-    if (stepData && stepData.block) {
-      setState({
-        activeId: active.id as string,
-        activeBlock: stepData.block as Block,
-        activeGroupId: stepData.block.parentId,
-        overGroupId: null,
-        insertPosition: null,
-      });
-    }
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { over } = event;
-    if (!over) {
-      setState((prev) => ({
-        ...prev,
-        overGroupId: null,
-        insertPosition: null,
-      }));
-      return;
-    }
-
-    // Get the data from the over element
-    const overData = over.data.current;
-    if (!overData) return;
-
-    // Handle hovering over a step group
-    if (overData.type === "stepGroup") {
-      setState((prev) => ({
-        ...prev,
-        overGroupId: overData.groupId,
-        insertPosition: null,
-      }));
-    }
-    // Handle hovering over a gap between steps
-    else if (overData.type === "stepGap") {
-      setState((prev) => ({
-        ...prev,
-        overGroupId: null,
-        insertPosition: {
-          groupId: overData.groupId,
-          order: overData.index,
-        },
-      }));
-    }
-    // Reset when hovering elsewhere
-    else {
-      setState((prev) => ({
-        ...prev,
-        overGroupId: null,
-        insertPosition: null,
-      }));
-    }
-  };
-
   /**
-   * 두 스텝 사이의 새 order 값을 계산합니다.
-   * @param prevOrder 이전 스텝의 order 값
-   * @param nextOrder 다음 스텝의 order 값
-   * @returns 두 값 사이의 중간값
+   * 두 스텝 사이의 새 순서값 계산
    */
   const calculateMiddleOrder = (
     prevOrder: number | undefined,
     nextOrder: number | undefined,
   ): number => {
-    // 맨 앞에 삽입하는 경우
     if (prevOrder === undefined) {
+      // 맨 앞에 삽입하는 경우
       return nextOrder !== undefined ? nextOrder - ORDER_INITIAL_GAP : 0;
     }
 
-    // 맨 뒤에 삽입하는 경우
     if (nextOrder === undefined) {
+      // 맨 뒤에 삽입하는 경우
       return prevOrder + ORDER_INITIAL_GAP;
     }
 
@@ -142,22 +84,19 @@ export const useDragAndDrop = ({
   };
 
   /**
-   * 필요한 경우 모든 스텝의 order를 재조정합니다.
-   * @param _groupId 그룹 ID (로깅 목적)
-   * @param steps 해당 그룹의 모든 스텝
+   * 그룹 내 모든 스텝의 순서 재조정
    */
-  const rebalanceStepOrders = async (_groupId: string, steps: StepBlock[]) => {
-    // 언더스코어 접두사로 의도적으로 사용하지 않는 매개변수임을 표시
-    console.log(`리밸런싱 수행: 그룹 ${_groupId}의 ${steps.length}개 스텝`);
+  const rebalanceStepOrders = async (groupId: string, steps: StepBlock[]) => {
+    console.log(`리밸런싱: 그룹 ${groupId}의 ${steps.length}개 스텝`);
 
-    // 정렬된 스텝 목록 생성
+    // 현재 순서에 따라 정렬
     const sortedSteps = [...steps].sort(
       (a, b) =>
         (typeof a.properties.order === "number" ? a.properties.order : 0) -
         (typeof b.properties.order === "number" ? b.properties.order : 0),
     );
 
-    // 일정한 간격으로 order 값 재설정
+    // 정수 간격으로 순서값 재설정
     const updatePromises = sortedSteps.map((step, index) => {
       return updateBlock({
         id: step.id,
@@ -168,217 +107,294 @@ export const useDragAndDrop = ({
     });
 
     await Promise.all(updatePromises);
-    movesWithoutRebalancing = 0; // 리밸런싱 카운터 리셋
-
-    toast.success("스텝 순서가 최적화되었습니다.");
+    movesWithoutRebalancing = 0; // 리밸런싱 카운터 초기화
+    toast.success("스텝 순서가 최적화되었습니다");
   };
 
+  /**
+   * 그룹 간 스텝 이동 처리
+   */
+  const moveStepBetweenGroups = async (
+    stepId: string,
+    sourceGroupId: string,
+    targetGroupId: string,
+  ) => {
+    // 출발지/목적지 그룹 찾기
+    const sourceGroup = allBlocks.find((block) => block.id === sourceGroupId);
+    const targetGroup = allBlocks.find((block) => block.id === targetGroupId);
+
+    if (!sourceGroup || !targetGroup) {
+      throw new Error("그룹을 찾을 수 없습니다");
+    }
+
+    // 1. 출발지 그룹에서 스텝 제거
+    await updateBlock({
+      id: sourceGroupId,
+      childrenIds: sourceGroup.childrenIds.filter((id) => id !== stepId),
+    });
+
+    // 2. 목적지 그룹에 스텝 추가
+    const newChildrenIds = [...targetGroup.childrenIds];
+    if (!newChildrenIds.includes(stepId)) {
+      newChildrenIds.push(stepId);
+    }
+
+    await updateBlock({
+      id: targetGroupId,
+      childrenIds: newChildrenIds,
+    });
+
+    // 3. 스텝의 부모 그룹 ID 업데이트
+    await updateBlock({
+      id: stepId,
+      parentId: targetGroupId,
+    });
+
+    // 4. 목적지 그룹 확장 (UI)
+    if (onExpandGroup) {
+      onExpandGroup(targetGroupId);
+    }
+  };
+
+  /**
+   * 스텝을 그룹 끝에 추가
+   */
+  const appendStepToGroup = async (
+    stepId: string,
+    targetGroupId: string,
+    stepBlock: StepBlock,
+  ) => {
+    // 대상 그룹의 스텝들 가져오기
+    const stepsInGroup = allBlocks.filter(
+      (block) =>
+        block.parentId === targetGroupId && block.type === BlockType.STEP,
+    ) as StepBlock[];
+
+    // 현재 최대 순서값 계산
+    let lastOrder = 0;
+    if (stepsInGroup.length > 0) {
+      const orderValues = stepsInGroup
+        .map((step) => step.properties.order)
+        .filter((order): order is number => typeof order === "number");
+
+      lastOrder = orderValues.length > 0 ? Math.max(...orderValues) : 0;
+    }
+
+    // 마지막 스텝 다음에 위치하도록 순서값 설정
+    await updateBlock({
+      id: stepId,
+      parentId: targetGroupId,
+      properties: {
+        ...stepBlock.properties,
+        order: lastOrder + ORDER_INITIAL_GAP,
+      },
+    });
+
+    movesWithoutRebalancing++;
+  };
+
+  /**
+   * 스텝 순서 재배치
+   */
+  const reorderStepInStepGroup = async (
+    stepId: string,
+    targetGroupId: string,
+    dropIndex: number,
+  ) => {
+    // 대상 그룹의 모든 스텝 가져오기
+    const stepsInGroup = allBlocks.filter(
+      (block) =>
+        block.parentId === targetGroupId && block.type === BlockType.STEP,
+    ) as StepBlock[];
+
+    // 순서대로 정렬
+    const sortedSteps = [...stepsInGroup].sort(
+      (a, b) =>
+        (typeof a.properties.order === "number" ? a.properties.order : 0) -
+        (typeof b.properties.order === "number" ? b.properties.order : 0),
+    );
+
+    // 자기 자신 제외한 리스트 생성
+    const filteredSteps = sortedSteps.filter((step) => step.id !== stepId);
+
+    // 삽입 위치 계산
+    let prevOrder: number | undefined;
+    let nextOrder: number | undefined;
+
+    if (dropIndex === 0) {
+      // 맨 앞에 삽입
+      nextOrder =
+        filteredSteps.length > 0
+          ? filteredSteps[0].properties.order
+          : undefined;
+    } else if (dropIndex >= filteredSteps.length) {
+      // 맨 뒤에 삽입
+      prevOrder =
+        filteredSteps.length > 0
+          ? filteredSteps[filteredSteps.length - 1].properties.order
+          : undefined;
+    } else {
+      // 중간에 삽입
+      prevOrder = filteredSteps[dropIndex - 1].properties.order;
+      nextOrder = filteredSteps[dropIndex].properties.order;
+    }
+
+    // 새 순서값 계산 및 업데이트
+    const newOrder = calculateMiddleOrder(prevOrder, nextOrder);
+    await updateBlock({
+      id: stepId,
+      properties: {
+        order: newOrder,
+      },
+    });
+
+    movesWithoutRebalancing++;
+
+    // 임계값 초과 시 리밸런싱
+    if (movesWithoutRebalancing >= REBALANCING_THRESHOLD) {
+      await rebalanceStepOrders(targetGroupId, stepsInGroup);
+    }
+  };
+
+  /**
+   * 드래그 시작 처리: 무엇을 드래그하기 시작했는지 기록
+   */
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const stepData = active.data.current;
+
+    if (stepData && stepData.block) {
+      setState({
+        draggedStepBlockId: active.id as string,
+        draggedStepBlock: stepData.block as Block,
+        sourceStepGroupId: stepData.block.parentId,
+        hoveredStepGroupId: null,
+        dropTargetPosition: null,
+      });
+    }
+  };
+
+  /**
+   * 드래그 오버 처리: 드래그 중인 요소가 어디에 있는지 추적하고 드롭 가능한 위치를 시각적으로 표시
+   */
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+    if (!over) {
+      // 드롭 가능한 영역 위에 없는 경우
+      setState((prev) => ({
+        ...prev,
+        overGroupId: null,
+        insertPosition: null,
+      }));
+      return;
+    }
+
+    const overData = over.data.current;
+    if (!overData) return;
+
+    if (overData.type === "stepGroup") {
+      // 케이스 1: 스텝 그룹 자체 위에 있을 때
+      setState((prev) => ({
+        ...prev,
+        overGroupId: overData.groupId, // 현재 위치한 그룹 ID 저장
+        insertPosition: null, // 스텝 간 위치 정보는 없음
+      }));
+    } else if (overData.type === "stepGap") {
+      // 케이스 2: 스텝 사이 갭 위에 있을 때
+      setState((prev) => ({
+        ...prev,
+        overGroupId: null,
+        insertPosition: {
+          // 정확한 삽입 위치 정보 저장
+          groupId: overData.groupId, // 어떤 그룹 내의
+          order: overData.index, // 몇 번째 위치에 삽입할 것인지
+        },
+      }));
+    } else {
+      // 케이스 3: 다른 타입 위에 있을 때 (드롭 불가 영역)
+      setState((prev) => ({
+        ...prev,
+        overGroupId: null,
+        insertPosition: null,
+      }));
+    }
+  };
+
+  /**
+   * 드래그 종료 처리: 항목이 드롭되었을 때 실제 데이터 변경을 수행
+   */
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    // Store current state before resetting
-    const { activeId, activeGroupId: previousGroupId } = state;
-
-    // Reset states first
+    // 상태 저장 후 초기화 (드래그 작업 종료)
+    const { draggedStepBlockId, sourceStepGroupId: sourceGroupId } = state;
     setState({
-      activeId: null,
-      activeBlock: null,
-      activeGroupId: null,
-      overGroupId: null,
-      insertPosition: null,
+      draggedStepBlockId: null,
+      draggedStepBlock: null,
+      sourceStepGroupId: null,
+      hoveredStepGroupId: null,
+      dropTargetPosition: null,
     });
 
-    // Get the active step
-    if (!over || !active || !journeyId || !previousGroupId || !activeId) return;
+    // 유효성 검사
+    if (!over || !active || !journeyId || !sourceGroupId || !draggedStepBlockId)
+      return;
 
-    const stepBlock = allBlocks.find((block) => block.id === activeId) as
-      | StepBlock
-      | undefined;
+    const stepBlock = allBlocks.find(
+      (block) => block.id === draggedStepBlockId,
+    ) as StepBlock | undefined;
     if (!stepBlock) return;
 
     try {
-      // Handle dropping onto a step group
+      // 케이스 1: 그룹 자체에 드롭한 경우
       if (over.data.current?.type === "stepGroup") {
         const targetGroupId = over.data.current.groupId;
 
-        // If dropping to the same group, do nothing
-        if (targetGroupId === previousGroupId) return;
+        // 동일 그룹 내 이동이면 무시
+        if (targetGroupId === sourceGroupId) return;
 
-        // Find the target group
-        const targetGroup = allBlocks.find(
-          (block) => block.id === targetGroupId,
+        // 다른 그룹으로 이동: 두 단계 작업 수행
+        await moveStepBetweenGroups(
+          draggedStepBlockId,
+          sourceGroupId,
+          targetGroupId,
         );
-        if (!targetGroup) return;
-
-        // Find the source group and remove the step
-        const sourceGroup = allBlocks.find(
-          (block) => block.id === previousGroupId,
-        );
-        if (!sourceGroup) return;
-
-        // Update source group by removing the step
-        await updateBlock({
-          id: previousGroupId,
-          childrenIds: sourceGroup.childrenIds.filter((id) => id !== activeId),
-        });
-
-        // Update target group by adding the step
-        await updateBlock({
-          id: targetGroupId,
-          childrenIds: [...targetGroup.childrenIds, activeId],
-        });
-
-        // 대상 그룹의 스텝들
-        const stepsInTargetGroup = allBlocks.filter(
-          (block) =>
-            block.parentId === targetGroupId && block.type === BlockType.STEP,
-        ) as StepBlock[];
-
-        // 마지막 스텝의 order 값 가져오기
-        let lastOrder = 0;
-        if (stepsInTargetGroup.length > 0) {
-          const orderValues = stepsInTargetGroup
-            .map((step) => step.properties.order)
-            .filter((order): order is number => typeof order === "number");
-
-          lastOrder = orderValues.length > 0 ? Math.max(...orderValues) : 0;
-        }
-
-        // 그룹 끝에 스텝 추가 - 마지막 스텝보다 큰 order 값 설정
-        await updateBlock({
-          id: activeId,
-          parentId: targetGroupId,
-          properties: {
-            ...stepBlock.properties,
-            order: lastOrder + ORDER_INITIAL_GAP,
-          },
-        });
-
-        // 이동 카운터 증가
-        movesWithoutRebalancing++;
-
-        // Auto-expand the target group if it's collapsed
-        if (onExpandGroup) {
-          onExpandGroup(targetGroupId);
-        }
+        await appendStepToGroup(draggedStepBlockId, targetGroupId, stepBlock);
       }
-      // Handle dropping between steps
-      else if (over.data.current?.type === "stepGap" && state.insertPosition) {
-        const { groupId: targetGroupId, order: dropIndex } =
-          state.insertPosition;
+      // 케이스 2: 스텝 사이에 드롭한 경우
+      else if (
+        over.data.current?.type === "stepGap" &&
+        state.dropTargetPosition
+      ) {
+        const { stepGroupBlockId: targetGroupId, insertionIndex: dropIndex } =
+          state.dropTargetPosition;
 
-        // Find the target group
-        const targetGroup = allBlocks.find(
-          (block) => block.id === targetGroupId,
-        );
-        if (!targetGroup) return;
-
-        // 다른 그룹으로 이동하는 경우
-        if (previousGroupId !== targetGroupId) {
-          const sourceGroup = allBlocks.find(
-            (block) => block.id === previousGroupId,
+        // 다른 그룹으로 이동하는 경우 먼저 그룹 변경
+        if (sourceGroupId !== targetGroupId) {
+          await moveStepBetweenGroups(
+            draggedStepBlockId,
+            sourceGroupId,
+            targetGroupId,
           );
-          if (!sourceGroup) return;
-
-          // 원본 그룹에서 스텝 제거
-          await updateBlock({
-            id: previousGroupId,
-            childrenIds: sourceGroup.childrenIds.filter(
-              (id) => id !== activeId,
-            ),
-          });
-
-          // 대상 그룹에 스텝 추가
-          const newChildrenIds = [...targetGroup.childrenIds];
-          if (!newChildrenIds.includes(activeId)) {
-            newChildrenIds.push(activeId);
-          }
-
-          await updateBlock({
-            id: targetGroupId,
-            childrenIds: newChildrenIds,
-          });
-
-          // 스텝의 parentId 업데이트
-          await updateBlock({
-            id: activeId,
-            parentId: targetGroupId,
-          });
-
-          // 대상 그룹 확장
-          if (onExpandGroup) {
-            onExpandGroup(targetGroupId);
-          }
         }
 
-        // 대상 그룹 내 모든 스텝 가져오기
-        const stepsInTargetGroup = allBlocks.filter(
-          (block) =>
-            block.parentId === targetGroupId && block.type === BlockType.STEP,
-        ) as StepBlock[];
-
-        // 스텝 드롭 위치 결정을 위한 이전/다음 스텝 찾기
-        const sortedSteps = [...stepsInTargetGroup].sort(
-          (a, b) =>
-            (typeof a.properties.order === "number" ? a.properties.order : 0) -
-            (typeof b.properties.order === "number" ? b.properties.order : 0),
+        // 순서 재배치 (동일 그룹 내 이동과 다른 그룹으로 이동 모두 적용)
+        await reorderStepInStepGroup(
+          draggedStepBlockId,
+          targetGroupId,
+          dropIndex,
         );
-
-        // 현재 스텝을 제외한 정렬된 스텝 목록 생성
-        const filteredSteps = sortedSteps.filter(
-          (step) => step.id !== activeId,
-        );
-
-        let prevOrder: number | undefined;
-        let nextOrder: number | undefined;
-
-        if (dropIndex === 0) {
-          // 맨 앞에 삽입
-          nextOrder =
-            filteredSteps.length > 0
-              ? filteredSteps[0].properties.order
-              : undefined;
-        } else if (dropIndex >= filteredSteps.length) {
-          // 맨 뒤에 삽입
-          prevOrder =
-            filteredSteps.length > 0
-              ? filteredSteps[filteredSteps.length - 1].properties.order
-              : undefined;
-        } else {
-          // 중간에 삽입
-          prevOrder = filteredSteps[dropIndex - 1].properties.order;
-          nextOrder = filteredSteps[dropIndex].properties.order;
-        }
-
-        // 새 order 값 계산
-        const newOrder = calculateMiddleOrder(prevOrder, nextOrder);
-
-        // 스텝 업데이트 - 새로운 order 값만 설정
-        await updateBlock({
-          id: activeId,
-          properties: {
-            order: newOrder,
-          },
-        });
-
-        // 이동 카운터 증가
-        movesWithoutRebalancing++;
-
-        // 임계값을 초과하면 리밸런싱 수행
-        if (movesWithoutRebalancing >= REBALANCING_THRESHOLD) {
-          await rebalanceStepOrders(targetGroupId, stepsInTargetGroup);
-        }
-
-        // 변경 사항 적용을 위해 쿼리 캐시 무효화
-        await queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.journeys.detail(journeyId),
-        });
-
-        toast.success("스텝 위치가 업데이트되었습니다.");
       }
+
+      // 변경사항 반영을 위해 캐시 무효화
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      toast.success("스텝 위치가 업데이트되었습니다");
     } catch (error) {
-      console.error("Failed to update step position:", error);
-      toast.error("스텝 위치 업데이트에 실패했습니다.");
+      console.error("스텝 위치 업데이트 실패:", error);
+      toast.error("스텝 위치 업데이트에 실패했습니다");
     }
   };
 
