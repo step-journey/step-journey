@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PATH from "@/constants/path";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { Block, BlockType, StepBlock } from "@/features/block/types";
+import { Block, BlockType } from "@/features/block/types";
 import {
   createBlock,
   deleteBlockTree,
@@ -14,13 +14,7 @@ import {
   createDefaultParagraphBlock,
   generateBlockId,
 } from "@/features/block/utils/blockUtils";
-
-// Journey 데이터의 타입 정의 추가
-interface JourneyData {
-  journeyBlock: Block | null;
-  flattenedSteps: StepBlock[];
-  allBlocks: Block[];
-}
+import { JourneyData } from "@/features/journey/types/serviceTypes";
 
 export function useJourneyActions() {
   const navigate = useNavigate();
@@ -300,7 +294,7 @@ export function useJourneyActions() {
         return null;
       }
 
-      const { allBlocks, flattenedSteps } = journeyData;
+      const { allBlocks, sortedStepBlocks } = journeyData;
       const groupBlock = allBlocks.find((block: Block) => block.id === groupId);
 
       // throw 대신 early return 사용
@@ -311,7 +305,7 @@ export function useJourneyActions() {
       }
 
       // 2. 새 Step의 order 결정
-      const nextOrder = flattenedSteps.length;
+      const nextOrder = sortedStepBlocks.length;
 
       // 3. 새 Step ID 생성
       const stepId = generateBlockId();
@@ -361,7 +355,7 @@ export function useJourneyActions() {
       }
 
       // 11. 새로 추가된 Step의 order 찾기
-      const newStepOrder = updatedData.flattenedSteps.findIndex(
+      const newStepOrder = updatedData.sortedStepBlocks.findIndex(
         (step) => step.id === stepId,
       );
 
@@ -394,7 +388,7 @@ export function useJourneyActions() {
         return null;
       }
 
-      const { allBlocks, flattenedSteps } = journeyData;
+      const { allBlocks, sortedStepBlocks } = journeyData;
 
       // Step 블록 찾기
       const stepBlock = allBlocks.find((block: Block) => block.id === stepId);
@@ -406,7 +400,7 @@ export function useJourneyActions() {
       }
 
       // 현재 단계의 order 찾기
-      const currentStepOrder = flattenedSteps.findIndex(
+      const currentStepOrder = sortedStepBlocks.findIndex(
         (step) => step.id === stepId,
       );
 
@@ -458,8 +452,8 @@ export function useJourneyActions() {
       });
 
       // 다음 인덱스가 유효하지 않으면 조정
-      return updatedData && updatedData.flattenedSteps.length > 0
-        ? Math.min(nextOrder, updatedData.flattenedSteps.length - 1)
+      return updatedData && updatedData.sortedStepBlocks.length > 0
+        ? Math.min(nextOrder, updatedData.sortedStepBlocks.length - 1)
         : 0;
     } catch (error) {
       console.error("Failed to delete step:", error);

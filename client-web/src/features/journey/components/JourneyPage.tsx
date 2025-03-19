@@ -46,9 +46,9 @@ export default function JourneyPage() {
 
   // 데이터 및 현재 스텝 추출
   const journeyBlock = data?.journeyBlock || null;
-  const flattenedSteps = data?.flattenedSteps || [];
+  const sortedStepBlocks = data?.sortedStepBlocks || [];
   const allBlocks = data?.allBlocks || [];
-  const totalSteps = flattenedSteps.length;
+  const totalSteps = sortedStepBlocks.length;
 
   // useCallback 사용하여 함수 메모이제이션
   const goPrev = useCallback(() => {
@@ -108,20 +108,20 @@ export default function JourneyPage() {
   // 데이터가 로드되면 Zustand 스토어 상태 업데이트
   useEffect(() => {
     if (data) {
-      const { flattenedSteps, allBlocks } = data;
+      const { sortedStepBlocks, allBlocks } = data;
 
       // 블록 스토어 상태 업데이트
       setAllBlocks(allBlocks);
 
       // 콘텐츠 스토어 상태 업데이트
       updateContentState({
-        currentStep: flattenedSteps[currentStepOrder] || null,
-        allSteps: flattenedSteps,
+        currentStep: sortedStepBlocks[currentStepOrder] || null,
+        allSteps: sortedStepBlocks,
         highlightKeywords: true,
       });
 
       // 사이드바 스토어 현재 선택된 스텝 ID 업데이트
-      setCurrentStepId(flattenedSteps[currentStepOrder]?.id);
+      setCurrentStepId(sortedStepBlocks[currentStepOrder]?.id);
     }
   }, [
     data,
@@ -133,10 +133,10 @@ export default function JourneyPage() {
 
   // 스텝 클릭 핸들러 설정
   useEffect(() => {
-    if (data?.flattenedSteps) {
+    if (data?.sortedStepBlocks) {
       // 스텝 클릭 시 해당 order 로 이동하는 핸들러 등록
       setStepClickHandler((groupId, stepOrder) => {
-        const found = data.flattenedSteps.find(
+        const found = data.sortedStepBlocks.find(
           (fs) => fs.parentId === groupId && fs.properties.order === stepOrder,
         );
 
@@ -149,12 +149,12 @@ export default function JourneyPage() {
         }
       });
     }
-  }, [data?.flattenedSteps, setStepClickHandler, setCurrentStepOrder]);
+  }, [data?.sortedStepBlocks, setStepClickHandler, setCurrentStepOrder]);
 
   // 현재 step 이 변경될 때마다 step group 상태 업데이트
   useEffect(() => {
-    if (data?.flattenedSteps && data?.allBlocks) {
-      const currentStep = data.flattenedSteps[currentStepOrder];
+    if (data?.sortedStepBlocks && data?.allBlocks) {
+      const currentStep = data.sortedStepBlocks[currentStepOrder];
       if (currentStep) {
         // 현재 step ID와 모든 블록을 전달하여 step group 상태 업데이트
         updateStepGroupsForCurrentStep(currentStep.id, data.allBlocks);
@@ -162,7 +162,7 @@ export default function JourneyPage() {
     }
   }, [
     currentStepOrder,
-    data?.flattenedSteps,
+    data?.sortedStepBlocks,
     data?.allBlocks,
     updateStepGroupsForCurrentStep,
   ]);
@@ -219,7 +219,7 @@ export default function JourneyPage() {
       {/* 디버깅 패널 */}
       <DebugPanel
         currentStepOrder={currentStepOrder}
-        flattenedSteps={flattenedSteps}
+        sortedStepBlocks={sortedStepBlocks}
         allBlocks={allBlocks}
       />
     </div>

@@ -6,21 +6,10 @@ import {
 } from "@/features/block/services/blockService";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useEffect, useState } from "react";
-import {
-  Block,
-  BlockType,
-  StepBlock,
-  JourneyBlock,
-} from "@/features/block/types";
+import { BlockType } from "@/features/block/types";
 import { useBlockRenderer } from "@/features/block/hooks/useBlockRenderer";
 import { useBlockData } from "@/features/block/hooks/useBlockData";
-
-// 여정 데이터 반환 타입 정의
-type JourneyData = {
-  journeyBlock: JourneyBlock | null;
-  flattenedSteps: StepBlock[];
-  allBlocks: Block[];
-};
+import { JourneyData } from "@/features/journey/types/serviceTypes";
 
 // 여정 목록을 조회하는 훅
 export function useJourneys() {
@@ -78,15 +67,15 @@ export function useJourney(journeyId: string | undefined) {
   const blockRenderer = useBlockRenderer(
     journeyId || "",
     allBlocks,
-    journeyQuery.data?.flattenedSteps || [],
+    journeyQuery.data?.sortedStepBlocks || [],
     currentStepOrder,
   );
 
   // 스텝 인덱스 변경 함수
   const nextStep = () => {
     if (!journeyQuery.data) return;
-    const flattenedSteps = journeyQuery.data.flattenedSteps;
-    const maxOrder = flattenedSteps.length - 1;
+    const sortedStepBlocks = journeyQuery.data.sortedStepBlocks;
+    const maxOrder = sortedStepBlocks.length - 1;
     setCurrentStepOrder((prev) => Math.min(prev + 1, maxOrder));
   };
 
@@ -102,7 +91,7 @@ export function useJourney(journeyId: string | undefined) {
     }));
   };
 
-  // 스텝 그룹 블록 가져오기 (기존 메서드 대신 블록 데이터 훅 활용)
+  // 스텝 그룹 블록 가져오기
   const getStepGroups = () => {
     if (!journeyQuery.data?.journeyBlock?.id) return [];
 

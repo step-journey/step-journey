@@ -10,6 +10,7 @@ import { Block as BlockNoteBlock } from "@blocknote/core";
 import { filterAndSortStepBlocks } from "../utils/blockUtils";
 import { prepareBlocksForSaving } from "../utils/blockNoteConverter";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
+import { JourneyData } from "@/features/journey/types/serviceTypes";
 
 /**
  * 특정 ID의 Journey 블록을 조회
@@ -98,15 +99,17 @@ export const fetchAllJourneyBlocks = async (): Promise<JourneyBlock[]> => {
   return blocks.filter(isJourneyBlock) as JourneyBlock[];
 };
 
-// Journey와 그 단계들 로드
+/**
+ * 특정 Journey 블록과 그 하위의 Step 블록을 조회 및 정렬하여 반환
+ *
+ * @param id - 조회할 여정(Journey) 블록의 ID
+ * @returns {Promise<JourneyData>} 여정 블록, 정렬된 단계 블록들, 모든 관련 블록을 포함한 객체
+ * @throws 여정 ID에 해당하는 블록이 없거나 Journey 타입이 아닌 경우 에러 발생
+ */
 export const fetchJourneyAndOrderedSteps = async (
   id: string,
-): Promise<{
-  journeyBlock: JourneyBlock | null;
-  flattenedSteps: StepBlock[];
-  allBlocks: Block[];
-}> => {
-  // DB에서 Journey와 하위 블록 조회
+): Promise<JourneyData> => {
+  // Journey 블로과 그 하위 블록들 모두 조회
   const allBlocksInJourney = await fetchJourneyWithDescendants(id);
   let journeyBlock = allBlocksInJourney.find(
     (block) => block.id === id && isJourneyBlock(block),
@@ -120,7 +123,7 @@ export const fetchJourneyAndOrderedSteps = async (
   const sortedStepBlocks = filterAndSortStepBlocks(allBlocksInJourney);
   return {
     journeyBlock,
-    flattenedSteps: sortedStepBlocks,
+    sortedStepBlocks: sortedStepBlocks,
     allBlocks: allBlocksInJourney,
   };
 };

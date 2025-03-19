@@ -8,24 +8,24 @@ import { Separator } from "@/components/ui/separator";
 
 interface DebugPanelProps {
   currentStepOrder: number;
-  flattenedSteps: StepBlock[];
+  sortedStepBlocks: StepBlock[];
   allBlocks: Block[];
 }
 
 export function DebugPanel({
   currentStepOrder,
-  flattenedSteps,
+  sortedStepBlocks,
   allBlocks,
 }: DebugPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // 현재, 이전, 다음 스텝 계산
-  const currentStep = flattenedSteps[currentStepOrder];
+  const currentStep = sortedStepBlocks[currentStepOrder];
   const prevStep =
-    currentStepOrder > 0 ? flattenedSteps[currentStepOrder - 1] : null;
+    currentStepOrder > 0 ? sortedStepBlocks[currentStepOrder - 1] : null;
   const nextStep =
-    currentStepOrder < flattenedSteps.length - 1
-      ? flattenedSteps[currentStepOrder + 1]
+    currentStepOrder < sortedStepBlocks.length - 1
+      ? sortedStepBlocks[currentStepOrder + 1]
       : null;
 
   // step group title 안전하게 가져오기
@@ -112,14 +112,14 @@ export function DebugPanel({
                     <span>{currentStepOrder}</span>
 
                     <span className="text-muted-foreground">Total Steps:</span>
-                    <span>{flattenedSteps.length}</span>
+                    <span>{sortedStepBlocks.length}</span>
 
                     <span className="text-muted-foreground">Has Previous:</span>
                     <span>{currentStepOrder > 0 ? "Yes" : "No"}</span>
 
                     <span className="text-muted-foreground">Has Next:</span>
                     <span>
-                      {currentStepOrder < flattenedSteps.length - 1
+                      {currentStepOrder < sortedStepBlocks.length - 1
                         ? "Yes"
                         : "No"}
                     </span>
@@ -151,7 +151,7 @@ export function DebugPanel({
                       </tr>
                     </thead>
                     <tbody>
-                      {flattenedSteps.map((step, idx) => {
+                      {sortedStepBlocks.map((step, idx) => {
                         const parentGroup = allBlocks.find(
                           (block) => block.id === step.parentId,
                         );
