@@ -259,20 +259,32 @@ export const useDragAndDrop = ({
         (typeof b.properties.order === "number" ? b.properties.order : 0),
     );
 
-    // 자기 자신 제외한 리스트 생성
+    // 드래그 중인 아이템의 원래 위치 인덱스 찾기 (인덱스 조정을 위해 필요한 시작점 정보)
+    const currentIndex = sortedSteps.findIndex((step) => step.id === stepId);
+
+    // 자기 자신 제외한 리스트 생성 (드래그한 아이템을 제외하고 중간 위치의 order 값을 계산하기 위함)
     const filteredSteps = sortedSteps.filter((step) => step.id !== stepId);
+
+    // 필터링으로 인한 인덱스 차이를 보정해주는 로직
+    // 예: [A, B*, C, D, E] 에서 B를 D와 E 사이로 드래그할 때,
+    // B가 제거된 배열 [A, C, D, E]에서는 원래 인덱스 4(D와 E 사이)가 실제로는 3(D와 E 사이)가 됨
+    let adjustedDropIndex = dropIndex;
+    if (currentIndex < dropIndex) {
+      // 현재 위치가 드롭 위치보다 위에 있는 경우, 필터링으로 인덱스가 하나 줄어들었으므로 1을 빼서 조정해야 함
+      adjustedDropIndex = dropIndex - 1;
+    }
 
     // 삽입 위치 계산
     let prevOrder: number | undefined;
     let nextOrder: number | undefined;
 
-    if (dropIndex === 0) {
+    if (adjustedDropIndex === 0) {
       // 맨 앞에 삽입
       nextOrder =
         filteredSteps.length > 0
           ? filteredSteps[0].properties.order
           : undefined;
-    } else if (dropIndex >= filteredSteps.length) {
+    } else if (adjustedDropIndex >= filteredSteps.length) {
       // 맨 뒤에 삽입
       prevOrder =
         filteredSteps.length > 0
@@ -280,8 +292,8 @@ export const useDragAndDrop = ({
           : undefined;
     } else {
       // 중간에 삽입
-      prevOrder = filteredSteps[dropIndex - 1].properties.order;
-      nextOrder = filteredSteps[dropIndex].properties.order;
+      prevOrder = filteredSteps[adjustedDropIndex - 1].properties.order;
+      nextOrder = filteredSteps[adjustedDropIndex].properties.order;
     }
 
     // 새 순서값 계산 및 업데이트
