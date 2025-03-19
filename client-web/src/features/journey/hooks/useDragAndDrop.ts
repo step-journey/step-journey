@@ -265,6 +265,19 @@ export const useDragAndDrop = ({
     // 자기 자신 제외한 리스트 생성 (드래그한 아이템을 제외하고 중간 위치의 order 값을 계산하기 위함)
     const filteredSteps = sortedSteps.filter((step) => step.id !== stepId);
 
+    // 스텝이 없는 그룹으로 이동하는 경우 바로 첫 번째 아이템으로 추가
+    if (filteredSteps.length === 0) {
+      // 빈 그룹에 유일한 아이템으로 추가
+      await updateBlock({
+        id: stepId,
+        properties: {
+          order: 0,
+        },
+      });
+      movesWithoutRebalancing++;
+      return;
+    }
+
     // 필터링으로 인한 인덱스 차이를 보정해주는 로직
     // 예: [A, B*, C, D, E] 에서 B를 D와 E 사이로 드래그할 때,
     // B가 제거된 배열 [A, C, D, E]에서는 원래 인덱스 4(D와 E 사이)가 실제로는 3(D와 E 사이)가 됨
@@ -274,26 +287,32 @@ export const useDragAndDrop = ({
       adjustedDropIndex = dropIndex - 1;
     }
 
+    // 안전 검사: 조정된 인덱스가 유효한 범위인지 확인
+    adjustedDropIndex = Math.max(
+      0,
+      Math.min(adjustedDropIndex, filteredSteps.length),
+    );
+
     // 삽입 위치 계산
     let prevOrder: number | undefined;
     let nextOrder: number | undefined;
 
     if (adjustedDropIndex === 0) {
       // 맨 앞에 삽입
-      nextOrder =
-        filteredSteps.length > 0
-          ? filteredSteps[0].properties.order
-          : undefined;
+      nextOrder = filteredSteps[0]?.properties.order;
     } else if (adjustedDropIndex >= filteredSteps.length) {
       // 맨 뒤에 삽입
-      prevOrder =
-        filteredSteps.length > 0
-          ? filteredSteps[filteredSteps.length - 1].properties.order
-          : undefined;
+      prevOrder = filteredSteps[filteredSteps.length - 1]?.properties.order;
     } else {
-      // 중간에 삽입
-      prevOrder = filteredSteps[adjustedDropIndex - 1].properties.order;
-      nextOrder = filteredSteps[adjustedDropIndex].properties.order;
+      // 중간에 삽입 - 안전하게 접근
+      if (adjustedDropIndex > 0 && adjustedDropIndex < filteredSteps.length) {
+        prevOrder = filteredSteps[adjustedDropIndex - 1]?.properties.order;
+        nextOrder = filteredSteps[adjustedDropIndex]?.properties.order;
+      } else if (adjustedDropIndex === 0) {
+        nextOrder = filteredSteps[0]?.properties.order;
+      } else {
+        prevOrder = filteredSteps[filteredSteps.length - 1]?.properties.order;
+      }
     }
 
     // 새 순서값 계산 및 업데이트
