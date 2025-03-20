@@ -6,6 +6,7 @@ import {
   combineByGroup,
   filterSuggestionItems,
   locales,
+  defaultBlockSpecs,
 } from "@blocknote/core";
 import "@/styles/text-editor.css";
 import { Block, JourneyBlock, StepBlock } from "@/features/block/types";
@@ -69,11 +70,26 @@ export function BlockEditor({
     return getBlockNoteBlocksFromStep(block, allBlocks) as any;
   }, [block, allBlocks]);
 
+  // video, audio, file 블록 제외하기
+  const customSchema = useMemo(() => {
+    // 제외할 블록 제거
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { video, audio, file, ...remainingBlockSpecs } = defaultBlockSpecs;
+
+    // 커스텀 스키마 생성
+    return BlockNoteSchema.create({
+      blockSpecs: {
+        ...remainingBlockSpecs,
+      },
+    });
+  }, []);
+
   // 에디터 설정을 준비
   const editorConfig = useMemo(
     () => ({
       initialContent,
-      schema: withMultiColumn(BlockNoteSchema.create()),
+      // 제외된 블록이 적용된 스키마에 multiColumn 기능 추가
+      schema: withMultiColumn(customSchema),
       dropCursor: multiColumnDropCursor,
       dictionary: {
         ...locales.ko,
@@ -96,7 +112,7 @@ export function BlockEditor({
         },
       },
     }),
-    [initialContent],
+    [initialContent, customSchema],
   );
 
   // 에디터 인스턴스 생성
