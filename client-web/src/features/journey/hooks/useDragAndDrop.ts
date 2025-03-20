@@ -378,10 +378,27 @@ export const useDragAndDrop = ({
     const currentIndex = stepGroupIds.indexOf(groupId);
     if (currentIndex === -1) return;
 
+    // 순서 계산을 위해 현재 위치와 목표 위치를 비교하여 조정
+    // 현재 위치와 동일한 경우 이동 불필요
+    if (currentIndex === targetIndex) return;
+
     // 새 순서 계산 (현재 위치에서 제거 후 새 위치에 삽입)
     const newStepGroupIds = [...stepGroupIds];
-    newStepGroupIds.splice(currentIndex, 1);
-    newStepGroupIds.splice(targetIndex, 0, groupId);
+
+    if (currentIndex < targetIndex) {
+      // 아래로 이동하는 경우 (targetIndex 가 이미 변경된 배열 기준이므로 조정 필요)
+      // 요소 제거 후 배열이 앞으로 당겨지므로, targetIndex 를 1 감소시켜 정확한 위치에 삽입
+      // 1. 먼저 현재 항목 제거
+      newStepGroupIds.splice(currentIndex, 1);
+      // 2. 목표 위치에 삽입 (목표 위치 조정)
+      newStepGroupIds.splice(targetIndex - 1, 0, groupId);
+    } else {
+      // 위로 이동하는 경우
+      // 1. 먼저 현재 항목 제거
+      newStepGroupIds.splice(currentIndex, 1);
+      // 2. 목표 위치에 삽입
+      newStepGroupIds.splice(targetIndex, 0, groupId);
+    }
 
     // 여정의 모든 childrenIds 가져오기 (그룹이 아닌 항목도 포함)
     const nonGroupIds = journeyBlock.childrenIds.filter((id) => {
