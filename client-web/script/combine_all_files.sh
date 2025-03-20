@@ -11,11 +11,12 @@ cd "$(dirname "$0")/.."
 # 1) 결과를 저장할 파일들 (client-web 기준)
 ##############################################
 INFO_FILE="script/combined_all_1_project_info.txt"
-CODE_FILE="script/combined_all_2_code.txt"
+STRUCTURE_FILE="script/combined_all_2_project_structure.txt"
+CODE_FILE="script/combined_all_3_code.txt"
 CURRENT_DIR="$(basename "$(pwd)")"
 
 # 기존 파일 삭제 & 디렉토리 생성
-rm -f "$INFO_FILE" "$CODE_FILE"
+rm -f "$INFO_FILE" "$STRUCTURE_FILE" "$CODE_FILE"
 mkdir -p "$(dirname "$INFO_FILE")"
 
 # 프로젝트 소개 (INFO_FILE에 저장)
@@ -90,9 +91,9 @@ echo "" >> "$INFO_FILE"
 ##############################################
 # 프로젝트 구조(tree) 출력
 ##############################################
-echo "# Project Structure:" >> "$INFO_FILE"
-tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$INFO_FILE"
-echo "" >> "$INFO_FILE"
+echo "# Project Structure:" >> "$STRUCTURE_FILE"
+tree . --charset=ASCII -I "node_modules|dist|.idea|package-lock.json|fonts" >> "$STRUCTURE_FILE"
+echo "" >> "$STRUCTURE_FILE"
 
 ##############################################
 # 4) 소스코드만 별도 파일에 병합
@@ -133,4 +134,5 @@ done
 # 5) 마무리 안내
 ##############################################
 echo "프로젝트 정보가 $CURRENT_DIR/$INFO_FILE 에 성공적으로 저장되었습니다."
+echo "프로젝트 구조가 $CURRENT_DIR/$STRUCTURE_FILE 에 성공적으로 저장되었습니다."
 echo "소스 코드가 $CURRENT_DIR/$CODE_FILE 에 성공적으로 저장되었습니다."
