@@ -184,7 +184,7 @@ export function JourneySidebar({
     <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
       {/* 상단: 제목 + 검색창 */}
       <div className="shrink-0 p-4 pb-2">
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-center">
           <BlockRenderer
             block={typedJourneyBlock}
             area={RenderingArea.SIDEBAR}
