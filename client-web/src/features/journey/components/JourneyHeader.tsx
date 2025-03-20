@@ -6,7 +6,7 @@ interface Props {
 
 export function JourneyHeader({ renderAdditionalButtons }: Props) {
   return (
-    <header className="h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-zinc-900 px-4 flex items-center justify-between">
+    <header className="h-14 bg-white dark:bg-zinc-900 px-4 flex items-center justify-between">
       <div className="flex items-center gap-1"></div>
 
       <div className="flex items-center gap-2">
