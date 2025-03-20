@@ -2,16 +2,16 @@ import React from "react";
 import { JourneyBlock, isJourneyBlock, getJourneyTitle } from "../../../types";
 import { EditableJourneyTitle } from "../../../components/EditableJourneyTitle";
 
-interface JourneySidebarRendererProps {
+interface JourneyBlockSidebarRendererProps {
   block: JourneyBlock;
 }
 
 /**
  * Journey 블록의 사이드바 렌더러
  */
-export const JourneySidebarRenderer: React.FC<JourneySidebarRendererProps> = ({
-  block,
-}) => {
+export const JourneyBlockSidebarRenderer: React.FC<
+  JourneyBlockSidebarRendererProps
+> = ({ block }) => {
   // 타입 가드
   if (!isJourneyBlock(block)) {
     return <div>Invalid journey block</div>;

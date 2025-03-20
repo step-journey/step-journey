@@ -20,15 +20,15 @@ import { useParams } from "react-router-dom";
 import { useJourneyActions } from "@/features/journey/hooks/useJourneyActions";
 import { DeleteStepGroupModal } from "@/features/journey/components/DeleteStepGroupModal";
 
-interface StepGroupSidebarRendererProps {
+interface StepGroupBlockSidebarRendererProps {
   block: StepGroupBlock;
 }
 
 /**
  * StepGroup 블록의 사이드바 렌더러
  */
-export const StepGroupSidebarRenderer: React.FC<
-  StepGroupSidebarRendererProps
+export const StepGroupBlockSidebarRenderer: React.FC<
+  StepGroupBlockSidebarRendererProps
 > = ({ block }) => {
   const expandedGroups = useExpandedGroups();
   const toggleGroup = useToggleGroup();

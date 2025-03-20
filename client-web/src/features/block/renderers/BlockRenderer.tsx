@@ -1,9 +1,9 @@
 import React from "react";
 import { Block, BlockType } from "../types";
-import { JourneySidebarRenderer } from "./implementations/journey/JourneySidebarRenderer";
-import { StepGroupSidebarRenderer } from "./implementations/stepGroup/StepGroupSidebarRenderer";
-import { StepSidebarRenderer } from "./implementations/step/StepSidebarRenderer";
-import { StepJourneyContentRenderer } from "./implementations/step/StepJourneyContentRenderer";
+import { JourneyBlockSidebarRenderer } from "./implementations/journey/JourneyBlockSidebarRenderer";
+import { StepGroupBlockSidebarRenderer } from "./implementations/stepGroup/StepGroupBlockSidebarRenderer";
+import { StepBlockSidebarRenderer } from "./implementations/step/StepBlockSidebarRenderer";
+import { StepBlockJourneyContentRenderer } from "./implementations/step/StepBlockJourneyContentRenderer";
 
 /**
  * 렌더링 영역 타입
@@ -76,7 +76,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
   switch (block.type) {
     case BlockType.JOURNEY:
       if (area === RenderingArea.SIDEBAR) {
-        return <JourneySidebarRenderer block={block} />;
+        return <JourneyBlockSidebarRenderer block={block} />;
       } else {
         return (
           <RenderError message="Journey 블록은 SIDEBAR 영역에서만 랜더링 될 수 있습니다." />
@@ -85,7 +85,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
 
     case BlockType.STEP_GROUP:
       if (area === RenderingArea.SIDEBAR) {
-        return <StepGroupSidebarRenderer block={block} />;
+        return <StepGroupBlockSidebarRenderer block={block} />;
       } else if (area === RenderingArea.CONTENT) {
         console.error(
           `StepGroup block should not be rendered in CONTENT area: ${block.id}`,
@@ -98,7 +98,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
 
     case BlockType.STEP:
       if (area === RenderingArea.SIDEBAR) {
-        return <StepSidebarRenderer block={block} />;
+        return <StepBlockSidebarRenderer block={block} />;
       } else if (area === RenderingArea.CONTENT) {
         if (!journeyId) {
           console.error("journeyId is required for rendering Step content");
@@ -107,7 +107,10 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
           );
         }
         return (
-          <StepJourneyContentRenderer block={block} journeyId={journeyId} />
+          <StepBlockJourneyContentRenderer
+            block={block}
+            journeyId={journeyId}
+          />
         );
       }
       break;

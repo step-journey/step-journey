@@ -5,18 +5,17 @@ import { BlockEditor } from "../../../components/BlockEditor";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 
-interface StepContentRendererProps {
+interface StepBlockContentRendererProps {
   block: StepBlock;
-  journeyId: string; // 상위 Journey ID 추가
+  journeyId: string;
 }
 
 /**
  * Step 블록의 콘텐츠 렌더러
  */
-export const StepJourneyContentRenderer: React.FC<StepContentRendererProps> = ({
-  block,
-  journeyId,
-}) => {
+export const StepBlockJourneyContentRenderer: React.FC<
+  StepBlockContentRendererProps
+> = ({ block, journeyId }) => {
   const queryClient = useQueryClient();
 
   // 타입 가드

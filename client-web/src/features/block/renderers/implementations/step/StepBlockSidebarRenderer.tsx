@@ -15,13 +15,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { cn } from "@/lib/utils";
 
-interface StepSidebarRendererProps {
+interface StepBlockSidebarRendererProps {
   block: StepBlock;
 }
 
-export const StepSidebarRenderer: React.FC<StepSidebarRendererProps> = ({
-  block,
-}) => {
+export const StepBlockSidebarRenderer: React.FC<
+  StepBlockSidebarRendererProps
+> = ({ block }) => {
   const { journeyId } = useParams<{ journeyId: string }>();
   const currentStepId = useCurrentStepId();
   const handleStepClick = useHandleStepClick();
