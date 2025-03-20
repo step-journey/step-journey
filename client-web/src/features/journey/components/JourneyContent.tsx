@@ -1,9 +1,7 @@
 import { Block, isJourneyBlock } from "@/features/block/types";
 import { useCurrentStepBlock } from "@/features/block/store/contentStore";
-import {
-  BlockRenderer,
-  RenderingArea,
-} from "@/features/block/renderers/BlockRenderer";
+import { BlockRenderer } from "@/features/block/renderers/BlockRenderer";
+import { RenderingArea } from "@/features/block/constants/renderingAreaConstants";
 
 interface Props {
   journeyBlock: Block;

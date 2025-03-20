@@ -1,9 +1,9 @@
-// src/features/journey/components/DraggableStep.tsx
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { BlockRenderer, RenderingArea } from "@/features/block/renderers";
+import { BlockRenderer } from "@/features/block/renderers";
 import { Block } from "@/features/block/types";
 import { DND_TYPES } from "@/features/journey/constants/dndTypes";
+import { RenderingArea } from "@/features/block/constants/renderingAreaConstants";
 
 interface DraggableStepProps {
   id: string;

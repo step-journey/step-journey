@@ -4,14 +4,7 @@ import { JourneyBlockSidebarRenderer } from "./implementations/journey/JourneyBl
 import { StepGroupBlockSidebarRenderer } from "./implementations/stepGroup/StepGroupBlockSidebarRenderer";
 import { StepBlockSidebarRenderer } from "./implementations/step/StepBlockSidebarRenderer";
 import { StepBlockJourneyContentRenderer } from "./implementations/step/StepBlockJourneyContentRenderer";
-
-/**
- * 렌더링 영역 타입
- */
-export enum RenderingArea {
-  SIDEBAR = "sidebar",
-  CONTENT = "content",
-}
+import { RenderingArea } from "../constants/renderingAreaConstants";
 
 /**
  * 블록 렌더러 속성

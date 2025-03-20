@@ -16,7 +16,7 @@ import {
   StepBlock,
 } from "@/features/block/types";
 import React from "react";
-import { BlockRenderer, RenderingArea } from "@/features/block/renderers";
+import { BlockRenderer } from "@/features/block/renderers";
 import { useJourneyActions } from "../hooks/useJourneyActions";
 import { useParams } from "react-router-dom";
 import {
@@ -31,6 +31,7 @@ import { StepDropIndicator } from "./StepDropIndicator";
 import { DraggableStepGroup } from "./DraggableStepGroup";
 import { StepGroupDropIndicator } from "./StepGroupDropIndicator";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
+import { RenderingArea } from "@/features/block/constants/renderingAreaConstants";
 
 interface Props {
   journeyBlock: Block;
