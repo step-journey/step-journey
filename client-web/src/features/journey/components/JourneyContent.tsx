@@ -1,5 +1,5 @@
 import { Block, isJourneyBlock } from "@/features/block/types";
-import { useCurrentStep } from "@/features/block/store/contentStore";
+import { useCurrentStepBlock } from "@/features/block/store/contentStore";
 import {
   BlockRenderer,
   RenderingArea,
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function JourneyContent({ journeyBlock }: Props) {
-  const currentStep = useCurrentStep();
+  const currentStepBlock = useCurrentStepBlock();
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-6">
@@ -18,9 +18,9 @@ export function JourneyContent({ journeyBlock }: Props) {
         <div>Invalid journey block</div>
       ) : (
         <div className="h-full">
-          {currentStep && (
+          {currentStepBlock && (
             <BlockRenderer
-              block={currentStep}
+              block={currentStepBlock}
               area={RenderingArea.CONTENT}
               journeyId={journeyBlock.id}
             />

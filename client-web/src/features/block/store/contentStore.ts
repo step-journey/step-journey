@@ -10,14 +10,14 @@ import { StepBlock } from "../types";
  * - 키워드 강조 설정
  */
 interface ContentState {
-  currentStep: StepBlock | null; // 현재 활성화된 스텝
-  allSteps: StepBlock[]; // 모든 스텝 목록
+  currentStepBlock: StepBlock | null; // 현재 활성화된 스텝
+  allStepBlocks: StepBlock[]; // 모든 스텝 목록
   highlightKeywords: boolean; // 키워드 강조 여부
 }
 
 interface ContentActions {
-  setCurrentStep: (step: StepBlock | null) => void; // 현재 스텝 설정
-  setAllSteps: (steps: StepBlock[]) => void; // 모든 스텝 설정
+  setCurrentStepBlock: (step: StepBlock | null) => void; // 현재 스텝 설정
+  setAllStepBlocks: (steps: StepBlock[]) => void; // 모든 스텝 설정
   setHighlightKeywords: (highlight: boolean) => void; // 키워드 강조 설정
   updateState: (partial: Partial<ContentState>) => void; // 여러 상태 동시 업데이트
 }
@@ -26,19 +26,19 @@ export const useContentStore = create<ContentState & ContentActions>()(
   devtools(
     immer((set) => ({
       // 상태
-      currentStep: null,
-      allSteps: [],
+      currentStepBlock: null,
+      allStepBlocks: [],
       highlightKeywords: true,
 
       // 액션
-      setCurrentStep: (step) =>
+      setCurrentStepBlock: (step) =>
         set((state) => {
-          state.currentStep = step;
+          state.currentStepBlock = step;
         }),
 
-      setAllSteps: (steps) =>
+      setAllStepBlocks: (steps) =>
         set((state) => {
-          state.allSteps = steps;
+          state.allStepBlocks = steps;
         }),
 
       setHighlightKeywords: (highlight) =>
@@ -57,8 +57,9 @@ export const useContentStore = create<ContentState & ContentActions>()(
 );
 
 // 선택자 함수
-export const useCurrentStep = () =>
-  useContentStore((state) => state.currentStep);
-export const useAllSteps = () => useContentStore((state) => state.allSteps);
+export const useCurrentStepBlock = () =>
+  useContentStore((state) => state.currentStepBlock);
+export const useAllSteps = () =>
+  useContentStore((state) => state.allStepBlocks);
 export const useHighlightKeywords = () =>
   useContentStore((state) => state.highlightKeywords);

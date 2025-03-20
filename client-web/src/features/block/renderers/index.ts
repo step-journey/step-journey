@@ -12,4 +12,4 @@ export * from "./implementations/journey/JourneySidebarRenderer";
 export * from "./implementations/journey/JourneyContentRenderer";
 export * from "./implementations/stepGroup/StepGroupSidebarRenderer";
 export * from "./implementations/step/StepSidebarRenderer";
-export * from "./implementations/step/StepContentRenderer";
+export * from "./implementations/step/StepJourneyContentRenderer";

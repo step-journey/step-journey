@@ -1,4 +1,3 @@
-// src/features/block/renderers/implementations/step/StepContentRenderer.tsx
 import React from "react";
 import { StepBlock, isStepBlock } from "../../../types";
 import { EditableStepTitle } from "../../../components/EditableStepTitle";
@@ -14,7 +13,7 @@ interface StepContentRendererProps {
 /**
  * Step 블록의 콘텐츠 렌더러
  */
-export const StepContentRenderer: React.FC<StepContentRendererProps> = ({
+export const StepJourneyContentRenderer: React.FC<StepContentRendererProps> = ({
   block,
   journeyId,
 }) => {

@@ -82,8 +82,8 @@ export default function JourneyPage() {
       // 상태 초기화 - 새로운 journeyId로 이동할 때 상태를 리셋
       setCurrentStepOrder(0);
       updateContentState({
-        currentStep: null,
-        allSteps: [],
+        currentStepBlock: null,
+        allStepBlocks: [],
         highlightKeywords: true,
       });
       setCurrentStepId(undefined);
@@ -115,8 +115,8 @@ export default function JourneyPage() {
 
       // 콘텐츠 스토어 상태 업데이트
       updateContentState({
-        currentStep: sortedStepBlocks[currentStepOrder] || null,
-        allSteps: sortedStepBlocks,
+        currentStepBlock: sortedStepBlocks[currentStepOrder] || null,
+        allStepBlocks: sortedStepBlocks,
         highlightKeywords: true,
       });
 

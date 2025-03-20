@@ -4,7 +4,7 @@ import { JourneySidebarRenderer } from "./implementations/journey/JourneySidebar
 import { JourneyContentRenderer } from "./implementations/journey/JourneyContentRenderer";
 import { StepGroupSidebarRenderer } from "./implementations/stepGroup/StepGroupSidebarRenderer";
 import { StepSidebarRenderer } from "./implementations/step/StepSidebarRenderer";
-import { StepContentRenderer } from "./implementations/step/StepContentRenderer"; // 추가
+import { StepJourneyContentRenderer } from "./implementations/step/StepJourneyContentRenderer";
 
 /**
  * 렌더링 영역 타입
@@ -106,7 +106,9 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
             <RenderError message="Step 블록을 렌더링하려면 Journey ID가 필요합니다." />
           );
         }
-        return <StepContentRenderer block={block} journeyId={journeyId} />;
+        return (
+          <StepJourneyContentRenderer block={block} journeyId={journeyId} />
+        );
       }
       break;
   }
