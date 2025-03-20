@@ -24,6 +24,8 @@ import {
   CodeBlock,
   TableBlock,
   ImageBlock,
+  ColumnBlock,
+  ColumnListBlock,
 } from "../types";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
 
@@ -53,6 +55,15 @@ type BlockNoteGenericBlock = BlockNoDefaults<
   DefaultInlineContentSchema,
   DefaultStyleSchema
 >;
+
+// 멀티컬럼 타입을 위한 확장 인터페이스
+interface ExtendedBlockNoteBlock {
+  id: string;
+  type: string;
+  props?: Record<string, any>;
+  content?: any;
+  children?: ExtendedBlockNoteBlock[];
+}
 
 /**
  * BlockNote 인라인 콘텐츠를 StepJourney 인라인 콘텐츠로 변환
@@ -284,13 +295,21 @@ interface BlockNoteProps {
   caption?: string;
   showPreview?: boolean;
   previewWidth?: number;
+  width?: number; // 추가: 컬럼 너비를 위한 속성
+}
+
+/**
+ * 멀티컬럼 블록인지 확인
+ */
+function isMultiColumnBlock(block: any): boolean {
+  return block.type === "columnList" || block.type === "column";
 }
 
 /**
  * BlockNote 블록을 StepJourney 커스텀 블록으로 변환
  */
 export function convertBlockNoteToCustomBlock(
-  blockNoteBlock: BlockNoteGenericBlock,
+  blockNoteBlock: BlockNoteGenericBlock | ExtendedBlockNoteBlock,
   parentId: string,
   createdBy: string = "user",
 ): Block {
@@ -308,7 +327,45 @@ export function convertBlockNoteToCustomBlock(
     updatedAt: now,
   };
 
-  // 블록 타입에 따른 변환
+  // 멀티컬럼 블록 처리
+  if (isMultiColumnBlock(blockNoteBlock)) {
+    if (blockNoteBlock.type === "columnList") {
+      const columnListBlock: ColumnListBlock = {
+        ...baseBlock,
+        type: BlockType.COLUMN_LIST,
+        properties: {}, // 컬럼 리스트는 특별한 속성이 없음
+      };
+
+      // 자식 컬럼들 처리
+      if (blockNoteBlock.children && blockNoteBlock.children.length > 0) {
+        columnListBlock.childrenIds = blockNoteBlock.children.map(
+          (child: ExtendedBlockNoteBlock) => child.id,
+        );
+      }
+
+      return columnListBlock;
+    } else if (blockNoteBlock.type === "column") {
+      const props = blockNoteBlock.props || {};
+      const columnBlock: ColumnBlock = {
+        ...baseBlock,
+        type: BlockType.COLUMN,
+        properties: {
+          width: props.width ?? 1, // 기본 너비는 1
+        },
+      };
+
+      // 자식 블록들 처리
+      if (blockNoteBlock.children && blockNoteBlock.children.length > 0) {
+        columnBlock.childrenIds = blockNoteBlock.children.map(
+          (child: ExtendedBlockNoteBlock) => child.id,
+        );
+      }
+
+      return columnBlock;
+    }
+  }
+
+  // 기존 블록 타입에 따른 변환
   switch (blockNoteBlock.type) {
     case "paragraph": {
       const props = blockNoteBlock.props as BlockNoteProps;
@@ -562,12 +619,32 @@ export function convertBlockNoteToCustomBlock(
  */
 export function convertCustomToBlockNoteBlock(
   customBlock: Block,
-): BlockNoteGenericBlock {
+): BlockNoteGenericBlock | ExtendedBlockNoteBlock {
   // 공통 블록 속성
   const baseBlockNote = {
     id: customBlock.id,
     children: [] as BlockNoteGenericBlock[],
   };
+
+  // 멀티컬럼 블록 처리
+  if (customBlock.type === BlockType.COLUMN_LIST) {
+    return {
+      ...baseBlockNote,
+      type: "columnList",
+      props: {},
+      content: undefined,
+    } as unknown as ExtendedBlockNoteBlock;
+  } else if (customBlock.type === BlockType.COLUMN) {
+    const columnBlock = customBlock as ColumnBlock;
+    return {
+      ...baseBlockNote,
+      type: "column",
+      props: {
+        width: columnBlock.properties.width || 1,
+      },
+      content: undefined,
+    } as unknown as ExtendedBlockNoteBlock;
+  }
 
   // 블록 타입에 따른 변환
   switch (customBlock.type) {
@@ -727,7 +804,7 @@ export function convertCustomToBlockNoteBlock(
  * @returns 변환된 모든 블록의 배열
  */
 export function convertBlockNoteTreeToCustomBlocks(
-  blockNoteBlocks: BlockNoteGenericBlock[],
+  blockNoteBlocks: (BlockNoteGenericBlock | ExtendedBlockNoteBlock)[],
   parentId: string,
   createdBy: string = "user",
 ): Block[] {
@@ -782,7 +859,7 @@ export function convertBlockNoteTreeToCustomBlocks(
 export function buildBlockNoteTree(
   customBlock: Block,
   allBlocks: Block[],
-): BlockNoteGenericBlock {
+): BlockNoteGenericBlock | ExtendedBlockNoteBlock {
   // 현재 블록을 BlockNote 형식으로 변환
   const blockNoteBlock = convertCustomToBlockNoteBlock(customBlock);
 
@@ -806,7 +883,7 @@ export function buildBlockNoteTree(
 export function getBlockNoteBlocksFromStep(
   stepBlock: Block,
   allBlocks: Block[],
-): BlockNoteGenericBlock[] {
+): (BlockNoteGenericBlock | ExtendedBlockNoteBlock)[] {
   // 스텝 블록의 자식 블록들 가져오기
   const contentBlocks = stepBlock.childrenIds
     .map((childId) => allBlocks.find((block) => block.id === childId))
@@ -821,7 +898,7 @@ export function getBlockNoteBlocksFromStep(
  * (모든 중첩 블록을 평면화하여 저장 가능한 형태로 변환)
  */
 export async function prepareBlocksForSaving(
-  blockNoteBlocks: BlockNoteGenericBlock[],
+  blockNoteBlocks: (BlockNoteGenericBlock | ExtendedBlockNoteBlock)[],
   parentId: string,
   createdBy: string = "user",
 ): Promise<Block[]> {
