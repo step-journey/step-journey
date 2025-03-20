@@ -1,3 +1,4 @@
+// src/features/block/renderers/implementations/step/StepContentRenderer.tsx
 import React from "react";
 import { StepBlock, isStepBlock } from "../../../types";
 import { EditableStepTitle } from "../../../components/EditableStepTitle";
@@ -38,13 +39,15 @@ export const StepContentRenderer: React.FC<StepContentRendererProps> = ({
 
   return (
     <div className="w-full">
-      <EditableStepTitle
-        stepId={block.id}
-        value={block.properties.title || ""}
-        onBlur={handleTitleBlur}
-        className="mb-3 text-2xl font-bold"
-        placeholder="제목 없음"
-      />
+      <div className="px-6">
+        <EditableStepTitle
+          stepId={block.id}
+          value={block.properties.title || ""}
+          onBlur={handleTitleBlur}
+          className="text-2xl font-bold"
+          placeholder="제목 없음"
+        />
+      </div>
 
       <BlockEditor key={`${journeyId}-${block.id}`} block={block} />
     </div>
