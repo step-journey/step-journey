@@ -4,7 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PATH from "@/constants/path";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { Block, BlockType } from "@/features/block/types";
+import {
+  Block,
+  BlockType,
+  JourneyBlock,
+  StepBlock,
+} from "@/features/block/types";
 import {
   createBlock,
   deleteBlockTree,
@@ -15,6 +20,10 @@ import {
   generateBlockId,
 } from "@/features/block/utils/blockUtils";
 import { JourneyData } from "@/features/journey/types/serviceTypes";
+import {
+  GROUP_ORDER_MULTIPLIER,
+  ORDER_INITIAL_GAP,
+} from "@/features/journey/constants/orderConstants";
 
 export function useJourneyActions() {
   const navigate = useNavigate();
@@ -294,7 +303,8 @@ export function useJourneyActions() {
         return null;
       }
 
-      const { allBlocks, sortedStepBlocks } = journeyData;
+      const { allBlocks } = journeyData;
+      const journeyBlock = journeyData.journeyBlock;
       const groupBlock = allBlocks.find((block: Block) => block.id === groupId);
 
       // throw 대신 early return 사용
@@ -304,13 +314,44 @@ export function useJourneyActions() {
         return null;
       }
 
-      // 2. 새 Step의 order 결정
-      const nextOrder = sortedStepBlocks.length;
+      // 2. step group 의 base order 계산
+      const stepGroupBaseOrder = calculateStepGroupBaseOrder(
+        journeyBlock,
+        groupId,
+        allBlocks,
+      );
 
-      // 3. 새 Step ID 생성
+      // 3. 그룹 내 스텝들 찾기
+      const stepsInGroup = allBlocks.filter(
+        (block) => block.parentId === groupId && block.type === BlockType.STEP,
+      ) as StepBlock[];
+
+      // 4. 다음 스텝 order 계산 (그룹 내 스텝이 없으면 그룹 기준값, 있으면 마지막 스텝 이후)
+      let nextOrder = stepGroupBaseOrder; // 기본값은 그룹 기준값
+
+      if (stepsInGroup.length > 0) {
+        // 현재 순서에 따라 정렬
+        const sortedGroupSteps = [...stepsInGroup].sort(
+          (a, b) =>
+            (typeof a.properties.order === "number" ? a.properties.order : 0) -
+            (typeof b.properties.order === "number" ? b.properties.order : 0),
+        );
+
+        // 마지막 스텝의 order 값 가져오기
+        const lastStep = sortedGroupSteps[sortedGroupSteps.length - 1];
+        const lastOrder =
+          typeof lastStep.properties.order === "number"
+            ? lastStep.properties.order
+            : stepGroupBaseOrder;
+
+        // 다음 스텝은 마지막 스텝 이후에 위치
+        nextOrder = lastOrder + ORDER_INITIAL_GAP;
+      }
+
+      // 5. 새 Step ID 생성
       const stepId = generateBlockId();
 
-      // 4. 기본 스텝 생성
+      // 6. 기본 스텝 생성 (order 값에 그룹 오프셋 적용)
       const newStep: Partial<Block> = {
         id: stepId,
         type: BlockType.STEP,
@@ -319,32 +360,32 @@ export function useJourneyActions() {
         createdBy: "user",
         properties: {
           title: "새 단계",
-          order: nextOrder,
+          order: nextOrder, // 그룹 위치를 고려한 order 값
         },
       };
 
-      // 5. 기본 문단 블록 생성
+      // 7. 기본 문단 블록 생성
       const defaultParagraphBlock = createDefaultParagraphBlock(stepId);
 
-      // 6. 관계 설정
+      // 8. 관계 설정
       newStep.childrenIds = [defaultParagraphBlock.id];
 
-      // 7. 부모 그룹 블록 업데이트
+      // 9. 부모 그룹 블록 업데이트
       await updateBlock({
         id: groupId,
         childrenIds: [...(groupBlock.childrenIds || []), stepId],
       });
 
-      // 8. DB에 저장
+      // 10. DB에 저장
       await createBlock(newStep);
       await createBlock(defaultParagraphBlock);
 
-      // 9. 리스트 새로고침
+      // 11. 리스트 새로고침
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
 
-      // 10. 새로 추가된 Step 데이터 조회
+      // 12. 새로 추가된 Step 데이터 조회
       const updatedData = await queryClient.fetchQuery<JourneyData>({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
@@ -354,7 +395,7 @@ export function useJourneyActions() {
         return { stepId, order: -1 }; // 인덱스를 찾지 못했을 경우
       }
 
-      // 11. 새로 추가된 Step의 order 찾기
+      // 13. 새로 추가된 Step의 order 찾기
       const newStepOrder = updatedData.sortedStepBlocks.findIndex(
         (step) => step.id === stepId,
       );
@@ -462,6 +503,33 @@ export function useJourneyActions() {
     } finally {
       setIsDeletingStep(false);
     }
+  };
+
+  /**
+   * 특정 그룹의 기준 order 값을 계산하는 함수
+   * 여정 내 그룹의 위치에 따라 적절한 order 오프셋 반환
+   */
+  const calculateStepGroupBaseOrder = (
+    journeyBlock: JourneyBlock | Block | null | undefined,
+    groupId: string,
+    allBlocks: Block[],
+  ): number => {
+    if (!journeyBlock) return 0;
+
+    // Step Group 만 필터링
+    const stepGroupIds = journeyBlock.childrenIds.filter((id) => {
+      const block = allBlocks.find((b) => b.id === id);
+      return block && block.type === BlockType.STEP_GROUP;
+    });
+
+    // 현재 그룹의 인덱스 찾기
+    const groupIndex = stepGroupIds.indexOf(groupId);
+
+    // 그룹을 찾지 못하거나 첫 번째 그룹인 경우 0 반환
+    if (groupIndex === -1) return 0;
+
+    // GROUP_ORDER_MULTIPLIER 를 곱하여 기준 order 값 반환
+    return groupIndex * GROUP_ORDER_MULTIPLIER;
   };
 
   return {

@@ -14,6 +14,11 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { DND_TYPES } from "@/features/journey/constants/dndTypes";
+import {
+  GROUP_ORDER_MULTIPLIER,
+  ORDER_INITIAL_GAP,
+  REBALANCING_THRESHOLD,
+} from "../constants/orderConstants";
 
 // 드롭 타겟 위치를 나타내는 타입
 interface DropTargetPosition {
@@ -40,9 +45,6 @@ interface UseDragAndDropProps {
   onExpandGroup?: (groupId: string) => void;
 }
 
-// 정렬 관련 상수
-const ORDER_INITIAL_GAP = 1.0; // 스텝 간 기본 간격 (정수로 유지)
-const REBALANCING_THRESHOLD = 100; // 이 횟수 이상 스텝 이동 시 전체 재정렬 수행
 let movesWithoutRebalancing = 0; // 재정렬 없이 진행된 이동 횟수
 
 export const useDragAndDrop = ({
@@ -358,8 +360,50 @@ export const useDragAndDrop = ({
     }
   };
 
+  // 해당 그룹에 속한 모든 스텝의 order 값을 기준 값(baseOrder)을 기준으로 업데이트
+  const updateStepOrdersInGroup = async (
+    groupId: string,
+    baseOrder: number,
+  ) => {
+    // 해당 그룹에 속한 모든 스텝 블록 찾기
+    const stepsInGroup = allBlocks.filter(
+      (block) => block.parentId === groupId && block.type === BlockType.STEP,
+    ) as StepBlock[];
+
+    if (stepsInGroup.length === 0) return;
+
+    // 현재 순서에 따라 정렬
+    const sortedSteps = [...stepsInGroup].sort(
+      (a, b) =>
+        (typeof a.properties.order === "number" ? a.properties.order : 0) -
+        (typeof b.properties.order === "number" ? b.properties.order : 0),
+    );
+
+    // 타입스크립트 안전성을 위한 추가 체크
+    if (sortedSteps.length === 0) return;
+
+    // 각 스텝의 상대적 위치를 유지하면서 새 order 값 계산 (한번에 업데이트)
+    const updatePromises = sortedSteps.map((step, index) => {
+      // 간단하게 인덱스 기반 순서 사용
+      const newOrder = baseOrder + index * ORDER_INITIAL_GAP;
+
+      return updateBlock({
+        id: step.id,
+        properties: {
+          order: newOrder,
+        },
+      });
+    });
+
+    await Promise.all(updatePromises);
+
+    console.log(
+      `그룹 ${groupId}의 모든 스텝 순서가 baseOrder=${baseOrder}으로 업데이트됨`,
+    );
+  };
+
   /**
-   * 스텝 그룹 순서 재배치
+   * 스텝 그룹 순서 재배치 및 그룹 내 스텝 순서 업데이트
    */
   const reorderStepGroups = async (groupId: string, targetIndex: number) => {
     if (!journeyId) return;
@@ -386,8 +430,8 @@ export const useDragAndDrop = ({
     const newStepGroupIds = [...stepGroupIds];
 
     if (currentIndex < targetIndex) {
-      // 아래로 이동하는 경우 (targetIndex 가 이미 변경된 배열 기준이므로 조정 필요)
-      // 요소 제거 후 배열이 앞으로 당겨지므로, targetIndex 를 1 감소시켜 정확한 위치에 삽입
+      // 아래로 이동하는 경우 (targetIndex가 이미 변경된 배열 기준이므로 조정 필요)
+      // 요소 제거 후 배열이 앞으로 당겨지므로, targetIndex를 1 감소시켜 정확한 위치에 삽입
       // 1. 먼저 현재 항목 제거
       newStepGroupIds.splice(currentIndex, 1);
       // 2. 목표 위치에 삽입 (목표 위치 조정)
@@ -414,6 +458,18 @@ export const useDragAndDrop = ({
       id: journeyId,
       childrenIds: newChildrenIds,
     });
+
+    // 이제 각 그룹 내의 스텝들의 order 값을 업데이트
+    // 그룹 순서에 따라 스텝들의 전역 order 값이 결정되도록 그룹별로 큰 간격을 둠
+    const updatePromises = newStepGroupIds.map(async (gId, groupIndex) => {
+      // 각 그룹에 큰 간격의 기준 order 값 할당
+      const baseOrder = groupIndex * GROUP_ORDER_MULTIPLIER;
+
+      // 해당 그룹에 속한 모든 스텝의 order 값 업데이트
+      await updateStepOrdersInGroup(gId, baseOrder);
+    });
+
+    await Promise.all(updatePromises);
   };
 
   /**
@@ -566,7 +622,7 @@ export const useDragAndDrop = ({
       // 스텝 그룹 드래그 종료 처리
       else if (draggedStepGroupBlockId && dropGroupTargetIndex !== null) {
         if (over.data.current?.type === DND_TYPES.STEP_GROUP_GAP) {
-          // 그룹 순서 재배치
+          // 그룹 순서 재배치 - 여기서 그룹에 속한 스텝들의 order도 함께 업데이트
           await reorderStepGroups(
             draggedStepGroupBlockId,
             dropGroupTargetIndex,
