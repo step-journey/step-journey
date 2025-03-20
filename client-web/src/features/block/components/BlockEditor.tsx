@@ -37,15 +37,17 @@ interface JourneyData {
 interface BlockEditorProps {
   block: StepBlock;
   onSave?: () => void;
+  onLastSavedChange?: (lastSaved: Date | null) => void;
   readOnly?: boolean;
 }
 
 export function BlockEditor({
   block,
   onSave,
+  onLastSavedChange,
   readOnly = false,
 }: BlockEditorProps) {
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [, setLastSaved] = useState<Date | null>(null);
   const allBlocks = useAllBlocks();
   const queryClient = useQueryClient();
 
@@ -155,8 +157,14 @@ export function BlockEditor({
         await convertAndSaveBlockNoteContent(block, topLevelBlocks as any);
 
         // 저장 성공 후 상태 업데이트
-        setLastSaved(new Date());
+        const now = new Date();
+        setLastSaved(now);
         lastSavedContentRef.current = currentContent;
+
+        // 마지막 저장 시간을 부모 컴포넌트에 전달
+        if (onLastSavedChange) {
+          onLastSavedChange(now);
+        }
 
         // 변경 사항 저장 후 관련 Journey 쿼리 무효화를 제한적으로 수행
         if (rootJourneyId) {
@@ -188,7 +196,16 @@ export function BlockEditor({
     }, 2000); // 2초마다 변경사항 확인 및 저장
 
     return () => clearInterval(saveInterval);
-  }, [editor, block, onSave, readOnly, queryClient, rootJourneyId, allBlocks]);
+  }, [
+    editor,
+    block,
+    onSave,
+    onLastSavedChange,
+    readOnly,
+    queryClient,
+    rootJourneyId,
+    allBlocks,
+  ]);
 
   return (
     <div className="editor-container">
@@ -204,11 +221,6 @@ export function BlockEditor({
           getItems={getSlashMenuItems}
         />
       </BlockNoteView>
-      {lastSaved && !readOnly && (
-        <div className="text-xs text-gray-400 mt-1 text-right">
-          마지막 저장: {lastSaved.toLocaleTimeString()}
-        </div>
-      )}
     </div>
   );
 }

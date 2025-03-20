@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { StepBlock, isStepBlock } from "../../../types";
 import { BlockEditor } from "../../../components/BlockEditor";
 
@@ -13,38 +13,30 @@ interface StepBlockContentRendererProps {
 export const StepBlockJourneyContentRenderer: React.FC<
   StepBlockContentRendererProps
 > = ({ block, journeyId }) => {
-  // const queryClient = useQueryClient();
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // 타입 가드
   if (!isStepBlock(block)) {
     return <div>Invalid step block</div>;
   }
 
-  // 제목 업데이트 후 쿼리 무효화
-  // const handleTitleBlur = async () => {
-  //   try {
-  //     // 쿼리 캐시 무효화 (UI 업데이트 위함)
-  //     await queryClient.invalidateQueries({
-  //       queryKey: QUERY_KEYS.journeys.detail(journeyId),
-  //     });
-  //   } catch (error) {
-  //     console.error("Failed to invalidate queries:", error);
-  //   }
-  // };
-
   return (
-    <div className="w-full">
-      {/*<div className="px-6">*/}
-      {/*  <EditableStepTitle*/}
-      {/*    stepId={block.id}*/}
-      {/*    value={block.properties.title || ""}*/}
-      {/*    onBlur={handleTitleBlur}*/}
-      {/*    className="text-2xl font-bold"*/}
-      {/*    placeholder="제목 없음"*/}
-      {/*  />*/}
-      {/*</div>*/}
+    <div className="w-full flex justify-center">
+      <div className="w-full max-w-6xl px-4 sm:px-6 md:px-8">
+        <div className="flex justify-end mb-1">
+          <span className="text-xs text-gray-400">
+            {lastSaved
+              ? `${lastSaved.toLocaleTimeString()}에 저장됨`
+              : "편집시 자동 저장"}
+          </span>
+        </div>
 
-      <BlockEditor key={`${journeyId}-${block.id}`} block={block} />
+        <BlockEditor
+          key={`${journeyId}-${block.id}`}
+          block={block}
+          onLastSavedChange={setLastSaved}
+        />
+      </div>
     </div>
   );
 };
