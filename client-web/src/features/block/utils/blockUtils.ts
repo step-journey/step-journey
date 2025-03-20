@@ -69,7 +69,7 @@ export function filterAndSortStepBlocks(allBlocks: Block[]): StepBlock[] {
 }
 
 /**
- * 기본 문단 블록 생성
+ * 기본 paragraph 블록 생성
  *
  * @param parentId 부모 블록 ID
  * @returns 기본 문단 블록 객체
@@ -94,7 +94,7 @@ export function createDefaultParagraphBlock(parentId: string): Block {
     content: [
       {
         type: "text",
-        text: "내용을 입력하세요...",
+        text: "",
         styles: {},
       },
     ],
