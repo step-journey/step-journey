@@ -38,18 +38,18 @@ interface BlockEditorProps {
   block: StepBlock;
   onSave?: () => void;
   onLastSavedChange?: (lastSaved: Date | null) => void;
-  readOnly?: boolean;
 }
 
 export function BlockEditor({
   block,
   onSave,
   onLastSavedChange,
-  readOnly = false,
 }: BlockEditorProps) {
   const [, setLastSaved] = useState<Date | null>(null);
   const allBlocks = useAllBlocks();
   const queryClient = useQueryClient();
+  // 에디터 뷰에 접근하기 위한 ref 추가
+  const editorViewRef = useRef<HTMLDivElement>(null);
 
   // 마지막 저장된 내용을 참조로 저장
   const lastSavedContentRef = useRef<string>("");
@@ -134,8 +134,6 @@ export function BlockEditor({
 
   // 자동 저장 타이머
   useEffect(() => {
-    if (readOnly) return;
-
     const saveInterval = setInterval(async () => {
       try {
         // 이미 저장 중이면 건너뜁니다
@@ -201,19 +199,37 @@ export function BlockEditor({
     block,
     onSave,
     onLastSavedChange,
-    readOnly,
     queryClient,
     rootJourneyId,
     allBlocks,
   ]);
 
+  // 에디터 자동 포커스 기능
+  useEffect(() => {
+    // 컴포넌트가 완전히 마운트된 후 포커스 설정을 위해 약간의 지연
+    const timeoutId = setTimeout(() => {
+      try {
+        // BlockNote API 를 통한 포커스 시도
+        if (editor && typeof editor.focus === "function") {
+          editor.focus();
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to focus editor:", error);
+      }
+    }, 100); // 약간의 지연을 두어 컴포넌트가 완전히 마운트된 후 포커스하도록 함
+
+    return () => clearTimeout(timeoutId);
+  }, [editor]);
+
   return (
     <div className="editor-container">
       <BlockNoteView
         editor={editor}
-        editable={!readOnly}
+        // editable={}
         className="min-h-[200px] border rounded-md overflow-auto"
         slashMenu={false} // 기본 슬래시 메뉴 비활성화 (커스텀 메뉴 사용)
+        ref={editorViewRef}
       >
         {/* 멀티컬럼 지원이 포함된 커스텀 슬래시 메뉴 추가 */}
         <SuggestionMenuController
