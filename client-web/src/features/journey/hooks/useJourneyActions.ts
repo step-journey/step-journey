@@ -9,6 +9,10 @@ import {
   BlockType,
   JourneyBlock,
   StepBlock,
+  isStepGroupBlock,
+  getStepGroupTitle,
+  isStepBlock,
+  getStepTitle,
 } from "@/features/block/types";
 import {
   createBlock,
@@ -24,6 +28,38 @@ import {
   GROUP_ORDER_MULTIPLIER,
   ORDER_INITIAL_GAP,
 } from "@/features/journey/constants/orderConstants";
+
+/**
+ * 중복을 피하는 title 생성 함수
+ * @param baseTitle 기본 title (예: "새 그룹", "새 단계")
+ * @param existingTitles 이미 존재하는 title 배열
+ * @returns 중복되지 않는 새 title
+ */
+const generateUniqueTitle = (
+  baseTitle: string,
+  existingTitles: string[],
+): string => {
+  // 기본 title 이 존재하지 않으면 그대로 사용
+  if (!existingTitles.includes(baseTitle)) {
+    return baseTitle;
+  }
+
+  // 정규식으로 "기본제목 (숫자)" 패턴 찾기
+  const regex = new RegExp(`^${baseTitle} \\((\\d+)\\)$`);
+
+  // 기존 title 에서 숫자 추출하여 최대값 찾기
+  let maxNum = 0;
+  for (const title of existingTitles) {
+    const match = title.match(regex);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      maxNum = Math.max(maxNum, num);
+    }
+  }
+
+  // 다음 번호 사용
+  return `${baseTitle} (${maxNum + 1})`;
+};
 
 export function useJourneyActions() {
   const navigate = useNavigate();
@@ -174,16 +210,33 @@ export function useJourneyActions() {
         return null;
       }
 
-      const { journeyBlock } = journeyData;
+      const { journeyBlock, allBlocks } = journeyData;
       if (!journeyBlock) {
         toast.error("Journey 블록을 찾을 수 없습니다.");
         return null;
       }
 
-      // 2. 새 step group ID 생성
+      // 2. 모든 step group 의 title 수집
+      const stepGroupTitles = allBlocks
+        .filter(
+          (block) =>
+            block.type === BlockType.STEP_GROUP && block.parentId === journeyId,
+        )
+        .map((block) => {
+          // 타입 가드와 유틸리티 함수 사용
+          if (isStepGroupBlock(block)) {
+            return getStepGroupTitle(block);
+          }
+          return "";
+        });
+
+      // 3. 고유한 제목 생성
+      const newTitle = generateUniqueTitle("새 그룹", stepGroupTitles);
+
+      // 4. 새 step group ID 생성
       const groupId = generateBlockId();
 
-      // 3. 기본 step group 생성
+      // 5. 기본 step group 생성
       const stepNewGroup: Partial<Block> = {
         id: groupId,
         type: BlockType.STEP_GROUP,
@@ -191,20 +244,20 @@ export function useJourneyActions() {
         childrenIds: [],
         createdBy: "user",
         properties: {
-          title: "새 그룹",
+          title: newTitle,
         },
       };
 
-      // 4. 부모 Journey block 업데이트
+      // 6. 부모 Journey block 업데이트
       await updateBlock({
         id: journeyId,
         childrenIds: [...(journeyBlock.childrenIds || []), groupId],
       });
 
-      // 5. DB에 저장
+      // 7. DB에 저장
       await createBlock(stepNewGroup);
 
-      // 6. 리스트 새로고침
+      // 8. 리스트 새로고침
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
@@ -314,19 +367,36 @@ export function useJourneyActions() {
         return null;
       }
 
-      // 2. step group 의 base order 계산
+      // 2. 그룹 내 모든 step의 제목 수집
+      const stepsInGroupTitles = allBlocks
+        .filter(
+          (block) =>
+            block.parentId === groupId && block.type === BlockType.STEP,
+        )
+        .map((block) => {
+          // 타입 가드와 유틸리티 함수 사용
+          if (isStepBlock(block)) {
+            return getStepTitle(block);
+          }
+          return "";
+        });
+
+      // 3. 고유한 제목 생성
+      const newTitle = generateUniqueTitle("새 단계", stepsInGroupTitles);
+
+      // 4. step group 의 base order 계산
       const stepGroupBaseOrder = calculateStepGroupBaseOrder(
         journeyBlock,
         groupId,
         allBlocks,
       );
 
-      // 3. 그룹 내 스텝들 찾기
+      // 5. 그룹 내 스텝들 찾기
       const stepsInGroup = allBlocks.filter(
         (block) => block.parentId === groupId && block.type === BlockType.STEP,
       ) as StepBlock[];
 
-      // 4. 다음 스텝 order 계산 (그룹 내 스텝이 없으면 그룹 기준값, 있으면 마지막 스텝 이후)
+      // 6. 다음 스텝 order 계산 (그룹 내 스텝이 없으면 그룹 기준값, 있으면 마지막 스텝 이후)
       let nextOrder = stepGroupBaseOrder; // 기본값은 그룹 기준값
 
       if (stepsInGroup.length > 0) {
@@ -348,10 +418,10 @@ export function useJourneyActions() {
         nextOrder = lastOrder + ORDER_INITIAL_GAP;
       }
 
-      // 5. 새 Step ID 생성
+      // 7. 새 Step ID 생성
       const stepId = generateBlockId();
 
-      // 6. 기본 스텝 생성 (order 값에 그룹 오프셋 적용)
+      // 8. 기본 스텝 생성 (order 값에 그룹 오프셋 적용)
       const newStep: Partial<Block> = {
         id: stepId,
         type: BlockType.STEP,
@@ -359,33 +429,33 @@ export function useJourneyActions() {
         childrenIds: [],
         createdBy: "user",
         properties: {
-          title: "새 단계",
+          title: newTitle,
           order: nextOrder, // 그룹 위치를 고려한 order 값
         },
       };
 
-      // 7. 기본 문단 블록 생성
+      // 9. 기본 문단 블록 생성
       const defaultParagraphBlock = createDefaultParagraphBlock(stepId);
 
-      // 8. 관계 설정
+      // 10. 관계 설정
       newStep.childrenIds = [defaultParagraphBlock.id];
 
-      // 9. 부모 그룹 블록 업데이트
+      // 11. 부모 그룹 블록 업데이트
       await updateBlock({
         id: groupId,
         childrenIds: [...(groupBlock.childrenIds || []), stepId],
       });
 
-      // 10. DB에 저장
+      // 12. DB에 저장
       await createBlock(newStep);
       await createBlock(defaultParagraphBlock);
 
-      // 11. 리스트 새로고침
+      // 13. 리스트 새로고침
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
 
-      // 12. 새로 추가된 Step 데이터 조회
+      // 14. 새로 추가된 Step 데이터 조회
       const updatedData = await queryClient.fetchQuery<JourneyData>({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
@@ -395,7 +465,7 @@ export function useJourneyActions() {
         return { stepId, order: -1 }; // 인덱스를 찾지 못했을 경우
       }
 
-      // 13. 새로 추가된 Step의 order 찾기
+      // 15. 새로 추가된 Step의 order 찾기
       const newStepOrder = updatedData.sortedStepBlocks.findIndex(
         (step) => step.id === stepId,
       );
