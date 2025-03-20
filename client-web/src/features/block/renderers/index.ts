@@ -9,7 +9,6 @@ export * from "./BlockRenderer";
 
 // 블록 렌더러 구현체 재내보내기
 export * from "./implementations/journey/JourneySidebarRenderer";
-export * from "./implementations/journey/JourneyContentRenderer";
 export * from "./implementations/stepGroup/StepGroupSidebarRenderer";
 export * from "./implementations/step/StepSidebarRenderer";
 export * from "./implementations/step/StepJourneyContentRenderer";

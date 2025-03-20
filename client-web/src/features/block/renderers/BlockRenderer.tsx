@@ -1,7 +1,6 @@
 import React from "react";
 import { Block, BlockType } from "../types";
 import { JourneySidebarRenderer } from "./implementations/journey/JourneySidebarRenderer";
-import { JourneyContentRenderer } from "./implementations/journey/JourneyContentRenderer";
 import { StepGroupSidebarRenderer } from "./implementations/stepGroup/StepGroupSidebarRenderer";
 import { StepSidebarRenderer } from "./implementations/step/StepSidebarRenderer";
 import { StepJourneyContentRenderer } from "./implementations/step/StepJourneyContentRenderer";
@@ -78,10 +77,11 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
     case BlockType.JOURNEY:
       if (area === RenderingArea.SIDEBAR) {
         return <JourneySidebarRenderer block={block} />;
-      } else if (area === RenderingArea.CONTENT) {
-        return <JourneyContentRenderer block={block} />;
+      } else {
+        return (
+          <RenderError message="Journey 블록은 SIDEBAR 영역에서만 랜더링 될 수 있습니다." />
+        );
       }
-      break;
 
     case BlockType.STEP_GROUP:
       if (area === RenderingArea.SIDEBAR) {
