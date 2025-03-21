@@ -19,6 +19,7 @@ import { EditableStepGroupTitle } from "@/features/block/components/EditableStep
 import { useParams } from "react-router-dom";
 import { useJourneyActions } from "@/features/journey/hooks/useJourneyActions";
 import { DeleteStepGroupModal } from "@/features/journey/components/DeleteStepGroupModal";
+import { useIsEditMode } from "@/features/block/store/editorStore";
 
 interface StepGroupBlockSidebarRendererProps {
   block: StepGroupBlock;
@@ -37,6 +38,8 @@ export const StepGroupBlockSidebarRenderer: React.FC<
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { deleteStepGroup, isDeletingStepGroup } = useJourneyActions();
+  // 편집 모드 상태 가져오기
+  const isEditMode = useIsEditMode();
 
   // 타입 가드
   if (!isStepGroupBlock(block)) {
@@ -54,18 +57,21 @@ export const StepGroupBlockSidebarRenderer: React.FC<
 
   // 편집 버튼 클릭 핸들러
   const handleEditClick = (e: React.MouseEvent) => {
+    if (!isEditMode) return; // View Mode에서는 작동 안 함
     e.stopPropagation(); // 펼치기/접기 방지
     setIsEditing(true);
   };
 
   // 편집 완료 버튼 클릭 핸들러
   const handleCompleteClick = (e: React.MouseEvent) => {
+    if (!isEditMode) return; // View Mode에서는 작동 안 함
     e.stopPropagation(); // 펼치기/접기 방지
     setIsEditing(false);
   };
 
   // 삭제 버튼 클릭 핸들러
   const handleDeleteClick = (e: React.MouseEvent) => {
+    if (!isEditMode) return; // View Mode에서는 작동 안 함
     e.stopPropagation(); // 펼치기/접기 방지
     setIsDeleteModalOpen(true);
   };
@@ -109,7 +115,7 @@ export const StepGroupBlockSidebarRenderer: React.FC<
           {/* 아이콘 컨테이너 - 편집/완료 및 화살표 아이콘 함께 배치 */}
           <div className="flex items-center">
             {/* 편집 또는 완료 아이콘 - 상태에 따라 표시 */}
-            {isEditing ? (
+            {isEditMode && isEditing ? (
               // 편집 중일 때는 저장 아이콘 표시 (무채색)
               <button
                 onClick={handleCompleteClick}
@@ -120,6 +126,8 @@ export const StepGroupBlockSidebarRenderer: React.FC<
               </button>
             ) : (
               // 편집 중이 아닐 때는 호버 시 편집 아이콘 표시 (무채색)
+              // Edit Mode이고 hover 된 경우에만 수정/삭제 아이콘 표시
+              isEditMode &&
               isHovered && (
                 <>
                   <button

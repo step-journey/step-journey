@@ -4,6 +4,7 @@ import { updateBlock } from "../services/blockService";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useIsEditMode } from "../store/editorStore";
 
 interface EditableJourneyTitleProps {
   journeyId: string;
@@ -24,6 +25,7 @@ export function EditableJourneyTitle({
   const isInitialMount = useRef(true);
   const lastValueRef = useRef(value);
   const queryClient = useQueryClient();
+  const isEditMode = useIsEditMode();
 
   // 초기화 및 외부 값 변경 처리
   useEffect(() => {
@@ -95,16 +97,16 @@ export function EditableJourneyTitle({
   return (
     <div
       ref={titleRef}
-      contentEditable
+      contentEditable={isEditMode} // View Mode에서는 편집 불가능하게 설정
       suppressContentEditableWarning
       className={cn(
         "outline-none border-none focus:ring-0 focus:ring-offset-0 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none leading-normal break-words",
         className,
       )}
       data-placeholder={placeholder}
-      onInput={handleInput}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
+      onInput={isEditMode ? handleInput : undefined} // View Mode에서는 input 이벤트 비활성화
+      onBlur={isEditMode ? handleBlur : undefined} // View Mode에서는 blur 이벤트 비활성화
+      onKeyDown={isEditMode ? handleKeyDown : undefined} // View Mode에서는 키 이벤트 비활성화
     />
   );
 }

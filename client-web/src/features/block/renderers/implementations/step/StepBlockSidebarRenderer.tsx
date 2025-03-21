@@ -14,6 +14,7 @@ import { updateBlock } from "@/features/block/services/blockService";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { cn } from "@/lib/utils";
+import { useIsEditMode } from "@/features/block/store/editorStore";
 
 interface StepBlockSidebarRendererProps {
   block: StepBlock;
@@ -30,6 +31,7 @@ export const StepBlockSidebarRenderer: React.FC<
   );
   const { deleteStep, isDeletingStep } = useJourneyActions();
   const queryClient = useQueryClient();
+  const isEditMode = useIsEditMode();
 
   // Local states for hover effect and delete modal
   const [isHovered, setIsHovered] = useState(false);
@@ -58,6 +60,7 @@ export const StepBlockSidebarRenderer: React.FC<
 
   // Step 삭제 핸들러
   const handleDeleteClick = (e: React.MouseEvent) => {
+    if (!isEditMode) return; // View Mode에서는 작동 안 함
     e.stopPropagation(); // 클릭 이벤트 버블링 방지
     setIsDeleteModalOpen(true);
   };
@@ -76,6 +79,8 @@ export const StepBlockSidebarRenderer: React.FC<
 
   // 더블 클릭으로 편집 모드로 전환
   const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!isEditMode) return; // View Mode에서는 작동 안 함
+
     e.stopPropagation(); // 클릭 이벤트 버블링 방지
     if (!isEditing) {
       setEditTitle(stepTitle);
@@ -131,7 +136,7 @@ export const StepBlockSidebarRenderer: React.FC<
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {isEditing ? (
+        {isEditMode && isEditing ? (
           // 편집 모드 UI
           <div
             className="flex items-center w-full"
@@ -167,7 +172,7 @@ export const StepBlockSidebarRenderer: React.FC<
             <span className="truncate flex-1">{stepTitle}</span>
 
             {/* 삭제 아이콘 - hover 된 경우에만 표시 */}
-            {isHovered && (
+            {isEditMode && isHovered && (
               <button
                 onClick={handleDeleteClick}
                 className="transition-opacity duration-150 ml-1 p-1 rounded-sm hover:bg-gray-200 text-gray-500 hover:text-red-500 flex-shrink-0 w-6 h-6 flex items-center justify-center"

@@ -4,6 +4,7 @@ import { updateBlock } from "../services/blockService";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useIsEditMode } from "../store/editorStore";
 
 interface EditableStepGroupTitleProps {
   groupId: string;
@@ -32,6 +33,7 @@ export function EditableStepGroupTitle({
   const isInitialMount = useRef(true);
   const lastValueRef = useRef(value);
   const queryClient = useQueryClient();
+  const isGlobalEditMode = useIsEditMode();
 
   // 초기화 및 외부 값 변경 처리
   useEffect(() => {
@@ -49,7 +51,7 @@ export function EditableStepGroupTitle({
 
   // 편집 모드가 활성화될 때 포커스 및 텍스트 전체 선택 설정
   useEffect(() => {
-    if (isEditing && titleRef.current) {
+    if (isEditing && isGlobalEditMode && titleRef.current) {
       // 편집 모드가 활성화되면 포커스 설정
       titleRef.current.focus();
 
@@ -60,7 +62,7 @@ export function EditableStepGroupTitle({
       selection?.removeAllRanges();
       selection?.addRange(range);
     }
-  }, [isEditing]);
+  }, [isEditing, isGlobalEditMode]);
 
   // 입력 이벤트 처리
   const handleInput = () => {
@@ -147,7 +149,7 @@ export function EditableStepGroupTitle({
   const titleStyle = cn(
     "text-sm transition-all duration-150",
     className,
-    isEditing
+    isEditing && isGlobalEditMode
       ? "bg-blue-50 border border-blue-200 rounded px-2 py-0.5 min-w-[100px] outline-none focus-visible:outline-none focus:ring-0 ring-0 focus-visible:ring-0"
       : "truncate",
   );
@@ -155,14 +157,16 @@ export function EditableStepGroupTitle({
   return (
     <div
       ref={titleRef}
-      contentEditable={isEditing}
-      suppressContentEditableWarning={isEditing}
+      contentEditable={isEditing && isGlobalEditMode} // 로컬 편집 모드와 글로벌 편집 모드가 모두 활성화된 경우에만 편집 가능
+      suppressContentEditableWarning={isEditing && isGlobalEditMode}
       className={titleStyle}
       data-placeholder={placeholder}
-      onInput={isEditing ? handleInput : undefined}
-      onBlur={isEditing ? handleBlur : undefined}
-      onKeyDown={isEditing ? handleKeyDown : undefined}
-      onClick={isEditing ? (e) => e.stopPropagation() : undefined}
+      onInput={isEditing && isGlobalEditMode ? handleInput : undefined}
+      onBlur={isEditing && isGlobalEditMode ? handleBlur : undefined}
+      onKeyDown={isEditing && isGlobalEditMode ? handleKeyDown : undefined}
+      onClick={
+        isEditing && isGlobalEditMode ? (e) => e.stopPropagation() : undefined
+      }
     >
       {value || placeholder}
     </div>
