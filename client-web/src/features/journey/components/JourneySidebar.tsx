@@ -15,7 +15,7 @@ import {
   StepContainerMap,
   StepBlock,
 } from "@/features/block/types";
-import React from "react";
+import React, { useRef, useState, useLayoutEffect } from "react";
 import { BlockRenderer } from "@/features/block/renderers";
 import { useJourneyActions } from "../hooks/useJourneyActions";
 import { useParams } from "react-router-dom";
@@ -34,6 +34,7 @@ import { StepGroupDropIndicator } from "./StepGroupDropIndicator";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { RenderingArea } from "@/features/block/constants/renderingAreaConstants";
 import { useIsEditMode } from "@/features/block/store/editorStore";
+import { cn } from "@/lib/utils";
 
 interface Props {
   journeyBlock: Block;
@@ -57,6 +58,22 @@ export function JourneySidebar({
   );
   const currentStepId = useCurrentStepId();
   const isEditMode = useIsEditMode();
+
+  // 버튼 컨테이너의 높이를 관리하는 state
+  const [buttonHeight, setButtonHeight] = useState("auto");
+  const [, setInitialized] = useState(false);
+  const buttonsRef = useRef<HTMLDivElement>(null);
+  const hiddenButtonsRef = useRef<HTMLDivElement>(null);
+
+  // 버튼 컨테이너의 실제 높이 측정 - DOM이 그려지기 전에 실행
+  useLayoutEffect(() => {
+    if (hiddenButtonsRef.current) {
+      // 숨겨진 버튼 컨테이너에서 실제 높이 측정
+      const height = `${hiddenButtonsRef.current.scrollHeight}px`;
+      setButtonHeight(height);
+      setInitialized(true);
+    }
+  }, []);
 
   // 드래그 앤 드롭 기능을 위한 커스텀 훅
   const {
@@ -218,6 +235,32 @@ export function JourneySidebar({
   // 스텝 추가 버튼 비활성화 여부 결정
   const disableAddStepButton = stepGroupBlocks.length === 0;
 
+  // 버튼 컨텐츠 컴포넌트 - 중복 코드 방지를 위해 추출
+  const ButtonsContent = () => (
+    <div className="space-y-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full justify-start text-xs text-muted-foreground hover:text-foreground transition-colors duration-300"
+        onClick={handleAddStepGroup}
+        disabled={isAddingStepGroup}
+      >
+        <IconFolderPlus size={14} className="mr-1" />
+        스텝 그룹 추가
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full justify-start text-xs text-muted-foreground hover:text-foreground transition-colors duration-300"
+        onClick={handleAddNewStep}
+        disabled={isAddingStep || disableAddStepButton}
+      >
+        <IconPlus size={14} className="mr-1" />새 스텝 추가
+      </Button>
+    </div>
+  );
+
   return (
     <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
       {/* 상단: 제목 + 검색창 */}
@@ -245,31 +288,36 @@ export function JourneySidebar({
 
       {/* 스텝 목록 스크롤 영역 */}
       <ScrollArea className="flex-1 py-2 pl-4 pr-1">
-        {/* 스텝 그룹 추가 버튼과 스텝 추가 버튼 */}
-        {isEditMode && (
-          <div className="space-y-2 mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
-              onClick={handleAddStepGroup}
-              disabled={isAddingStepGroup}
-            >
-              <IconFolderPlus size={14} className="mr-1" />
-              스텝 그룹 추가
-            </Button>
+        {/* 숨겨진 버튼 컨테이너 - 높이 측정용 (화면에 보이지 않음) */}
+        <div
+          ref={hiddenButtonsRef}
+          className="absolute opacity-0 pointer-events-none"
+          aria-hidden="true"
+        >
+          <ButtonsContent />
+        </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
-              onClick={handleAddNewStep}
-              disabled={isAddingStep || disableAddStepButton}
-            >
-              <IconPlus size={14} className="mr-1" />새 스텝 추가
-            </Button>
+        {/* 버튼 컨테이너 - 애니메이션 적용 */}
+        <div
+          ref={buttonsRef}
+          className={cn(
+            "overflow-hidden transition-all duration-500 ease-in-out mb-4",
+            isEditMode ? "opacity-100" : "opacity-0",
+          )}
+          style={{
+            height: isEditMode ? buttonHeight : "0px",
+            marginBottom: isEditMode ? "1rem" : "0",
+          }}
+        >
+          <div
+            className="transform transition-transform duration-500 ease-out"
+            style={{
+              transform: isEditMode ? "translateY(0)" : "translateY(-8px)",
+            }}
+          >
+            <ButtonsContent />
           </div>
-        )}
+        </div>
 
         {/* 드래그 앤 드롭을 위한 DndContext */}
         <DndContext
