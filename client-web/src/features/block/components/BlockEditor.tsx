@@ -12,6 +12,7 @@ import "@/styles/text-editor.css";
 import { Block, JourneyBlock, StepBlock } from "@/features/block/types";
 import { convertAndSaveBlockNoteContent } from "@/features/block/services/blockService";
 import { useAllBlocks } from "@/features/block/store/blockStore";
+import { useIsEditMode } from "@/features/block/store/editorStore";
 import { toast } from "sonner";
 import { getBlockNoteBlocksFromStep } from "@/features/block/utils/blockNoteConverter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -50,6 +51,8 @@ export function BlockEditor({
   const queryClient = useQueryClient();
   // 에디터 뷰에 접근하기 위한 ref 추가
   const editorViewRef = useRef<HTMLDivElement>(null);
+  // 편집 모드 상태 가져오기
+  const isEditMode = useIsEditMode();
 
   // 마지막 저장된 내용을 참조로 저장
   const lastSavedContentRef = useRef<string>("");
@@ -134,6 +137,9 @@ export function BlockEditor({
 
   // 자동 저장 타이머
   useEffect(() => {
+    // 편집 모드가 아닐 때는 저장 타이머를 설정하지 않음
+    if (!isEditMode) return;
+
     const saveInterval = setInterval(async () => {
       try {
         // 이미 저장 중이면 건너뜁니다
@@ -195,6 +201,7 @@ export function BlockEditor({
 
     return () => clearInterval(saveInterval);
   }, [
+    isEditMode,
     editor,
     block,
     onSave,
@@ -206,6 +213,9 @@ export function BlockEditor({
 
   // 에디터 자동 포커스 기능
   useEffect(() => {
+    // 편집 모드가 아닐 때는 포커스를 설정하지 않음
+    if (!isEditMode) return;
+
     // 컴포넌트가 완전히 마운트된 후 포커스 설정을 위해 약간의 지연
     const timeoutId = setTimeout(() => {
       try {
@@ -220,18 +230,17 @@ export function BlockEditor({
     }, 100); // 약간의 지연을 두어 컴포넌트가 완전히 마운트된 후 포커스하도록 함
 
     return () => clearTimeout(timeoutId);
-  }, [editor]);
+  }, [isEditMode, editor]);
 
   return (
     <div className="editor-container">
       <BlockNoteView
         editor={editor}
-        // editable={}
+        editable={isEditMode}
         className="min-h-[200px] border rounded-md overflow-auto"
         slashMenu={false} // 기본 슬래시 메뉴 비활성화 (커스텀 메뉴 사용)
         ref={editorViewRef}
       >
-        {/* 멀티컬럼 지원이 포함된 커스텀 슬래시 메뉴 추가 */}
         <SuggestionMenuController
           triggerCharacter={"/"}
           getItems={getSlashMenuItems}
