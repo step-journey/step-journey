@@ -10,10 +10,7 @@
     min-height: 200px;
 }
 
-.bn-editor {
-    padding: 0.5rem 1rem 1rem 1rem;
-    padding-inline: 28px !important;
-}
+.bn-editor {}
 
 .bn-container .public-DraftEditor-content {
     min-height: 150px;

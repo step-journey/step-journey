@@ -13,7 +13,7 @@ interface StepBlockContentRendererProps {
 export const StepBlockJourneyContentRenderer: React.FC<
   StepBlockContentRendererProps
 > = ({ block, journeyId }) => {
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [, setLastSaved] = useState<Date | null>(null);
 
   // 타입 가드
   if (!isStepBlock(block)) {
@@ -22,15 +22,7 @@ export const StepBlockJourneyContentRenderer: React.FC<
 
   return (
     <div className="w-full flex justify-center">
-      <div className="w-full max-w-6xl px-4 sm:px-6 md:px-8">
-        <div className="flex justify-end mb-1">
-          <span className="text-xs text-gray-400">
-            {lastSaved
-              ? `${lastSaved.toLocaleTimeString()}에 저장됨`
-              : "편집시 자동 저장"}
-          </span>
-        </div>
-
+      <div className="w-full max-w-screen-2xl px-4 sm:px-6 md:px-8">
         <BlockEditor
           key={`${journeyId}-${block.id}`}
           block={block}
