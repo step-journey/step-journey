@@ -338,7 +338,11 @@ export function useJourneyActions() {
   };
 
   // Step 추가 함수
-  const addStep = async (journeyId: string, groupId: string) => {
+  const addStep = async (
+    journeyId: string,
+    groupId: string,
+    afterStepId?: string,
+  ) => {
     if (!journeyId || !groupId) return null;
 
     setIsAddingStep(true);
@@ -396,7 +400,7 @@ export function useJourneyActions() {
         (block) => block.parentId === groupId && block.type === BlockType.STEP,
       ) as StepBlock[];
 
-      // 6. 다음 스텝 order 계산 (그룹 내 스텝이 없으면 그룹 기준값, 있으면 마지막 스텝 이후)
+      // 6. 다음 스텝 order 계산
       let nextOrder = stepGroupBaseOrder; // 기본값은 그룹 기준값
 
       if (stepsInGroup.length > 0) {
@@ -407,15 +411,48 @@ export function useJourneyActions() {
             (typeof b.properties.order === "number" ? b.properties.order : 0),
         );
 
-        // 마지막 스텝의 order 값 가져오기
-        const lastStep = sortedGroupSteps[sortedGroupSteps.length - 1];
-        const lastOrder =
-          typeof lastStep.properties.order === "number"
-            ? lastStep.properties.order
-            : stepGroupBaseOrder;
+        if (afterStepId) {
+          // 특정 스텝 다음에 추가하는 경우
+          const afterStep = sortedGroupSteps.find(
+            (step) => step.id === afterStepId,
+          );
+          const afterStepIndex = sortedGroupSteps.findIndex(
+            (step) => step.id === afterStepId,
+          );
 
-        // 다음 스텝은 마지막 스텝 이후에 위치
-        nextOrder = lastOrder + ORDER_INITIAL_GAP;
+          if (afterStep && afterStepIndex > -1) {
+            const afterOrder =
+              typeof afterStep.properties.order === "number"
+                ? afterStep.properties.order
+                : stepGroupBaseOrder;
+
+            if (afterStepIndex < sortedGroupSteps.length - 1) {
+              // 뒤에 다른 스텝이 있는 경우, 중간 위치 계산
+              const nextStep = sortedGroupSteps[afterStepIndex + 1];
+              // 다음 변수 이름을 nextStepOrder로 변경하여 변수 충돌 해결
+              const nextStepOrder =
+                typeof nextStep.properties.order === "number"
+                  ? nextStep.properties.order
+                  : afterOrder + ORDER_INITIAL_GAP;
+
+              // 중간 값 계산
+              nextOrder = (afterOrder + nextStepOrder) / 2;
+            } else {
+              // 마지막 스텝인 경우
+              nextOrder = afterOrder + ORDER_INITIAL_GAP;
+            }
+          }
+        } else {
+          // 마지막 스텝의 order 값 가져오기
+          const lastStep = sortedGroupSteps[sortedGroupSteps.length - 1];
+          const lastOrder =
+            typeof lastStep.properties.order === "number"
+              ? lastStep.properties.order
+              : stepGroupBaseOrder;
+
+          // 다음 스텝은 마지막 스텝 이후에 위치
+          nextOrder = lastOrder + ORDER_INITIAL_GAP;
+        }
       }
 
       // 7. 새 Step ID 생성

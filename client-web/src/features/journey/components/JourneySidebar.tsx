@@ -22,6 +22,7 @@ import { useParams } from "react-router-dom";
 import {
   useExpandedGroups,
   useToggleGroup,
+  useCurrentStepId,
 } from "@/features/block/store/sidebarStore";
 import { useBlockStore } from "@/features/block/store/blockStore";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
@@ -32,6 +33,7 @@ import { DraggableStepGroup } from "./DraggableStepGroup";
 import { StepGroupDropIndicator } from "./StepGroupDropIndicator";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { RenderingArea } from "@/features/block/constants/renderingAreaConstants";
+import { useIsEditMode } from "@/features/block/store/editorStore";
 
 interface Props {
   journeyBlock: Block;
@@ -53,6 +55,8 @@ export function JourneySidebar({
   const setCurrentStepOrder = useBlockStore(
     (state) => state.setCurrentStepOrder,
   );
+  const currentStepId = useCurrentStepId();
+  const isEditMode = useIsEditMode();
 
   // 드래그 앤 드롭 기능을 위한 커스텀 훅
   const {
@@ -137,15 +141,45 @@ export function JourneySidebar({
     return elements;
   };
 
-  // 유틸리티 함수
-  const handleAddStep = async (groupId: string) => {
-    if (journeyId) {
-      const result = await addStep(journeyId, groupId);
+  // 현재 스텝 다음에 스텝 추가 핸들러
+  const handleAddNewStep = async () => {
+    if (!journeyId) return;
+
+    let targetGroupId: string | undefined;
+    let afterStepId: string | undefined;
+
+    // 1. 현재 선택된 스텝이 있는 경우, 그 다음에 추가
+    if (currentStepId) {
+      const currentStep = allBlocks.find(
+        (block) => block.id === currentStepId,
+      ) as StepBlock | undefined;
+
+      if (currentStep) {
+        targetGroupId = currentStep.parentId;
+        afterStepId = currentStepId;
+      }
+    }
+
+    // 2. 현재 선택된 스텝이 없는 경우, childrenIds 배열 순서대로 첫 번째 그룹에 추가
+    if (!targetGroupId && isJourneyBlock(journeyBlock)) {
+      // Journey Block의 childrenIds는 UI에 표시되는 순서와 동일함
+      for (const childId of journeyBlock.childrenIds) {
+        const childBlock = allBlocks.find((block) => block.id === childId);
+        if (childBlock && childBlock.type === BlockType.STEP_GROUP) {
+          targetGroupId = childId;
+          break; // 첫 번째 스텝 그룹을 찾으면 즉시 반복 종료
+        }
+      }
+    }
+
+    // 대상 그룹이 결정되었으면 스텝 추가
+    if (targetGroupId) {
+      const result = await addStep(journeyId, targetGroupId, afterStepId);
 
       if (result && result.order !== -1) {
         // 그룹이 접혀있으면 펼치기
-        if (!expandedGroups[groupId]) {
-          toggleGroup(groupId);
+        if (!expandedGroups[targetGroupId]) {
+          toggleGroup(targetGroupId);
         }
 
         // 새로 추가된 스텝으로 이동
@@ -181,6 +215,9 @@ export function JourneySidebar({
         block && block.type === BlockType.STEP_GROUP,
     ) as Block[];
 
+  // 스텝 추가 버튼 비활성화 여부 결정
+  const disableAddStepButton = stepGroupBlocks.length === 0;
+
   return (
     <aside className="flex flex-col border-r border-gray-200 bg-white w-[280px]">
       {/* 상단: 제목 + 검색창 */}
@@ -208,19 +245,31 @@ export function JourneySidebar({
 
       {/* 스텝 목록 스크롤 영역 */}
       <ScrollArea className="flex-1 py-2 pl-4 pr-1">
-        {/* 스텝 그룹 추가 버튼 */}
-        <div className="mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
-            onClick={handleAddStepGroup}
-            disabled={isAddingStepGroup}
-          >
-            <IconFolderPlus size={14} className="mr-1" />
-            스텝 그룹 추가
-          </Button>
-        </div>
+        {/* 스텝 그룹 추가 버튼과 스텝 추가 버튼 */}
+        {isEditMode && (
+          <div className="space-y-2 mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleAddStepGroup}
+              disabled={isAddingStepGroup}
+            >
+              <IconFolderPlus size={14} className="mr-1" />
+              스텝 그룹 추가
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleAddNewStep}
+              disabled={isAddingStep || disableAddStepButton}
+            >
+              <IconPlus size={14} className="mr-1" />새 스텝 추가
+            </Button>
+          </div>
+        )}
 
         {/* 드래그 앤 드롭을 위한 DndContext */}
         <DndContext
@@ -261,17 +310,6 @@ export function JourneySidebar({
                       <div className="step-items-container">
                         {renderStepBlocks(groupBlock)}
                       </div>
-
-                      {/* 스텝 추가 버튼 */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-xs text-muted-foreground hover:text-foreground mt-1"
-                        onClick={() => handleAddStep(groupBlock.id)}
-                        disabled={isAddingStep}
-                      >
-                        <IconPlus size={12} className="mr-1" />새 스텝 추가
-                      </Button>
                     </div>
                   )}
                 </div>
