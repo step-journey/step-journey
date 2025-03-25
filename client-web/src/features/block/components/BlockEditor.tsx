@@ -21,12 +21,13 @@ import {
   SuggestionMenuController,
   getDefaultReactSlashMenuItems,
 } from "@blocknote/react";
+
 import {
-  getMultiColumnSlashMenuItems,
-  multiColumnDropCursor,
-  locales as multiColumnLocales,
   withMultiColumn,
-} from "@blocknote/xl-multi-column";
+  multiColumnDropCursor,
+  getMultiColumnSlashMenuItems,
+  locales as multiColumnLocales,
+} from "@/features/block/extensions/multiColumn";
 
 // Journey 데이터 타입 정의
 interface JourneyData {
@@ -99,19 +100,13 @@ export function BlockEditor({
       dictionary: {
         ...locales.ko,
         multi_column: {
-          // 기존 멀티컬럼 한국어 번역을 가져와서 필요한 부분만 오버라이드
           ...multiColumnLocales.ko,
           slash_menu: {
-            // 필요한 부분만 오버라이드
             two_columns: {
               ...multiColumnLocales.ko.slash_menu.two_columns,
-              title: "2개의 열", // "두 열"을 "2개의 열"로 변경
-              subtext: "2개의 열 나란히", // 필요시 부제목도 변경
             },
             three_columns: {
               ...multiColumnLocales.ko.slash_menu.three_columns,
-              title: "3개의 열", // "세 열"을 "3개의 열"로 변경
-              subtext: "3개의 열 나란히",
             },
           },
         },
