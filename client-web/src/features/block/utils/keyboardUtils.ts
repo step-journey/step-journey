@@ -2,7 +2,11 @@ export function handleKeyboardShortcuts(
   e: KeyboardEvent,
   goPrev: () => void,
   goNext: () => void,
+  isEditMode: boolean,
 ) {
+  // 편집 모드에서는 키보드 단축키 비활성화
+  if (isEditMode) return;
+
   const target = e.target as HTMLElement;
 
   // 에디터 영역 내부인지 확인하는 방법들
@@ -29,6 +33,5 @@ export function handleKeyboardShortcuts(
   if (e.key === "ArrowRight" || e.key === "ArrowDown") {
     e.preventDefault();
     goNext();
-    return;
   }
 }

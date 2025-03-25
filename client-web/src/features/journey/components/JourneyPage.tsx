@@ -10,18 +10,15 @@ import { JourneyContent } from "./JourneyContent";
 import { JourneyFooter } from "./JourneyFooter";
 import { Button } from "@/components/ui/button";
 import PATH from "@/constants/path";
-
-// React Query 훅 사용
 import { useJourney } from "../hooks/useJourneys";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-
-// Zustand 스토어
 import { useBlockStore } from "@/features/block/store/blockStore";
 import { useContentStore } from "@/features/block/store/contentStore";
 import {
   useSidebarStore,
   useUpdateGroupsForCurrentStep,
 } from "@/features/block/store/sidebarStore";
+import { useIsEditMode } from "@/features/block/store/editorStore";
 import { handleKeyboardShortcuts } from "@/features/block/utils/keyboardUtils";
 import { DebugPanel } from "@/features/journey/components/DebugPanel";
 
@@ -30,6 +27,7 @@ export default function JourneyPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const prevJourneyIdRef = useRef<string | undefined>(journeyId);
+  const isEditMode = useIsEditMode();
 
   // Zustand 스토어에서 필요한 상태와 액션 가져오기
   const { setAllBlocks, setCurrentStepOrder, currentStepOrder } =
@@ -62,10 +60,10 @@ export default function JourneyPage() {
   // 키보드 단축키 등록 (편집 모드가 아닐 때만)
   useEffect(() => {
     const handler = (e: KeyboardEvent) =>
-      handleKeyboardShortcuts(e, goPrev, goNext);
+      handleKeyboardShortcuts(e, goPrev, goNext, isEditMode);
     window.addEventListener("keydown", handler, { passive: false });
     return () => window.removeEventListener("keydown", handler);
-  }, [goPrev, goNext]);
+  }, [goPrev, goNext, isEditMode]);
 
   // URL에서 journeyId가 변경될 때 애플리케이션 상태를 재설정하여
   // 다른 Journey로 이동할 때 깨끗한 상태에서 시작하도록 보장
@@ -172,7 +170,7 @@ export default function JourneyPage() {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4">
         <p>Journey를 불러오는 중 오류가 발생했습니다.</p>
-        <p className="text-red-500">{(error as Error).message}</p>
+        <p className="text-red-500">{error.message}</p>
         <Button onClick={() => navigate(PATH.HOME)}>홈으로 돌아가기</Button>
       </div>
     );
