@@ -8,6 +8,7 @@ interface DraggableStepGroupProps {
   block: Block;
   children: React.ReactNode;
   isDragOverlay?: boolean;
+  isEditMode?: boolean;
 }
 
 export function DraggableStepGroup({
@@ -15,6 +16,7 @@ export function DraggableStepGroup({
   block,
   children,
   isDragOverlay = false,
+  isEditMode,
 }: DraggableStepGroupProps) {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id,
@@ -22,13 +24,17 @@ export function DraggableStepGroup({
       type: DND_TYPES.DRAGGABLE_STEP_GROUP,
       block,
     },
+    disabled: !isEditMode, // 편집 모드가 아닐 경우 드래그 비활성화
   });
+
+  // 커서 스타일을 편집 모드에 따라 변경
+  const cursorClass = isEditMode ? "cursor-grab" : "cursor-default";
 
   return (
     <div
       ref={!isDragOverlay ? setNodeRef : undefined}
-      {...(!isDragOverlay ? { ...listeners, ...attributes } : {})}
-      className={`step-group-item ${isDragOverlay ? "drag-overlay" : ""}`}
+      {...(!isDragOverlay && isEditMode ? { ...listeners, ...attributes } : {})}
+      className={`step-group-item ${isDragOverlay ? "drag-overlay" : ""} ${cursorClass}`}
     >
       {children}
     </div>

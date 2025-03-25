@@ -43,6 +43,7 @@ interface DragAndDropState {
 interface UseDragAndDropProps {
   journeyId: string | undefined;
   allBlocks: Block[];
+  isEditMode?: boolean;
   onExpandGroup?: (groupId: string) => void;
 }
 
@@ -51,6 +52,7 @@ let movesWithoutRebalancing = 0; // 재정렬 없이 진행된 이동 횟수
 export const useDragAndDrop = ({
   journeyId,
   allBlocks,
+  isEditMode,
   onExpandGroup,
 }: UseDragAndDropProps) => {
   const queryClient = useQueryClient();
@@ -128,7 +130,7 @@ export const useDragAndDrop = ({
     setStateRaw(initialState);
   };
 
-  // 드래그 감지 센서 설정
+  // 드래그 감지 센서 설정 - 편집 모드가 아니면 활성화되지 않도록 수정
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -527,6 +529,9 @@ export const useDragAndDrop = ({
    * 드래그 시작 처리: 무엇을 드래그하기 시작했는지 기록
    */
   const handleDragStart = (event: DragStartEvent) => {
+    // 편집 모드가 아닌 경우 드래그 시작하지 않음
+    if (!isEditMode) return;
+
     const { active } = event;
     const activeData = active.data.current;
 
@@ -551,6 +556,9 @@ export const useDragAndDrop = ({
    * 드래그 오버 처리: 드래그 중인 요소가 어디에 있는지 추적하고 드롭 가능한 위치를 시각적으로 표시
    */
   const handleDragOver = (event: DragOverEvent) => {
+    // 편집 모드가 아닌 경우 처리하지 않음
+    if (!isEditMode) return;
+
     const { over } = event;
     if (!over) {
       // 드롭 가능한 영역 위에 없는 경우
@@ -600,6 +608,9 @@ export const useDragAndDrop = ({
    * 드래그 종료 처리: 항목이 드롭되었을 때 실제 데이터 변경을 수행
    */
   const handleDragEnd = async (event: DragEndEvent) => {
+    // 편집 모드가 아닌 경우 처리하지 않음
+    if (!isEditMode) return;
+
     const { active, over } = event;
 
     // 상태 저장 후 초기화 (드래그 작업 종료)
