@@ -14,6 +14,7 @@ type StepClickHandler = (stepId: string) => void;
 interface SidebarState {
   expandedGroups: Record<string, boolean>; // 펼쳐진 그룹 목록
   currentStepId?: string; // 현재 활성화된 스텝 ID
+  prevStepGroupId?: string; // 이전 스텝의 그룹 ID
   stepClickHandler: StepClickHandler; // 스텝 클릭 핸들러
 }
 
@@ -38,6 +39,7 @@ export const useSidebarStore = create<SidebarState & SidebarActions>()(
       // 상태
       expandedGroups: {},
       currentStepId: undefined,
+      prevStepGroupId: undefined,
       stepClickHandler: () => {}, // 기본 빈 핸들러
 
       // 액션
@@ -85,7 +87,7 @@ export const useSidebarStore = create<SidebarState & SidebarActions>()(
           });
         }),
 
-      // current step 에 따라 step group 상태 업데이트 - 수정됨
+      // current step 에 따라 step group 상태 업데이트
       updateGroupsForCurrentStep: (currentStepId, allBlocks) =>
         set((state) => {
           if (!currentStepId || allBlocks.length === 0) return;
@@ -100,17 +102,23 @@ export const useSidebarStore = create<SidebarState & SidebarActions>()(
           const currentStepGroupId = currentStep.parentId;
           if (!currentStepGroupId) return;
 
-          // 3. 모든 step group 접기
-          const allStepGroupIds = allBlocks
-            .filter((block) => block.type === BlockType.STEP_GROUP)
-            .map((block) => block.id);
+          // 3. 이전 그룹 ID와 현재 그룹 ID가 다른 경우에만 접기/펼치기 동작 수행
+          if (currentStepGroupId !== state.prevStepGroupId) {
+            // 3-1. 모든 step group 접기
+            const allStepGroupIds = allBlocks
+              .filter((block) => block.type === BlockType.STEP_GROUP)
+              .map((block) => block.id);
 
-          allStepGroupIds.forEach((groupId) => {
-            state.expandedGroups[groupId] = false;
-          });
+            allStepGroupIds.forEach((groupId) => {
+              state.expandedGroups[groupId] = false;
+            });
 
-          // 4. 현재 step group 만 펼치기
-          state.expandedGroups[currentStepGroupId] = true;
+            // 3-2. 현재 step group 만 펼치기
+            state.expandedGroups[currentStepGroupId] = true;
+
+            // 3-3. 이전 그룹 ID 업데이트
+            state.prevStepGroupId = currentStepGroupId;
+          }
         }),
     })),
     { name: "sidebar-store" },
