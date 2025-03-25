@@ -55,10 +55,14 @@ export const StepGroupBlockSidebarRenderer: React.FC<
   // 현재 스텝이 이 그룹에 속하는지 확인
   const isCurrentGroup = block.id === currentStepGroupId;
 
+  // 현재 스텝 그룹이 접혀있는 경우 푸른색 스타일 적용
+  const isCurrentCollapsedGroup = isCurrentGroup && !isExpanded;
+
   // 그룹 라벨 스타일
   let stepGroupTitleClass = `
     flex items-center h-8 px-2 cursor-pointer w-full
     rounded hover:bg-gray-100 justify-between
+    ${isCurrentCollapsedGroup ? "bg-gray-100" : ""}
   `;
 
   // 편집 버튼 클릭 핸들러
@@ -112,7 +116,8 @@ export const StepGroupBlockSidebarRenderer: React.FC<
             value={getStepGroupTitle(block)}
             className={cn(
               "text-sm truncate",
-              isCurrentGroup && "font-semibold", // 현재 스텝이 속한 스텝 그룹의 title 값은 semibold 처리
+              isCurrentGroup && "font-semibold", // 현재 스텝이 속한 그룹은 semibold 처리
+              isCurrentCollapsedGroup && "text-blue-600", // 현재 스텝이 속한 그룹이 접혀있으면 푸른색 적용
             )}
             placeholder="제목 없는 그룹"
             journeyId={journeyId || ""}
@@ -157,11 +162,21 @@ export const StepGroupBlockSidebarRenderer: React.FC<
               )
             )}
 
-            {/* 화살표 아이콘 - 항상 표시 (무채색) */}
+            {/* 화살표 아이콘 - 항상 표시 (현재 그룹이 접혀있는 경우 푸른색으로 표시) */}
             {isExpanded ? (
-              <IconChevronDown className="h-4 w-4 flex-shrink-0 text-gray-500" />
+              <IconChevronDown
+                className={cn(
+                  "h-4 w-4 flex-shrink-0",
+                  isCurrentCollapsedGroup ? "text-blue-600" : "text-gray-500",
+                )}
+              />
             ) : (
-              <IconChevronRight className="h-4 w-4 flex-shrink-0 text-gray-500" />
+              <IconChevronRight
+                className={cn(
+                  "h-4 w-4 flex-shrink-0",
+                  isCurrentCollapsedGroup ? "text-blue-600" : "text-gray-500",
+                )}
+              />
             )}
           </div>
         </div>
