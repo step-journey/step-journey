@@ -256,7 +256,7 @@ export function JourneySidebar({
         onClick={handleAddNewStep}
         disabled={isAddingStep || disableAddStepButton}
       >
-        <IconPlus size={14} className="mr-1" />새 스텝 추가
+        <IconPlus size={14} className="mr-1" />스텝 추가
       </Button>
     </div>
   );

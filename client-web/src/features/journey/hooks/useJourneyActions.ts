@@ -7,12 +7,11 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import {
   Block,
   BlockType,
-  JourneyBlock,
-  StepBlock,
-  isStepGroupBlock,
   getStepGroupTitle,
-  isStepBlock,
   getStepTitle,
+  isStepBlock,
+  isStepGroupBlock,
+  StepBlock,
 } from "@/features/block/types";
 import {
   createBlock,
@@ -24,10 +23,8 @@ import {
   generateBlockId,
 } from "@/features/block/utils/blockUtils";
 import { JourneyData } from "@/features/journey/types/serviceTypes";
-import {
-  GROUP_ORDER_MULTIPLIER,
-  ORDER_INITIAL_GAP,
-} from "@/features/journey/constants/orderConstants";
+import { ORDER_INITIAL_GAP } from "@/features/journey/constants/orderConstants";
+import { calculateStepGroupBaseOrder } from "@/features/journey/utils/journeyUtils";
 
 /**
  * 중복을 피하는 title 생성 함수
@@ -262,6 +259,12 @@ export function useJourneyActions() {
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
 
+      // 캐시를 강제로 새로고침하여 새 그룹이 반영되도록 함
+      await queryClient.fetchQuery<JourneyData>({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        staleTime: 0,
+      });
+
       toast.success("새 그룹이 추가되었습니다.");
       return { groupId };
     } catch (error) {
@@ -348,9 +351,15 @@ export function useJourneyActions() {
     setIsAddingStep(true);
 
     try {
-      // 1. 해당 그룹 블록 조회 - 타입 명시
+      // 캐시 무효화 먼저 수행
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      });
+
+      // 1. 해당 그룹 블록 조회 - 타입 명시 (staleTime: 0으로 설정하여 최신 데이터 강제로 가져오기)
       const journeyData = await queryClient.fetchQuery<JourneyData>({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        staleTime: 0,
       });
 
       // throw 대신 early return 사용
@@ -378,7 +387,6 @@ export function useJourneyActions() {
             block.parentId === groupId && block.type === BlockType.STEP,
         )
         .map((block) => {
-          // 타입 가드와 유틸리티 함수 사용
           if (isStepBlock(block)) {
             return getStepTitle(block);
           }
@@ -400,8 +408,8 @@ export function useJourneyActions() {
         (block) => block.parentId === groupId && block.type === BlockType.STEP,
       ) as StepBlock[];
 
-      // 6. 다음 스텝 order 계산
-      let nextOrder = stepGroupBaseOrder; // 기본값은 그룹 기준값
+      // 6. 다음 스텝의 상대적 order 계산 (그룹 내 위치)
+      let relativeOrder = 0; // 그룹 내 상대적 위치
 
       if (stepsInGroup.length > 0) {
         // 현재 순서에 따라 정렬
@@ -424,22 +432,21 @@ export function useJourneyActions() {
             const afterOrder =
               typeof afterStep.properties.order === "number"
                 ? afterStep.properties.order
-                : stepGroupBaseOrder;
+                : 0;
 
             if (afterStepIndex < sortedGroupSteps.length - 1) {
               // 뒤에 다른 스텝이 있는 경우, 중간 위치 계산
               const nextStep = sortedGroupSteps[afterStepIndex + 1];
-              // 다음 변수 이름을 nextStepOrder로 변경하여 변수 충돌 해결
               const nextStepOrder =
                 typeof nextStep.properties.order === "number"
                   ? nextStep.properties.order
                   : afterOrder + ORDER_INITIAL_GAP;
 
-              // 중간 값 계산
-              nextOrder = (afterOrder + nextStepOrder) / 2;
+              // 중간 값 계산 (그룹 내 상대적 위치만)
+              relativeOrder = (afterOrder + nextStepOrder) / 2;
             } else {
               // 마지막 스텝인 경우
-              nextOrder = afterOrder + ORDER_INITIAL_GAP;
+              relativeOrder = afterOrder + ORDER_INITIAL_GAP;
             }
           }
         } else {
@@ -448,17 +455,20 @@ export function useJourneyActions() {
           const lastOrder =
             typeof lastStep.properties.order === "number"
               ? lastStep.properties.order
-              : stepGroupBaseOrder;
+              : 0;
 
           // 다음 스텝은 마지막 스텝 이후에 위치
-          nextOrder = lastOrder + ORDER_INITIAL_GAP;
+          relativeOrder = lastOrder + ORDER_INITIAL_GAP;
         }
       }
 
       // 7. 새 Step ID 생성
       const stepId = generateBlockId();
 
-      // 8. 기본 스텝 생성 (order 값에 그룹 오프셋 적용)
+      // 8. 최종 order 값 계산 - 그룹 baseOrder + 스텝 상대적 위치
+      const finalOrder = stepGroupBaseOrder + relativeOrder;
+
+      // 9. 기본 스텝 생성 (order 값에 그룹 오프셋 적용)
       const newStep: Partial<Block> = {
         id: stepId,
         type: BlockType.STEP,
@@ -467,34 +477,37 @@ export function useJourneyActions() {
         createdBy: "user",
         properties: {
           title: newTitle,
-          order: nextOrder, // 그룹 위치를 고려한 order 값
+          order: finalOrder,
         },
       };
 
-      // 9. 기본 문단 블록 생성
+      // 10. 기본 문단 블록 생성
       const defaultParagraphBlock = createDefaultParagraphBlock(stepId);
 
-      // 10. 관계 설정
+      // 11. 관계 설정
       newStep.childrenIds = [defaultParagraphBlock.id];
 
-      // 11. 부모 그룹 블록 업데이트
+      // 12. 부모 그룹 블록 업데이트
+      const updatedChildrenIds = [...(groupBlock.childrenIds || []), stepId];
+
       await updateBlock({
         id: groupId,
-        childrenIds: [...(groupBlock.childrenIds || []), stepId],
+        childrenIds: updatedChildrenIds,
       });
 
-      // 12. DB에 저장
+      // 13. DB에 저장
       await createBlock(newStep);
       await createBlock(defaultParagraphBlock);
 
-      // 13. 리스트 새로고침
+      // 14. 리스트 새로고침
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
 
-      // 14. 새로 추가된 Step 데이터 조회
+      // 15. 새로 추가된 Step 데이터 조회 (force fresh fetch)
       const updatedData = await queryClient.fetchQuery<JourneyData>({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        staleTime: 0, // 최신 데이터 강제 가져오기
       });
 
       if (!updatedData) {
@@ -502,7 +515,7 @@ export function useJourneyActions() {
         return { stepId, order: -1 }; // 인덱스를 찾지 못했을 경우
       }
 
-      // 15. 새로 추가된 Step의 order 찾기
+      // 16. 새로 추가된 Step 의 order 찾기
       const newStepOrder = updatedData.sortedStepBlocks.findIndex(
         (step) => step.id === stepId,
       );
@@ -610,33 +623,6 @@ export function useJourneyActions() {
     } finally {
       setIsDeletingStep(false);
     }
-  };
-
-  /**
-   * 특정 그룹의 기준 order 값을 계산하는 함수
-   * 여정 내 그룹의 위치에 따라 적절한 order 오프셋 반환
-   */
-  const calculateStepGroupBaseOrder = (
-    journeyBlock: JourneyBlock | Block | null | undefined,
-    groupId: string,
-    allBlocks: Block[],
-  ): number => {
-    if (!journeyBlock) return 0;
-
-    // Step Group 만 필터링
-    const stepGroupIds = journeyBlock.childrenIds.filter((id) => {
-      const block = allBlocks.find((b) => b.id === id);
-      return block && block.type === BlockType.STEP_GROUP;
-    });
-
-    // 현재 그룹의 인덱스 찾기
-    const groupIndex = stepGroupIds.indexOf(groupId);
-
-    // 그룹을 찾지 못하거나 첫 번째 그룹인 경우 0 반환
-    if (groupIndex === -1) return 0;
-
-    // GROUP_ORDER_MULTIPLIER 를 곱하여 기준 order 값 반환
-    return groupIndex * GROUP_ORDER_MULTIPLIER;
   };
 
   return {

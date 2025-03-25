@@ -1,12 +1,12 @@
 import { useState } from "react";
 import {
+  closestCenter,
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
 } from "@dnd-kit/core";
 import { Block, BlockType, StepBlock } from "@/features/block/types";
 import { updateBlock } from "@/features/block/services/blockService";
@@ -19,6 +19,7 @@ import {
   ORDER_INITIAL_GAP,
   REBALANCING_THRESHOLD,
 } from "../constants/orderConstants";
+import { calculateStepGroupBaseOrder } from "@/features/journey/utils/journeyUtils";
 
 // 드롭 타겟 위치를 나타내는 타입
 interface DropTargetPosition {
@@ -244,15 +245,39 @@ export const useDragAndDrop = ({
         block.parentId === targetGroupId && block.type === BlockType.STEP,
     ) as StepBlock[];
 
+    // 해당 그룹의 base order 계산 (중요! 이 부분이 추가됨)
+    const journeyBlock = allBlocks.find(
+      (block) => block.type === BlockType.JOURNEY,
+    );
+
+    const stepGroupBaseOrder = calculateStepGroupBaseOrder(
+      journeyBlock,
+      targetGroupId,
+      allBlocks,
+    );
+
     // 현재 최대 순서값 계산
-    let lastOrder = 0;
+    let relativeOrder = 0;
     if (stepsInGroup.length > 0) {
       const orderValues = stepsInGroup
-        .map((step) => step.properties.order)
+        .map((step) => {
+          // 기존 order에서 base order를 제외한 상대적 위치만 고려
+          const order =
+            typeof step.properties.order === "number"
+              ? step.properties.order
+              : 0;
+          // 기존 스텝의 상대적 위치 계산 (큰 숫자에서 base order 제거)
+          const relativePos = Math.max(0, order - stepGroupBaseOrder);
+          return relativePos;
+        })
         .filter((order): order is number => typeof order === "number");
 
-      lastOrder = orderValues.length > 0 ? Math.max(...orderValues) : 0;
+      relativeOrder = orderValues.length > 0 ? Math.max(...orderValues) : 0;
+      relativeOrder += ORDER_INITIAL_GAP;
     }
+
+    // 최종 order 값 계산 (그룹 base order + 상대적 위치)
+    const finalOrder = stepGroupBaseOrder + relativeOrder;
 
     // 마지막 스텝 다음에 위치하도록 순서값 설정
     await updateBlock({
@@ -260,7 +285,7 @@ export const useDragAndDrop = ({
       parentId: targetGroupId,
       properties: {
         ...stepBlock.properties,
-        order: lastOrder + ORDER_INITIAL_GAP,
+        order: finalOrder,
       },
     });
 
@@ -276,6 +301,17 @@ export const useDragAndDrop = ({
     dropIndex: number,
     isSameGroup: boolean = false,
   ) => {
+    // 해당 그룹의 base order 계산 (중요! 이 부분이 추가됨)
+    const journeyBlock = allBlocks.find(
+      (block) => block.type === BlockType.JOURNEY,
+    );
+
+    const stepGroupBaseOrder = calculateStepGroupBaseOrder(
+      journeyBlock,
+      targetGroupId,
+      allBlocks,
+    );
+
     // 대상 그룹의 모든 스텝 가져오기
     const stepsInGroup = allBlocks.filter(
       (block) =>
@@ -301,7 +337,7 @@ export const useDragAndDrop = ({
       await updateBlock({
         id: stepId,
         properties: {
-          order: 0,
+          order: stepGroupBaseOrder,
         },
       });
       movesWithoutRebalancing++;
@@ -344,11 +380,26 @@ export const useDragAndDrop = ({
     }
 
     // 새 순서값 계산 및 업데이트
-    const newOrder = calculateMiddleOrder(prevOrder, nextOrder);
+    let calculatedOrder = calculateMiddleOrder(prevOrder, nextOrder);
+
+    // 이미 기존 order 값들이 stepGroupBaseOrder를 포함하고 있는지 확인
+    let hasBaseOrderAlready = false;
+
+    if (prevOrder !== undefined && prevOrder >= stepGroupBaseOrder) {
+      hasBaseOrderAlready = true;
+    } else if (nextOrder !== undefined && nextOrder >= stepGroupBaseOrder) {
+      hasBaseOrderAlready = true;
+    }
+
+    // 이미 base order가 포함되어 있지 않다면 추가
+    if (!hasBaseOrderAlready) {
+      calculatedOrder += stepGroupBaseOrder;
+    }
+
     await updateBlock({
       id: stepId,
       properties: {
-        order: newOrder,
+        order: calculatedOrder,
       },
     });
 
