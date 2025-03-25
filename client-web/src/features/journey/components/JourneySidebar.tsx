@@ -115,7 +115,7 @@ export function JourneySidebar({
     // 모든 요소(스텝 + 드롭 표시기)를 담을 배열
     const elements: React.ReactElement[] = [];
 
-    // 맨 처음에 드롭 표시기 추가
+    // 맨 처음에 드롭 표시기 추가 - 드래그 중일 때만 활성화
     elements.push(
       <StepDropIndicator
         key={`gap-${groupBlock.id}-0`}
@@ -129,29 +129,24 @@ export function JourneySidebar({
       />,
     );
 
-    // 스텝과 그 사이에 드롭 표시기 추가
+    // 스텝 추가
     stepBlocks.forEach((stepBlock, i) => {
-      // 스텝 추가
       elements.push(
-        <DraggableStep
-          key={stepBlock.id}
-          id={stepBlock.id}
-          block={stepBlock}
-        />,
-      );
+        <div key={stepBlock.id} className="relative">
+          <DraggableStep id={stepBlock.id} block={stepBlock} />
 
-      // 스텝 다음에 드롭 표시기 추가
-      elements.push(
-        <StepDropIndicator
-          key={`gap-${groupBlock.id}-${i + 1}`}
-          id={`gap-${groupBlock.id}-${i + 1}`}
-          groupId={groupBlock.id}
-          index={i + 1}
-          isOver={
-            dropTargetPosition?.stepGroupBlockId === groupBlock.id &&
-            dropTargetPosition?.insertionIndex === i + 1
-          }
-        />,
+          {/* 스텝 다음에 드롭 표시기 추가 */}
+          <StepDropIndicator
+            key={`gap-${groupBlock.id}-${i + 1}`}
+            id={`gap-${groupBlock.id}-${i + 1}`}
+            groupId={groupBlock.id}
+            index={i + 1}
+            isOver={
+              dropTargetPosition?.stepGroupBlockId === groupBlock.id &&
+              dropTargetPosition?.insertionIndex === i + 1
+            }
+          />
+        </div>,
       );
     });
 
@@ -256,7 +251,8 @@ export function JourneySidebar({
         onClick={handleAddNewStep}
         disabled={isAddingStep || disableAddStepButton}
       >
-        <IconPlus size={14} className="mr-1" />스텝 추가
+        <IconPlus size={14} className="mr-1" />
+        스텝 추가
       </Button>
     </div>
   );
@@ -328,18 +324,20 @@ export function JourneySidebar({
           onDragEnd={handleDragEnd}
         >
           {/* 스텝 그룹 맨 위에 드롭 표시기 */}
-          <StepGroupDropIndicator
-            key="group-gap-0"
-            id="group-gap-0"
-            index={0}
-            isOver={dropGroupTargetIndex === 0}
-          />
+          <div className="relative">
+            <StepGroupDropIndicator
+              key="group-gap-0"
+              id="group-gap-0"
+              index={0}
+              isOver={dropGroupTargetIndex === 0}
+            />
+          </div>
 
           {/* 스텝 그룹 매핑 */}
           {stepGroupBlocks.map((groupBlock, index) => (
-            <React.Fragment key={groupBlock.id}>
+            <div key={groupBlock.id} className="relative">
               <DraggableStepGroup id={groupBlock.id} block={groupBlock}>
-                <div className="mb-3 w-full">
+                <div className="mb-2 w-full">
                   <DroppableStepGroup
                     id={groupBlock.id}
                     isOver={hoveredStepGroupId === groupBlock.id}
@@ -355,7 +353,7 @@ export function JourneySidebar({
                   {expandedGroups[groupBlock.id] && (
                     <div className="ml-5 mt-1">
                       {/* 드롭 표시기가 있는 스텝 */}
-                      <div className="step-items-container">
+                      <div className="step-items-container gap-1">
                         {renderStepBlocks(groupBlock)}
                       </div>
                     </div>
@@ -370,7 +368,7 @@ export function JourneySidebar({
                 index={index + 1}
                 isOver={dropGroupTargetIndex === index + 1}
               />
-            </React.Fragment>
+            </div>
           ))}
 
           {/* 드래그 오버레이 - 드래그 중인 아이템의 복제본을 보여줌 */}

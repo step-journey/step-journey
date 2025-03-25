@@ -24,6 +24,10 @@ export function StepGroupDropIndicator({
     <div
       ref={setNodeRef}
       className={`step-group-drop-indicator ${isOver ? "step-group-drop-indicator-active" : ""}`}
+      style={{
+        top: index === 0 ? 0 : undefined,
+        bottom: index !== 0 ? 0 : undefined,
+      }}
     />
   );
 }

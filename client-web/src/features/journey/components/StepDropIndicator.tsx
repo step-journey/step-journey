@@ -27,6 +27,10 @@ export function StepDropIndicator({
     <div
       ref={setNodeRef}
       className={`step-drop-indicator ${isOver ? "step-drop-indicator-active" : ""}`}
+      style={{
+        top: index === 0 ? 0 : undefined,
+        bottom: index !== 0 ? 0 : undefined,
+      }}
     />
   );
 }

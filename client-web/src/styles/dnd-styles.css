@@ -10,36 +10,42 @@
 .step-group-item.drag-overlay {
     background-color: white;
     border-radius: 4px;
-    opacity: 0.9;
+    opacity: 0.5;
     border: 1px solid #e5e7eb;
     pointer-events: none;
 }
 
 /* Step group drop indicator */
 .step-group-drop-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
     height: 4px;
-    margin: 4px 0;
-    background-color: transparent;
-    border-radius: 2px;
-    transition: background-color 0.2s ease;
+    background-color: rgba(59, 130, 246, 0.4);
+    z-index: 88;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
 .step-group-drop-indicator-active {
-    background-color: #3b82f6;
-    box-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
+    opacity: 1;
 }
 
 .step-drop-indicator {
-    height: 2px;
-    margin: 3px 0;
-    background-color: transparent;
-    border-radius: 1px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: rgba(59, 130, 246, 0.4);
+    z-index: 88;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
 .step-drop-indicator-active {
-    height: 3px;
-    background-color: #3b82f6;
-    box-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
+    opacity: 1;
 }
 
 /* Step container */
@@ -52,7 +58,7 @@
 .step-item.drag-overlay {
     background-color: white;
     border-radius: 4px;
-    opacity: 0.9;
+    opacity: 0.5;
     border: 1px solid #e5e7eb;
     pointer-events: none;
 }
@@ -60,6 +66,7 @@
 /* Step group drop target */
 .step-group-droppable {
     border-radius: 4px;
+    position: relative;
 }
 
 .step-group-drop-active {
@@ -70,5 +77,5 @@
 .step-items-container {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    position: relative;
 }
