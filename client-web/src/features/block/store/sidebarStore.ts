@@ -15,12 +15,14 @@ interface SidebarState {
   expandedGroups: Record<string, boolean>; // 펼쳐진 그룹 목록
   currentStepId?: string; // 현재 활성화된 스텝 ID
   prevStepGroupId?: string; // 이전 스텝의 그룹 ID
+  currentStepGroupId?: string; // 현재 스텝이 속한 그룹 ID
   stepClickHandler: StepClickHandler; // 스텝 클릭 핸들러
 }
 
 interface SidebarActions {
   toggleGroup: (groupId: string) => void; // 그룹 펼치기/접기 토글
   setCurrentStepId: (stepId: string | undefined) => void; // 현재 스텝 ID 설정
+  setCurrentStepGroupId: (groupId: string | undefined) => void; // 현재 스텝 그룹 ID 설정
   setStepClickHandler: (handler: StepClickHandler) => void; // 스텝 클릭 핸들러 설정
   handleStepClick: (stepId: string) => void; // 스텝 클릭 처리
   expandGroup: (groupId: string) => void; // 특정 그룹 펼치기
@@ -40,6 +42,7 @@ export const useSidebarStore = create<SidebarState & SidebarActions>()(
       expandedGroups: {},
       currentStepId: undefined,
       prevStepGroupId: undefined,
+      currentStepGroupId: undefined,
       stepClickHandler: () => {}, // 기본 빈 핸들러
 
       // 액션
@@ -52,6 +55,11 @@ export const useSidebarStore = create<SidebarState & SidebarActions>()(
       setCurrentStepId: (stepId) =>
         set((state) => {
           state.currentStepId = stepId;
+        }),
+
+      setCurrentStepGroupId: (groupId) =>
+        set((state) => {
+          state.currentStepGroupId = groupId;
         }),
 
       setStepClickHandler: (handler) =>
@@ -102,6 +110,9 @@ export const useSidebarStore = create<SidebarState & SidebarActions>()(
           const currentStepGroupId = currentStep.parentId;
           if (!currentStepGroupId) return;
 
+          // 현재 스텝의 그룹 ID 업데이트
+          state.currentStepGroupId = currentStepGroupId;
+
           // 3. 이전 그룹 ID와 현재 그룹 ID가 다른 경우에만 접기/펼치기 동작 수행
           if (currentStepGroupId !== state.prevStepGroupId) {
             // 3-1. 모든 step group 접기
@@ -130,6 +141,8 @@ export const useExpandedGroups = () =>
   useSidebarStore((state) => state.expandedGroups);
 export const useCurrentStepId = () =>
   useSidebarStore((state) => state.currentStepId);
+export const useCurrentStepGroupId = () =>
+  useSidebarStore((state) => state.currentStepGroupId);
 export const useToggleGroup = () =>
   useSidebarStore((state) => state.toggleGroup);
 export const useHandleStepClick = () =>

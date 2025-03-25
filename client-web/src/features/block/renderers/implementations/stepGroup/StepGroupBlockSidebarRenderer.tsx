@@ -7,6 +7,7 @@ import {
 import {
   useExpandedGroups,
   useToggleGroup,
+  useCurrentStepGroupId,
 } from "@/features/block/store/sidebarStore";
 import {
   IconChevronDown,
@@ -20,6 +21,7 @@ import { useParams } from "react-router-dom";
 import { useJourneyActions } from "@/features/journey/hooks/useJourneyActions";
 import { DeleteStepGroupModal } from "@/features/journey/components/DeleteStepGroupModal";
 import { useIsEditMode } from "@/features/block/store/editorStore";
+import { cn } from "@/lib/utils";
 
 interface StepGroupBlockSidebarRendererProps {
   block: StepGroupBlock;
@@ -33,6 +35,7 @@ export const StepGroupBlockSidebarRenderer: React.FC<
 > = ({ block }) => {
   const expandedGroups = useExpandedGroups();
   const toggleGroup = useToggleGroup();
+  const currentStepGroupId = useCurrentStepGroupId();
   const { journeyId } = useParams<{ journeyId: string }>();
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -48,6 +51,9 @@ export const StepGroupBlockSidebarRenderer: React.FC<
 
   // 현재 그룹이 펼쳐져 있는지 확인
   const isExpanded = expandedGroups[block.id] || false;
+
+  // 현재 스텝이 이 그룹에 속하는지 확인
+  const isCurrentGroup = block.id === currentStepGroupId;
 
   // 그룹 라벨 스타일
   let stepGroupTitleClass = `
@@ -104,7 +110,10 @@ export const StepGroupBlockSidebarRenderer: React.FC<
           <EditableStepGroupTitle
             groupId={block.id}
             value={getStepGroupTitle(block)}
-            className="text-sm truncate"
+            className={cn(
+              "text-sm truncate",
+              isCurrentGroup && "font-semibold", // 현재 스텝이 속한 스텝 그룹의 title 값은 semibold 처리
+            )}
             placeholder="제목 없는 그룹"
             journeyId={journeyId || ""}
             isEditing={isEditing}
