@@ -50,8 +50,8 @@ export function BlockEditor({
   const [, setLastSaved] = useState<Date | null>(null);
   const allBlocks = useAllBlocks();
   const queryClient = useQueryClient();
-  // 에디터 뷰에 접근하기 위한 ref 추가
-  const editorViewRef = useRef<HTMLDivElement>(null);
+  // 에디터 컨테이너 접근을 위한 ref 추가
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   // 편집 모드 상태 가져오기
   const isEditMode = useIsEditMode();
 
@@ -217,7 +217,6 @@ export function BlockEditor({
         // BlockNote API 를 통한 포커스 시도
         if (editor && typeof editor.focus === "function") {
           editor.focus();
-          return;
         }
       } catch (error) {
         console.error("Failed to focus editor:", error);
@@ -228,13 +227,12 @@ export function BlockEditor({
   }, [isEditMode, editor]);
 
   return (
-    <div className="editor-container">
+    <div className="editor-container" ref={editorContainerRef}>
       <BlockNoteView
         editor={editor}
         editable={isEditMode}
         className="min-h-[200px] border rounded-md overflow-auto"
         slashMenu={false} // 기본 슬래시 메뉴 비활성화 (커스텀 메뉴 사용)
-        ref={editorViewRef}
       >
         <SuggestionMenuController
           triggerCharacter={"/"}
