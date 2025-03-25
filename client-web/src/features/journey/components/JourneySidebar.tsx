@@ -202,8 +202,16 @@ export function JourneySidebar({
 
   const handleAddStepGroup = async () => {
     if (journeyId) {
-      await addStepGroup(journeyId);
-      // 새 step group 이 추가되면 자동으로 데이터가 갱신됨
+      const result = await addStepGroup(journeyId);
+      if (result && result.groupId && result.stepId && result.stepOrder >= 0) {
+        // 그룹이 접혀있으면 펼치기
+        if (!expandedGroups[result.groupId]) {
+          toggleGroup(result.groupId);
+        }
+
+        // 새로 추가된 스텝으로 이동
+        setCurrentStepOrder(result.stepOrder);
+      }
     }
   };
 

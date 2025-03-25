@@ -23,7 +23,7 @@ import {
   generateBlockId,
 } from "@/features/block/utils/blockUtils";
 import { JourneyData } from "@/features/journey/types/serviceTypes";
-import { ORDER_INITIAL_GAP } from "@/features/journey/constants/orderConstants";
+import {GROUP_ORDER_MULTIPLIER, ORDER_INITIAL_GAP} from "@/features/journey/constants/orderConstants";
 import { calculateStepGroupBaseOrder } from "@/features/journey/utils/journeyUtils";
 
 /**
@@ -189,7 +189,7 @@ export function useJourneyActions() {
     navigate(`${PATH.JOURNEY}/${journeyId}`);
   };
 
-  // Step Group 추가 함수
+  // Step Group 추가 함수 - 수정됨: 기본 스텝 추가 및 스텝 선택 기능 추가
   const addStepGroup = async (journeyId: string) => {
     if (!journeyId) return null;
 
@@ -228,45 +228,77 @@ export function useJourneyActions() {
         });
 
       // 3. 고유한 제목 생성
-      const newTitle = generateUniqueTitle("새 그룹", stepGroupTitles);
+      const newGroupTitle = generateUniqueTitle("새 그룹", stepGroupTitles);
 
-      // 4. 새 step group ID 생성
+      // 4. 새 step group과 step IDs 생성
       const groupId = generateBlockId();
+      const stepId = generateBlockId();
 
-      // 5. 기본 step group 생성
+      // 5. stepGroup baseOrder 계산 - 새 그룹이므로 기존 그룹 개수 * multiplier
+      const stepGroupCount = stepGroupTitles.length;
+      const stepGroupBaseOrder = stepGroupCount * GROUP_ORDER_MULTIPLIER;
+
+      // 6. 기본 step group 생성
       const stepNewGroup: Partial<Block> = {
         id: groupId,
         type: BlockType.STEP_GROUP,
         parentId: journeyId,
-        childrenIds: [],
+        childrenIds: [stepId], // 스텝 ID를 자식으로 설정
         createdBy: "user",
         properties: {
-          title: newTitle,
+          title: newGroupTitle,
         },
       };
 
-      // 6. 부모 Journey block 업데이트
+      // 7. 기본 step 생성
+      const newStep: Partial<Block> = {
+        id: stepId,
+        type: BlockType.STEP,
+        parentId: groupId,
+        childrenIds: [],
+        createdBy: "user",
+        properties: {
+          title: "새 단계",
+          order: stepGroupBaseOrder, // 그룹 base order 적용
+        },
+      };
+
+      // 8. 기본 문단 블록 생성
+      const defaultParagraphBlock = createDefaultParagraphBlock(stepId);
+      newStep.childrenIds = [defaultParagraphBlock.id];
+
+      // 9. 부모 Journey block 업데이트
       await updateBlock({
         id: journeyId,
         childrenIds: [...(journeyBlock.childrenIds || []), groupId],
       });
 
-      // 7. DB에 저장
+      // 10. DB에 저장
       await createBlock(stepNewGroup);
+      await createBlock(newStep);
+      await createBlock(defaultParagraphBlock);
 
-      // 8. 리스트 새로고침
+      // 11. 리스트 새로고침
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
       });
 
-      // 캐시를 강제로 새로고침하여 새 그룹이 반영되도록 함
-      await queryClient.fetchQuery<JourneyData>({
+      // 12. 캐시를 강제로 새로고침하여 새 블록이 반영되도록 함
+      const updatedData = await queryClient.fetchQuery<JourneyData>({
         queryKey: QUERY_KEYS.journeys.detail(journeyId),
         staleTime: 0,
       });
 
+      // 13. 새로 생성된 스텝의 순서 인덱스 찾기
+      let stepOrder = -1;
+      if (updatedData) {
+        stepOrder = updatedData.sortedStepBlocks.findIndex(
+          (step) => step.id === stepId,
+        );
+      }
+
       toast.success("새 그룹이 추가되었습니다.");
-      return { groupId };
+      return { groupId, stepId, stepOrder };
     } catch (error) {
       console.error("Failed to add step group:", error);
       toast.error("그룹 추가에 실패했습니다.");
