@@ -25,9 +25,10 @@ export enum BlockType {
   CODE_BLOCK = "code",
   TABLE = "table",
   IMAGE = "image",
-  // 멀티컬럼 블록 타입들
+  // 커스텀 블록
   COLUMN = "column",
   COLUMN_LIST = "columnList",
+  ALERT = "alert",
 }
 
 // 모든 블록 타입에 공통적인 기본 속성 (아직 없음)

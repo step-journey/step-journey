@@ -26,6 +26,7 @@ import {
   ImageBlock,
   ColumnBlock,
   ColumnListBlock,
+  AlertBlock,
 } from "../types";
 import { generateBlockId } from "@/features/block/utils/blockUtils";
 
@@ -305,6 +306,10 @@ function isMultiColumnBlock(block: any): boolean {
   return block.type === "columnList" || block.type === "column";
 }
 
+function isAlertBlockType(block: any): boolean {
+  return block.type === "alert";
+}
+
 /**
  * BlockNote 블록을 StepJourney 커스텀 블록으로 변환
  */
@@ -363,6 +368,34 @@ export function convertBlockNoteToCustomBlock(
 
       return columnBlock;
     }
+  }
+
+  // Alert 블록 처리 추가
+  if (isAlertBlockType(blockNoteBlock)) {
+    const props = blockNoteBlock.props as BlockNoteProps & { type?: string };
+    const alertBlock: AlertBlock = {
+      ...baseBlock,
+      type: BlockType.ALERT,
+      properties: {
+        textAlignment: props?.textAlignment || "left",
+        textColor: props?.textColor || "default",
+        type:
+          (props?.type as "warning" | "error" | "info" | "success") ||
+          "warning",
+      },
+      content: Array.isArray(blockNoteBlock.content)
+        ? convertBlockNoteInlineToCustomInline(
+            blockNoteBlock.content as BlockNoteInlineContent[],
+          )
+        : [],
+    };
+
+    // BlockNote의 children 처리
+    if (blockNoteBlock.children && blockNoteBlock.children.length > 0) {
+      alertBlock.childrenIds = blockNoteBlock.children.map((child) => child.id);
+    }
+
+    return alertBlock;
   }
 
   // 기존 블록 타입에 따른 변환
@@ -643,6 +676,21 @@ export function convertCustomToBlockNoteBlock(
         width: columnBlock.properties.width || 1,
       },
       content: undefined,
+    } as unknown as ExtendedBlockNoteBlock;
+  }
+
+  // Alert 블록 처리 추가
+  if (customBlock.type === BlockType.ALERT) {
+    const alertBlock = customBlock as AlertBlock;
+    return {
+      ...baseBlockNote,
+      type: "alert",
+      props: {
+        textAlignment: alertBlock.properties.textAlignment || "left",
+        textColor: alertBlock.properties.textColor || "default",
+        type: alertBlock.properties.type || "warning",
+      },
+      content: convertCustomInlineToBlockNoteInline(alertBlock.content || []),
     } as unknown as ExtendedBlockNoteBlock;
   }
 

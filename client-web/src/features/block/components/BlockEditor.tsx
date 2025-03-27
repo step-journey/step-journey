@@ -7,6 +7,7 @@ import {
   filterSuggestionItems,
   locales,
   defaultBlockSpecs,
+  insertOrUpdateBlock,
 } from "@blocknote/core";
 import "@/styles/text-editor.css";
 import { Block, JourneyBlock, StepBlock } from "@/features/block/types";
@@ -28,6 +29,10 @@ import {
   getMultiColumnSlashMenuItems,
   locales as multiColumnLocales,
 } from "@/features/block/extensions/multiColumn";
+
+// Alert 블록 가져오기
+import { Alert } from "@/features/block/extensions/alert";
+import { IconAlertTriangle } from "@tabler/icons-react";
 
 // Journey 데이터 타입 정의
 interface JourneyData {
@@ -86,6 +91,7 @@ export function BlockEditor({
     return BlockNoteSchema.create({
       blockSpecs: {
         ...remainingBlockSpecs,
+        alert: Alert, // Alert 블록 추가
       },
     });
   }, []);
@@ -118,12 +124,26 @@ export function BlockEditor({
   // 에디터 인스턴스 생성
   const editor = useCreateBlockNote(editorConfig);
 
+  // Alert 블록 삽입 함수
+  const insertAlert = (editor: ReturnType<typeof useCreateBlockNote>) => ({
+    title: "알림 블록",
+    onItemClick: () => {
+      insertOrUpdateBlock(editor, {
+        type: "alert",
+        props: { type: "info" }, // 기본 타입은 info
+      });
+    },
+    aliases: ["알림", "alert", "callout", "경고", "정보", "메모"],
+    group: "기본 블록",
+    icon: <IconAlertTriangle size={16} />,
+  });
+
   // 기본 슬래시 메뉴 항목과 멀티컬럼 항목 병합
   const getSlashMenuItems = useMemo(() => {
     return async (query: string) =>
       filterSuggestionItems(
         combineByGroup(
-          getDefaultReactSlashMenuItems(editor),
+          [...getDefaultReactSlashMenuItems(editor), insertAlert(editor)],
           getMultiColumnSlashMenuItems(editor),
         ),
         query,

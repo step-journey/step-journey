@@ -4,6 +4,7 @@ import ReactModal from "react-modal";
 import "@/index.css"; // Tailwind Global Styles
 import "@/styles/text-editor.css";
 import "@/styles/dnd-styles.css";
+import "@/styles/alert-block.css";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 

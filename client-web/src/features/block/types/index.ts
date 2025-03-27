@@ -10,6 +10,7 @@ import { CodeBlock } from "./codeBlock";
 import { TableBlock } from "./tableBlock";
 import { ImageBlock } from "./imageBlock";
 import { ColumnBlock, ColumnListBlock } from "./multiColumnBlock";
+import { AlertBlock } from "./alertBlock";
 
 /**
  * 블록 타입 시스템의 중앙 진입점 (Barrel Pattern)
@@ -37,6 +38,7 @@ export * from "./codeBlock";
 export * from "./tableBlock";
 export * from "./imageBlock";
 export * from "./multiColumnBlock";
+export * from "./alertBlock";
 
 // 모든 가능한 블록 타입의 유니온 타입
 export type Block =
@@ -52,4 +54,5 @@ export type Block =
   | TableBlock
   | ImageBlock
   | ColumnBlock
-  | ColumnListBlock;
+  | ColumnListBlock
+  | AlertBlock;
