@@ -119,6 +119,7 @@ find . \
   ! -path "*/fonts/*" \
   ! -path "*/script/*" \
   ! -name "package-lock.json" \
+  ! -path "*/public/init_data.json" \
   | sort \
   | while read -r file
 do

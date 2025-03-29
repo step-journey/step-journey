@@ -120,7 +120,7 @@ do
   [[ $file == client-web/* ]] || continue
 
   # 5-3) 제외 파일
-  if [[ "$file" = "client-web/package-lock.json" || "$file" == client-web/script/* ]]; then
+  if [[ "$file" = "client-web/package-lock.json" || "$file" == "client-web/public/init_data.json" || "$file" == client-web/script/* ]]; then
     continue
   fi
 

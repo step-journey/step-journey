@@ -17,8 +17,13 @@ export function useJourneys(): UseQueryResult<JourneyBlock[]> {
     queryKey: QUERY_KEYS.journeys.all,
     queryFn: async () => {
       if (!initialized) {
-        await initializeBlocksDatabase();
-        setInitialized(true);
+        try {
+          await initializeBlocksDatabase();
+          setInitialized(true);
+        } catch (error) {
+          console.error("Database initialization failed:", error);
+          // 오류가 발생해도 계속 진행 - 최소한 기존 데이터는 가져오도록
+        }
       }
       return fetchAllJourneyBlocks();
     },

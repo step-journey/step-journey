@@ -130,13 +130,26 @@ export const fetchJourneyAndOrderedSteps = async (
 
 // 데이터베이스 초기화
 export const initializeBlocksDatabase = async (): Promise<void> => {
-  // 이미 데이터가 있는지 확인
-  const count = await dbClient.blocks.count();
-  if (count > 0) {
-    return;
-  }
+  try {
+    // 이미 데이터가 있는지 확인
+    const count = await dbClient.blocks.count();
 
-  console.log("Database initialized");
+    if (count > 0) {
+      console.log(`데이터베이스에 이미 ${count}개의 블록이 있습니다.`);
+      return;
+    }
+
+    // 데이터가 없으면 초기 데이터 가져와서 저장
+    console.log("데이터베이스 초기화 중...");
+    await dbClient.importInitialData();
+
+    // 초기화 후 데이터 개수 확인
+    const newCount = await dbClient.blocks.count();
+    console.log(`데이터베이스 초기화 완료: ${newCount}개 블록 로드됨`);
+  } catch (error) {
+    console.error("데이터베이스 초기화 중 오류 발생:", error);
+    throw error;
+  }
 };
 
 /**
