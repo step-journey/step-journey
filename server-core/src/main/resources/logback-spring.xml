@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <springProfile name="local">
+        <include resource="logback-logger/console-logger.xml"/>
+
+        <logger name="org.core" level="INFO" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+
+        <logger name="org.core.filter.HttpLoggingFilter" level="INFO" additivity="false">
+            <appender-ref ref="JSON_STDOUT"/>
+        </logger>
+
+        <logger name="org.core.exception.GlobalExceptionHandler" level="INFO" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="dev, prod">
+        <include resource="logback-logger/console-logger.xml"/>
+
+        <logger name="org.core" level="INFO" additivity="false">
+            <appender-ref ref="GENERAL_JSON_STDOUT"/>
+        </logger>
+
+        <logger name="org.core.filter.HttpLoggingFilter" level="INFO" additivity="false">
+            <appender-ref ref="JSON_STDOUT"/>
+        </logger>
+
+        <logger name="org.core.exception.GlobalExceptionHandler" level="INFO" additivity="false">
+            <appender-ref ref="JSON_STDOUT"/>
+        </logger>
+
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </springProfile>
+
+</configuration>

@@ -1,0 +1,5 @@
+### 환경 변수 설정
+@baseUrl = http://localhost:9000
+
+### 1. 서버 헬스 체크 (Actuator)
+GET {{baseUrl}}/actuator/health

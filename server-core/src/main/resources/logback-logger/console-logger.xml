@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+    <!-- Spring, Hibernate 등 라이브러리 로깅에 사용 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %highlight(%5level) --- [%thread] %logger{39} : %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 요청, 응답 정보 로깅과 에러 로깅에 사용   -->
+    <appender name="JSON_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.core.logging.HttpJsonLayout" />
+        </encoder>
+    </appender>
+
+    <!-- 일반 JSON 로깅용 -->
+    <appender name="GENERAL_JSON_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.core.logging.JsonLayout" />
+        </encoder>
+    </appender>
+
+</included>

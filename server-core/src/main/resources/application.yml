@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: server-core
+  profiles:
+    active: local
+  flyway:
+    enabled: false
+
+server:
+  port: 8000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: 'health,info,metrics,prometheus'
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    enable:
+      hikaricp: true
+      jvm: true
+      system: true
+      process: true
+      http: true
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false
+
+http:
+  client:
+    connect-timeout-millis: 5000
+    read-timeout-seconds: 5
+    pool:
+      name: defaultPool
+      max-connections: 50
+
