@@ -1,49 +1,53 @@
-import { Button } from "@/components/ui/button";
-import { IconUserCircle } from "@tabler/icons-react";
-import { User } from "@/features/auth/types/auth";
+import { Link } from "react-router-dom";
+import { AuthStatus } from "./AuthStatus";
+import PATH from "@/constants/path";
+import * as React from "react";
+import { Container } from "@/components/layout/Container";
 
-/**
- * 헤더 컴포넌트
- * - isLoading이 true면 로딩 상태를 보여줍니다.
- * - user가 null이면 "로그인" 버튼을 보여주고,
- * - user가 있으면 "아이콘 + 유저이름 + 로그아웃" 버튼을 보여줍니다.
- */
-interface HeaderProps {
-  user: User | null;
-  onClickLogin: () => void;
-  onClickLogout: () => void;
-  isLoading?: boolean;
-}
+export function Header() {
+  // 클릭 이벤트 방지 함수
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
 
-export default function Header({
-  user,
-  onClickLogin,
-  onClickLogout,
-  isLoading = false,
-}: HeaderProps) {
   return (
-    <header className="h-14 w-full px-4 pr-6 border-b border-border flex items-center">
-      {/* 좌측 로고 텍스트 */}
-      <div className="text-xl font-semibold">StepJourney</div>
+    <header className="w-full h-16 border-b border-border/40 bg-background sticky top-0 z-10">
+      <Container className="h-full flex items-center justify-between">
+        <div className="flex items-center">
+          {/* Logo */}
+          <Link to={PATH.HOME} className="text-xl font-bold">
+            StepJourney
+          </Link>
 
-      {/* 우측 영역 */}
-      <div className="ml-auto">
-        {isLoading ? (
-          <span className="text-sm text-muted-foreground">로딩 중...</span>
-        ) : user ? (
-          <div className="flex items-center gap-3">
-            <IconUserCircle size={20} />
-            <span className="text-sm">{user.name}님</span>
-            <Button variant="outline" size="sm" onClick={onClickLogout}>
-              로그아웃
-            </Button>
-          </div>
-        ) : (
-          <Button variant="default" size="sm" onClick={onClickLogin}>
-            로그인
-          </Button>
-        )}
-      </div>
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center ml-16">
+            <Link
+              to="/"
+              className="text-sm font-medium hover:text-primary transition-colors mr-8"
+              onClick={handleClick}
+            >
+              홈
+            </Link>
+            <Link
+              to="/forums"
+              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors mr-8"
+              onClick={handleClick}
+            >
+              뉴스
+            </Link>
+            <Link
+              to="/news"
+              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
+              onClick={handleClick}
+            >
+              게시판
+            </Link>
+          </nav>
+        </div>
+
+        {/* 인증 상태 영역 */}
+        <AuthStatus />
+      </Container>
     </header>
   );
 }

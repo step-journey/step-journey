@@ -1,29 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchUser, logoutUser } from "@/features/auth/services/authService";
-import { QUERY_KEYS } from "@/constants/queryKeys";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/api/queryKeys.ts";
+import { User } from "../types/auth";
+import { getCurrentUser } from "../services/authService";
 
-// 사용자 정보를 조회하는 훅
-export function useUser() {
-  return useQuery({
-    queryKey: QUERY_KEYS.user.me,
-    queryFn: fetchUser,
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5분
-  });
-}
-
-// 로그아웃을 처리하는 훅
-export function useLogout() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: logoutUser,
-    onSuccess: () => {
-      // 성공 시 사용자 정보 캐시 무효화
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.me });
-      queryClient.setQueryData(QUERY_KEYS.user.me, null);
-      toast.success("로그아웃되었습니다.");
-    },
+export function useCurrentUser() {
+  return useQuery<User, Error>({
+    queryKey: queryKeys.users.me(),
+    queryFn: getCurrentUser,
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
   });
 }

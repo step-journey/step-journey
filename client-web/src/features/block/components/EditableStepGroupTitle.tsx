@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { updateBlock } from "../services/blockService";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/constants/queryKeys";
+import { queryKeys } from "@/api/queryKeys";
 import { useIsEditMode } from "../store/editorStore";
 
 interface EditableStepGroupTitleProps {
@@ -118,7 +118,7 @@ export function EditableStepGroupTitle({
 
         // 쿼리 캐시 무효화 - journey 상세 정보 갱신
         await queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.journeys.detail(journeyId),
+          queryKey: queryKeys.journeys.detail(journeyId),
         });
 
         // 상위 컴포넌트의 onBlur 호출

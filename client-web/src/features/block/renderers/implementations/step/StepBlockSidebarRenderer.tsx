@@ -12,7 +12,7 @@ import { IconTrash, IconCornerDownLeft } from "@tabler/icons-react";
 import { DeleteStepModal } from "@/features/journey/components/DeleteStepModal";
 import { updateBlock } from "@/features/block/services/blockService";
 import { useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/constants/queryKeys";
+import { queryKeys } from "@/api/queryKeys";
 import { cn } from "@/lib/utils";
 import { useIsEditMode } from "@/features/block/store/editorStore";
 
@@ -110,7 +110,7 @@ export const StepBlockSidebarRenderer: React.FC<
 
       // 쿼리 캐시 무효화 - journey 상세 정보 갱신
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       setIsEditing(false);

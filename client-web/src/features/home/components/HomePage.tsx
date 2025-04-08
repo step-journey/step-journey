@@ -1,31 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IconPlus } from "@tabler/icons-react";
-import Header from "./Header";
-import LoginModal from "@/features/auth/components/LoginModal";
 import { JourneyList } from "@/features/journey/components/JourneyList";
 import { CreateJourneyModal } from "@/features/journey/components/CreateJourneyModal";
-import { useUser, useLogout } from "@/features/auth/hooks/useAuth";
-import { useLoginModalState, useUIStore } from "@/store/uiStore";
+import { Header } from "./Header";
 
 export default function HomePage() {
-  const { data: user, isLoading: isLoadingUser } = useUser();
-  const { mutate: logout } = useLogout();
-
-  const isLoginModalOpen = useLoginModalState();
-  const { openLoginModal, closeLoginModal } = useUIStore();
-
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* 상단 Header */}
-      <Header
-        user={user || null}
-        onClickLogin={openLoginModal}
-        onClickLogout={() => logout()}
-        isLoading={isLoadingUser}
-      />
+      <Header />
 
       {/* 메인 레이아웃 */}
       <div className="flex flex-1 bg-background text-foreground">
@@ -77,9 +63,6 @@ export default function HomePage() {
         {/* 우측 사이드바 */}
         <aside className="hidden lg:flex flex-col w-64 border-l border-border p-4"></aside>
       </div>
-
-      {/* 로그인 모달 */}
-      <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
 
       {/* 여정 생성 다이얼로그 */}
       <CreateJourneyModal

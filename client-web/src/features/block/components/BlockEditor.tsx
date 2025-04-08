@@ -17,7 +17,7 @@ import { useIsEditMode } from "@/features/block/store/editorStore";
 import { toast } from "sonner";
 import { getBlockNoteBlocksFromStep } from "@/features/block/utils/blockNoteConverter";
 import { useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/constants/queryKeys";
+import { queryKeys } from "@/api/queryKeys";
 import {
   SuggestionMenuController,
   getDefaultReactSlashMenuItems,
@@ -188,7 +188,7 @@ export function BlockEditor({
         // 변경 사항 저장 후 관련 Journey 쿼리 무효화를 제한적으로 수행
         if (rootJourneyId) {
           queryClient.setQueryData(
-            QUERY_KEYS.journeys.detail(rootJourneyId),
+            queryKeys.journeys.detail(rootJourneyId),
             (oldData: JourneyData | undefined) => {
               if (!oldData) return oldData;
 

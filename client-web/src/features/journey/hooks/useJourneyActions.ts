@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PATH from "@/constants/path";
-import { QUERY_KEYS } from "@/constants/queryKeys";
+import { queryKeys } from "@/api/queryKeys";
 import {
   Block,
   BlockType,
@@ -137,7 +137,7 @@ export function useJourneyActions() {
 
       // 리스트 새로고침
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.all,
+        queryKey: queryKeys.journeys.all,
       });
 
       toast.success("새 여정이 생성되었습니다.");
@@ -164,7 +164,7 @@ export function useJourneyActions() {
 
       // 리스트 새로고침
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.all,
+        queryKey: queryKeys.journeys.all,
       });
 
       toast.success("여정이 삭제되었습니다.");
@@ -182,7 +182,7 @@ export function useJourneyActions() {
   const navigateToJourney = (journeyId: string) => {
     // 해당 Journey 관련 쿼리 캐시 무효화
     void queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.journeys.detail(journeyId),
+      queryKey: queryKeys.journeys.detail(journeyId),
     });
 
     // 페이지 이동
@@ -198,7 +198,7 @@ export function useJourneyActions() {
     try {
       // 1. 해당 Journey block 조회
       const journeyData = await queryClient.fetchQuery<JourneyData>({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       if (!journeyData) {
@@ -280,12 +280,12 @@ export function useJourneyActions() {
 
       // 11. 리스트 새로고침
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       // 12. 캐시를 강제로 새로고침하여 새 블록이 반영되도록 함
       const updatedData = await queryClient.fetchQuery<JourneyData>({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
         staleTime: 0,
       });
 
@@ -317,7 +317,7 @@ export function useJourneyActions() {
     try {
       // 1. Journey 와 Step Group 블록 조회
       const journeyData = await queryClient.fetchQuery<JourneyData>({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       if (!journeyData) {
@@ -358,7 +358,7 @@ export function useJourneyActions() {
 
       // 5. 리스트 새로고침
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       toast.success("그룹이 삭제되었습니다.");
@@ -385,12 +385,12 @@ export function useJourneyActions() {
     try {
       // 캐시 무효화 먼저 수행
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       // 1. 해당 그룹 블록 조회 - 타입 명시 (staleTime: 0으로 설정하여 최신 데이터 강제로 가져오기)
       const journeyData = await queryClient.fetchQuery<JourneyData>({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
         staleTime: 0,
       });
 
@@ -533,12 +533,12 @@ export function useJourneyActions() {
 
       // 14. 리스트 새로고침
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       // 15. 새로 추가된 Step 데이터 조회 (force fresh fetch)
       const updatedData = await queryClient.fetchQuery<JourneyData>({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
         staleTime: 0, // 최신 데이터 강제 가져오기
       });
 
@@ -572,7 +572,7 @@ export function useJourneyActions() {
     try {
       // 1. Step 블록과 관련 데이터 조회
       const journeyData = await queryClient.fetchQuery<JourneyData>({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       if (!journeyData) {
@@ -631,7 +631,7 @@ export function useJourneyActions() {
 
       // 5. 리스트 새로고침
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       toast.success("단계가 삭제되었습니다.");
@@ -641,7 +641,7 @@ export function useJourneyActions() {
 
       // 데이터 다시 가져오기
       const updatedData = await queryClient.fetchQuery<JourneyData>({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       // 다음 인덱스가 유효하지 않으면 조정

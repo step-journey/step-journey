@@ -11,7 +11,7 @@ import { JourneyFooter } from "./JourneyFooter";
 import { Button } from "@/components/ui/button";
 import PATH from "@/constants/path";
 import { useJourney } from "../hooks/useJourneys";
-import { QUERY_KEYS } from "@/constants/queryKeys";
+import { queryKeys } from "@/api/queryKeys";
 import { useBlockStore } from "@/features/block/store/blockStore";
 import { useContentStore } from "@/features/block/store/contentStore";
 import {
@@ -88,7 +88,7 @@ export default function JourneyPage() {
 
       // 무한 리패치 사이클을 방지하기 위해 기존 쿼리를 완전히 제거 후 강제 리패치
       queryClient.removeQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       // 이후 새 데이터 요청

@@ -12,7 +12,7 @@ import { Block, BlockType, StepBlock } from "@/features/block/types";
 import { updateBlock } from "@/features/block/services/blockService";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/constants/queryKeys";
+import { queryKeys } from "@/api/queryKeys";
 import { DND_TYPES } from "@/features/journey/constants/dndTypes";
 import {
   GROUP_ORDER_MULTIPLIER,
@@ -694,7 +694,7 @@ export const useDragAndDrop = ({
 
       // 변경사항 반영을 위해 캐시 무효화
       await queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.journeys.detail(journeyId),
+        queryKey: queryKeys.journeys.detail(journeyId),
       });
 
       toast.success("위치가 업데이트되었습니다");

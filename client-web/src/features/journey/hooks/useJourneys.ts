@@ -4,7 +4,7 @@ import {
   fetchJourneyAndOrderedSteps,
   initializeBlocksDatabase,
 } from "@/features/block/services/blockService";
-import { QUERY_KEYS } from "@/constants/queryKeys";
+import { queryKeys } from "@/api/queryKeys";
 import { useState } from "react";
 import { JourneyData } from "@/features/journey/types/serviceTypes";
 import { JourneyBlock } from "@/features/block/types";
@@ -14,7 +14,7 @@ export function useJourneys(): UseQueryResult<JourneyBlock[]> {
   const [initialized, setInitialized] = useState(false);
 
   return useQuery<JourneyBlock[]>({
-    queryKey: QUERY_KEYS.journeys.all,
+    queryKey: queryKeys.journeys.all,
     queryFn: async () => {
       if (!initialized) {
         try {
@@ -34,7 +34,7 @@ export function useJourneys(): UseQueryResult<JourneyBlock[]> {
 // 특정 journey block 과 그 하위의 모든 block 조회
 export function useJourney(journeyId: string): UseQueryResult<JourneyData> {
   return useQuery<JourneyData>({
-    queryKey: QUERY_KEYS.journeys.detail(journeyId),
+    queryKey: queryKeys.journeys.detail(journeyId),
     queryFn: async () => {
       if (import.meta.env.DEV) {
         console.log(
