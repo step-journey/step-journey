@@ -8,12 +8,26 @@ import "@/styles/alert-block.css";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import BootstrapApp from "./components/common/BootstrapApp.tsx";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { BrowserRouter } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import App from "@/App";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 ReactModal.setAppElement("#root");
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BootstrapApp />
+    <QueryProvider>
+      <BrowserRouter>
+        <TooltipProvider>
+          <App />
+        </TooltipProvider>
+        <ReactQueryDevtools
+          initialIsOpen={false}
+          buttonPosition={"bottom-left"}
+        />
+      </BrowserRouter>
+    </QueryProvider>
   </StrictMode>,
 );
